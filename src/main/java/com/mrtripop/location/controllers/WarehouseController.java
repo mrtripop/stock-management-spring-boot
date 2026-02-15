@@ -38,7 +38,7 @@ public class WarehouseController {
           .message(status.getMessage())
           .data(warehouses)
           .build()
-          .buildResponseEntity(HttpStatus.OK);
+          .toResponseEntity(HttpStatus.OK);
     } catch (Exception e) {
       log.error("Cannot get all warehouse: {}", e.getMessage());
       throw new GlobalThrowable(
@@ -57,7 +57,7 @@ public class WarehouseController {
           .message(status.getMessage())
           .data(warehouse)
           .build()
-          .buildResponseEntity(HttpStatus.OK);
+          .toResponseEntity(HttpStatus.OK);
     } catch (Exception e) {
       log.error("Cannot get warehouse by warehouse Id({}): {}", warehouseId, e.getMessage());
       throw new GlobalThrowable(
@@ -76,7 +76,7 @@ public class WarehouseController {
           .message(status.getMessage())
           .data(warehouse)
           .build()
-          .buildResponseEntity(HttpStatus.OK);
+          .toResponseEntity(HttpStatus.OK);
     } catch (Exception e) {
       log.error("Cannot add a new warehouse: {}", e.getMessage());
       throw new GlobalThrowable(

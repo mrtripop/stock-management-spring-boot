@@ -6,9 +6,8 @@ import com.mrtripop.model.QueryParams;
 import com.mrtripop.model.ResponseBody;
 import com.mrtripop.product.constant.ErrorCode;
 import com.mrtripop.product.constant.SuccessCode;
-import com.mrtripop.product.interfaces.ProductService;
-import com.mrtripop.product.models.ProductDTO;
-import com.mrtripop.product.services.ProductServiceImpl;
+import com.mrtripop.product.models.dto.ProductDTO;
+import com.mrtripop.product.services.ProductService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
@@ -23,11 +22,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/inventory/products")
 public class ProductController {
 
-  private final ProductService productService;
-
-  public ProductController(ProductServiceImpl productService) {
-    this.productService = productService;
-  }
+  private ProductService productService;
 
   @GetMapping
   public ResponseEntity<Object> getProducts(@Valid QueryParams queryParams) throws GlobalThrowable {
@@ -39,7 +34,7 @@ public class ProductController {
           .message(successCode.getMessage())
           .data(products)
           .build()
-          .buildResponseEntity(HttpStatus.OK);
+          .toResponseEntity(HttpStatus.OK);
     } catch (Exception e) {
       log.error("Cannot get all products: {}", e.getMessage());
       throw new GlobalThrowable(
@@ -62,7 +57,7 @@ public class ProductController {
           .message(successCode.getMessage())
           .data(product)
           .build()
-          .buildResponseEntity(HttpStatus.OK);
+          .toResponseEntity(HttpStatus.OK);
     } catch (Exception e) {
       log.error("Cannot get product by ID: {}", e.getMessage());
       throw new GlobalThrowable(
@@ -81,7 +76,7 @@ public class ProductController {
           .message(successCode.getMessage())
           .data(createdProduct)
           .build()
-          .buildResponseEntity(HttpStatus.CREATED);
+          .toResponseEntity(HttpStatus.CREATED);
     } catch (Exception e) {
       log.error("Cannot create a new product: {}", e.getMessage());
       throw new GlobalThrowable(
@@ -105,7 +100,7 @@ public class ProductController {
           .message(successCode.getMessage())
           .data(updatedProduct)
           .build()
-          .buildResponseEntity(HttpStatus.OK);
+          .toResponseEntity(HttpStatus.OK);
     } catch (Exception e) {
       log.error("Cannot update the product by ID: {}", e.getMessage());
       throw new GlobalThrowable(
@@ -127,7 +122,7 @@ public class ProductController {
           .code(successCode.getCode())
           .message(successCode.getMessage())
           .build()
-          .buildResponseEntity(HttpStatus.OK);
+          .toResponseEntity(HttpStatus.OK);
     } catch (Exception e) {
       log.error("Cannot delete the product by ID: {}", e.getMessage());
       throw new GlobalThrowable(

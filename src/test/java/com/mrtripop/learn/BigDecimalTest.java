@@ -53,4 +53,17 @@ class BigDecimalTest {
     // assert
     assertEquals(0.1, result.doubleValue());
   }
+
+
+  @Test
+  @DisplayName("Remove useless zero after calculation with two number")
+  void remove_useless_zero_after_calculation_with_two_number(){
+
+    BigDecimal number1 = BigDecimal.valueOf(0.5);
+    BigDecimal number2 = BigDecimal.valueOf(0.2);
+    // action
+    BigDecimal result = number1.multiply(number2);
+    // assert
+    assertEquals("0.1", result.toString());
+  }
 }

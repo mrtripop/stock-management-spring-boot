@@ -6,8 +6,8 @@ import com.mrtripop.model.QueryParams;
 import com.mrtripop.model.ResponseBody;
 import com.mrtripop.product.constant.ErrorCode;
 import com.mrtripop.product.constant.SuccessCode;
-import com.mrtripop.product.models.ProductDTO;
-import com.mrtripop.product.services.ProductHistoryServiceImpl;
+import com.mrtripop.product.models.dto.ProductDTO;
+import com.mrtripop.product.services.ProductHistoryService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
@@ -23,26 +23,23 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/inventory/products/histories")
 public class ProductHistoryController {
 
-  private final ProductHistoryServiceImpl productService;
-
-  public ProductHistoryController(ProductHistoryServiceImpl productService) {
-    this.productService = productService;
-  }
+  private ProductHistoryService productHistoryService;
 
   @GetMapping
   public ResponseEntity<Object> getProductsHistories(@Valid QueryParams queryParams)
       throws GlobalThrowable {
     try {
-      List<ProductDTO> productHistories = this.productService.getProductsHistories(queryParams);
+      List<ProductDTO> productHistories =
+          this.productHistoryService.getProductsHistories(queryParams);
       BaseStatusCode statusCode = SuccessCode.PRO2006_GET_ALL_PRODUCT_HISTORIES_IS_SUCCESS;
       return ResponseBody.builder()
           .code(statusCode.getCode())
           .message(statusCode.getMessage())
           .data(productHistories)
           .build()
-          .buildResponseEntity(HttpStatus.OK);
+          .toResponseEntity(HttpStatus.OK);
     } catch (Exception e) {
-      log.error("Cannot get all product histories: {}", e.getMessage());
+      log.error("Cannot get product histories: {}", e.getMessage());
       throw new GlobalThrowable(
           ErrorCode.PRO1007_CANNOT_GET_ALL_PRODUCT_HISTORIES, HttpStatus.INTERNAL_SERVER_ERROR);
     }
@@ -59,16 +56,16 @@ public class ProductHistoryController {
       throws GlobalThrowable {
     try {
       List<ProductDTO> productHistories =
-          this.productService.getProductHistoriesByCode(productCode, queryParams);
+          this.productHistoryService.getProductHistoriesByCode(productCode, queryParams);
       BaseStatusCode statusCode = SuccessCode.PRO2006_GET_ALL_PRODUCT_HISTORIES_IS_SUCCESS;
       return ResponseBody.builder()
           .code(statusCode.getCode())
           .message(statusCode.getMessage())
           .data(productHistories)
           .build()
-          .buildResponseEntity(HttpStatus.OK);
+          .toResponseEntity(HttpStatus.OK);
     } catch (Exception e) {
-      log.error("Cannot get all product histories: {}", e.getMessage());
+      log.error("Cannot get product histories by product code: {}", e.getMessage());
       throw new GlobalThrowable(
           ErrorCode.PRO1011_CANNOT_GET_PRODUCT_HISTORIES_BY_CODE, HttpStatus.INTERNAL_SERVER_ERROR);
     }

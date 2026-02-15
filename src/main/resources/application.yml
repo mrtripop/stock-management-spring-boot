@@ -2,6 +2,10 @@ server:
   port: 8080
 
 spring:
+  security:
+    user:
+      name: user
+      password: password
   jackson:
     property-naming-strategy: SNAKE_CASE
   datasource:
@@ -35,6 +39,8 @@ logging:
       mrtripop: ${LOGGING_LEVEL_COM_MRTRIPOP}
     org:
       hibernate: INFO
+      springframework:
+        security: DEBUG
 
 config:
   author:

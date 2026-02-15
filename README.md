@@ -137,6 +137,7 @@ http://localhost:8080/swagger-ui/index.html
 **Java**
 
 - [BigDecimal ใน Java](https://medium.com/@mrtripop/ทำความรู้จักกับ-bigdecimalใน-java-กัน-a8fe3cd26640)
+- [Object field mapping using MapStruct](https://phayao.medium.com/มาใช้-mapstruct-ใน-java-กันเถอะ-4b54bd0a3219)
 
 **Spring Boot**
 
@@ -180,11 +181,90 @@ http://localhost:8080/swagger-ui/index.html
 
 - [Dead-Letter Message]
 
+**Reactive Programming & Spring WebFlux**
+
+- [Spring WebFlux Documentation](https://docs.spring.io/spring-framework/docs/current/reference/html/web-reactive.html)
+- [Reactor Core Documentation](https://projectreactor.io/docs/core/release/reference/)
+- [Spring WebFlux Tutorial](https://www.baeldung.com/spring-webflux)
+- [Reactive Streams Specification](https://www.reactive-streams.org/)
+- [WebFlux vs Spring MVC](https://www.baeldung.com/spring-webflux-vs-spring-mvc)
+- [Mono and Flux Guide](https://www.baeldung.com/reactor-core)
+- [WebFlux Testing](https://www.baeldung.com/spring-webflux-testing)
+- [Reactive Database Access](https://www.baeldung.com/spring-data-r2dbc)
+
+## Reactive Programming Practice Guide
+
+### Learning Path
+
+**Phase 1: Fundamentals**
+1. Understanding Reactive Streams concepts
+2. Mono and Flux basics
+3. Operators: map, filter, flatMap
+4. Error handling in reactive streams
+
+**Phase 2: Spring WebFlux**
+1. WebFlux configuration
+2. Reactive controllers and handlers
+3. WebClient for reactive HTTP calls
+4. Reactive data access with R2DBC
+
+**Phase 3: Advanced Topics**
+1. Backpressure handling
+2. Custom operators
+3. Reactive security
+4. Performance optimization
+
+### Exercises Directory Structure
+
+```
+src/main/java/learning/reactive/
+├── exercises/
+│   ├── Exercise01_MonoFluxBasics.java
+│   ├── Exercise02_Transformations.java
+│   ├── Exercise03_ErrorHandling.java
+│   ├── Exercise04_WebFluxControllers.java
+│   ├── Exercise05_WebClient.java
+│   └── Exercise06_ReactiveRepository.java
+├── solutions/
+│   ├── Solution01_MonoFluxBasics.java
+│   ├── Solution02_Transformations.java
+│   ├── Solution03_ErrorHandling.java
+│   ├── Solution04_WebFluxControllers.java
+│   ├── Solution05_WebClient.java
+│   └── Solution06_ReactiveRepository.java
+└── README.md
+```
+
+### Quick Start Commands
+
+```bash
+# Add WebFlux dependency to pom.xml
+# Create reactive exercises
+mkdir -p src/main/java/learning/reactive/{exercises,solutions}
+
+# Run specific reactive test
+mvn test -Dtest=ReactiveExerciseTest
+
+# Start application in reactive mode
+mvn spring-boot:run -Dspring.profiles.active=reactive
+```
+
+### Key Concepts to Master
+
+1. **Publisher Types**: Mono (0-1 item), Flux (0-N items)
+2. **Hot vs Cold Streams**: Understanding when subscription matters
+3. **Threading Models**: Event loops vs traditional thread pools
+4. **Backpressure**: Managing flow control in reactive streams
+5. **Error Handling**: onError, retry, fallback strategies
+6. **Testing**: StepVerifier for reactive testing
+
 ## Reference
 
 - [PostgreSQL with docker volume](https://www.docker.com/blog/how-to-use-the-postgres-docker-official-image/)
 - [Redisinsight tool](https://hub.docker.com/r/redis/redisinsight)
 - [No validator could be found for constraint 'NotEmpty' validating type 'Integer'](https://stackoverflow.com/a/56096275/22370509)
+
+## API Testing
 
 
 

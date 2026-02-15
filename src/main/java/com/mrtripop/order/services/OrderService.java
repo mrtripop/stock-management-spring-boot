@@ -1,7 +1,7 @@
 package com.mrtripop.order.services;
 
-import com.mrtripop.account.models.User;
-import com.mrtripop.account.repositories.UserRepository;
+import com.mrtripop.users.models.User;
+import com.mrtripop.users.repositories.UserRepository;
 import com.mrtripop.location.repositories.AddressRepository;
 import com.mrtripop.model.QueryParams;
 import com.mrtripop.order.models.Order;

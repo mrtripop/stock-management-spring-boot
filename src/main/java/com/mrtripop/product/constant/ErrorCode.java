@@ -5,7 +5,7 @@ import com.mrtripop.constant.BaseStatusCode;
 public enum ErrorCode implements BaseStatusCode {
   GB4041_REQUEST_BODY_IS_NOT_VALID("GB4041", "Request body is not valid"),
   GB4042_QUERY_PARAMETER_IS_NOT_VALID("GB4042", "Query parameter is not valid"),
-  GB4043_QUERY_PARAMETER_IS_NOT_VALID("GB4043", "Method argument type mismatch"),
+  GB4043_METHOD_ARGUMENT_TYPE_MISMATCH("GB4043", "Method argument type mismatch"),
   GB4044_GLOBAL_ERROR_IS_OCCURRED("GB4044", "Global error is occurred"),
   PRO1001_CANNOT_GET_ALL_PRODUCTS("PRO1001", "Cannot get all products"),
   PRO1002_CANNOT_CREATE_NEW_PRODUCT("PRO1002", "Cannot create new product"),

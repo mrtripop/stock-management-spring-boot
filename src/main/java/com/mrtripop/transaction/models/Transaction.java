@@ -1,7 +1,7 @@
 package com.mrtripop.transaction.models;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.mrtripop.account.models.User;
+import com.mrtripop.users.models.User;
 import com.mrtripop.order.models.Order;
 import jakarta.persistence.*;
 import lombok.Data;

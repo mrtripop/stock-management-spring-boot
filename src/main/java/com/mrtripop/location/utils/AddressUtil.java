@@ -16,6 +16,7 @@ public class AddressUtil {
         .province(addressDTO.getProvince())
         .country(addressDTO.getCountry())
         .postalCode(addressDTO.getPostalCode())
+        .warehouses(addressDTO.getWarehouseList())
         .build();
   }
 
@@ -29,6 +30,7 @@ public class AddressUtil {
         .province(addressDTO.getProvince())
         .country(addressDTO.getCountry())
         .postalCode(addressDTO.getPostalCode())
+        .warehouseList(addressDTO.getWarehouses())
         .build();
   }
 
@@ -40,5 +42,6 @@ public class AddressUtil {
     oldAddress.setProvince(newAddress.getProvince());
     oldAddress.setCountry(newAddress.getCountry());
     oldAddress.setPostalCode(newAddress.getPostalCode());
+    oldAddress.setWarehouses(newAddress.getWarehouseList());
   }
 }

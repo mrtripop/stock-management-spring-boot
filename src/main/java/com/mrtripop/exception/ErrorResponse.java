@@ -28,9 +28,9 @@ public class ErrorResponse {
   }
 
   public static class ErrorResponseBuilder {
-    private int code;
-    private String status;
-    private String message;
+    private final int code;
+    private final String status;
+    private final String message;
     private String stackTrace;
     private Object data;
     private Date timestamp;
