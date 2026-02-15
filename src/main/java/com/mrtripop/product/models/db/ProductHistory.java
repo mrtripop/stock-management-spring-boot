@@ -1,17 +1,19 @@
 package com.mrtripop.product.models.db;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
+import lombok.experimental.SuperBuilder;
 
-@Data
+@Getter
+@Setter
 @Entity
-@Builder
+@SuperBuilder
 @NoArgsConstructor
-@AllArgsConstructor
+@ToString(callSuper = true)
 @Table(
     name = "product_history",
     indexes = {
