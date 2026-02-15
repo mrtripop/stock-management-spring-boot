@@ -1,7 +1,7 @@
 package com.mrtripop.order.models;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.mrtripop.account.models.User;
+import com.mrtripop.users.models.User;
 import com.mrtripop.location.models.entities.Address;
 import jakarta.persistence.*;
 import java.time.ZonedDateTime;

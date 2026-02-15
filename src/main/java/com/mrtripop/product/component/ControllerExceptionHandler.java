@@ -7,7 +7,6 @@ import com.mrtripop.product.constant.ErrorCode;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.MessageSourceResolvable;
@@ -36,7 +35,7 @@ public class ControllerExceptionHandler {
         .code(errorCode.getCode())
         .message(errorCode.getMessage())
         .build()
-        .buildResponseEntity(ex.getHttpStatus());
+        .toResponseEntity(ex.getHttpStatus());
   }
 
   @ExceptionHandler({HttpMessageNotReadableException.class, MissingPathVariableException.class})
@@ -47,49 +46,45 @@ public class ControllerExceptionHandler {
         .message(errorCode.getMessage())
         .error(ex.getMessage())
         .build()
-        .buildResponseEntity(HttpStatus.BAD_REQUEST);
+        .toResponseEntity(HttpStatus.BAD_REQUEST);
   }
 
   @ExceptionHandler(MethodArgumentNotValidException.class)
   public ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex) {
     List<String> errors =
-        ex.getBindingResult().getFieldErrors().stream()
-            .map(FieldError::getDefaultMessage)
-            .collect(Collectors.toList());
+        ex.getBindingResult().getFieldErrors().stream().map(FieldError::getDefaultMessage).toList();
     BaseStatusCode errorCode = ErrorCode.GB4041_REQUEST_BODY_IS_NOT_VALID;
     return ResponseBody.builder()
         .code(errorCode.getCode())
         .message(errorCode.getMessage())
         .error(getArgumentNotValidErrorMessage(errors))
         .build()
-        .buildResponseEntity(HttpStatus.BAD_REQUEST);
+        .toResponseEntity(HttpStatus.BAD_REQUEST);
   }
 
   @ExceptionHandler(HandlerMethodValidationException.class)
   public ResponseEntity<Object> handleMethodValidation(HandlerMethodValidationException ex) {
     List<String> errors =
-        ex.getAllErrors().stream()
-            .map(MessageSourceResolvable::getDefaultMessage)
-            .collect(Collectors.toList());
+        ex.getAllErrors().stream().map(MessageSourceResolvable::getDefaultMessage).toList();
     BaseStatusCode errorCode = ErrorCode.GB4042_QUERY_PARAMETER_IS_NOT_VALID;
     return ResponseBody.builder()
         .code(errorCode.getCode())
         .message(errorCode.getMessage())
         .error(getArgumentNotValidErrorMessage(errors))
         .build()
-        .buildResponseEntity(HttpStatus.BAD_REQUEST);
+        .toResponseEntity(HttpStatus.BAD_REQUEST);
   }
 
   @ExceptionHandler(MethodArgumentTypeMismatchException.class)
   public ResponseEntity<Object> handleMethodArgumentTypeMismatch(
       MethodArgumentTypeMismatchException ex) {
-    BaseStatusCode errorCode = ErrorCode.GB4043_QUERY_PARAMETER_IS_NOT_VALID;
+    BaseStatusCode errorCode = ErrorCode.GB4043_METHOD_ARGUMENT_TYPE_MISMATCH;
     return ResponseBody.builder()
         .code(errorCode.getCode())
         .message(errorCode.getMessage())
         .error(ex.getParameter().getParameterName())
         .build()
-        .buildResponseEntity(HttpStatus.BAD_REQUEST);
+        .toResponseEntity(HttpStatus.BAD_REQUEST);
   }
 
   private Map<String, List<String>> getArgumentNotValidErrorMessage(List<String> errors) {

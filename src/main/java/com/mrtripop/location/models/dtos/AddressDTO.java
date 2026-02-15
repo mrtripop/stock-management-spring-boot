@@ -1,10 +1,14 @@
 package com.mrtripop.location.models.dtos;
 
+import com.mrtripop.location.models.entities.Address;
+import com.mrtripop.location.models.entities.Warehouse;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.util.List;
 
 @Data
 @Builder
@@ -34,4 +38,6 @@ public class AddressDTO {
 
   @NotNull(message = "Address postal code must not be null")
   private String postalCode;
+
+  private List<Warehouse> warehouseList;
 }

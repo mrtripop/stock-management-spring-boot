@@ -42,7 +42,7 @@ public class AddressController {
           .message(code.getMessage())
           .data(response)
           .build()
-          .buildResponseEntity(HttpStatus.OK);
+          .toResponseEntity(HttpStatus.OK);
     } catch (Exception e) {
       log.error("Cannot get addresses: {}", e.getMessage());
       throw new GlobalThrowable(
@@ -63,7 +63,7 @@ public class AddressController {
           .message(code.getMessage())
           .data(response)
           .build()
-          .buildResponseEntity(HttpStatus.OK);
+          .toResponseEntity(HttpStatus.OK);
     } catch (Exception e) {
       log.error("Cannot get an addresses: {}", e.getMessage());
       throw new GlobalThrowable(
@@ -83,7 +83,7 @@ public class AddressController {
           .message(code.getMessage())
           .data(response)
           .build()
-          .buildResponseEntity(HttpStatus.OK);
+          .toResponseEntity(HttpStatus.OK);
     } catch (Exception e) {
       log.error("Cannot create a new address: {}", e.getMessage());
       throw new GlobalThrowable(
@@ -105,7 +105,7 @@ public class AddressController {
           .message(code.getMessage())
           .data(response)
           .build()
-          .buildResponseEntity(HttpStatus.OK);
+          .toResponseEntity(HttpStatus.OK);
     } catch (Exception e) {
       log.error("Cannot update the existing address: {}", e.getMessage());
       throw new GlobalThrowable(
@@ -123,7 +123,7 @@ public class AddressController {
           .code(code.getCode())
           .message(code.getMessage())
           .build()
-          .buildResponseEntity(HttpStatus.OK);
+          .toResponseEntity(HttpStatus.OK);
     } catch (Exception e) {
       log.error("Cannot delete the address: {}", e.getMessage());
       throw new GlobalThrowable(

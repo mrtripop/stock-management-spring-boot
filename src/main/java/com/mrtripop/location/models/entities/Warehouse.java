@@ -30,7 +30,8 @@ public class Warehouse {
   @Column(name = "is_refrigerated", columnDefinition = "BOOLEAN")
   private Boolean isRefrigerated;
 
-  @ManyToOne
+  @JsonIgnore
+  @ManyToOne(cascade = CascadeType.ALL)
   @JoinColumn(name = "address_id")
   private Address address;
 

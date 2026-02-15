@@ -1,6 +1,8 @@
 package com.mrtripop.model;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import java.time.Instant;
+import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -18,8 +20,10 @@ public class ResponseBody {
   private String message;
   private Object data;
   private Object error;
+  private LocalDateTime timestamp = LocalDateTime.from(Instant.now());
 
-  public ResponseEntity<Object> buildResponseEntity(HttpStatus httpStatus) {
-    return new ResponseEntity<>(new ResponseBody(code, message, data, error), httpStatus);
+  public ResponseEntity<Object> toResponseEntity(HttpStatus httpStatus) {
+    return new ResponseEntity<>(
+        new ResponseBody(code, message, data, error, timestamp), httpStatus);
   }
 }

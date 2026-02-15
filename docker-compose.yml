@@ -1,19 +1,19 @@
 services:
-  inventory:
-    container_name: management
-    build: ./
-    env_file:
-      - .env.dev
-    ports:
-      - "8080:8080"
-    depends_on:
-      - postgres
-      - collector
-      - redis
+#  inventory:
+#    container_name: management
+#    build: ./
+#    env_file:
+#      - .env.dev
+#    ports:
+#      - "8080:8080"
+#    depends_on:
+#      - postgres-db
+#      - collector
+#      - redis
 
-  postgres:
-    container_name: postgres
-    image: postgres
+  postgres-db:
+    container_name: postgres-db
+    image: postgres:14.6
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
@@ -22,7 +22,7 @@ services:
       - "5432:5432"
     restart: unless-stopped
     volumes:
-      - postgres:/var/lib/postgresql/data
+      - postgres-db:/var/lib/postgresql/data
 
   redis:
     container_name: redis
@@ -51,5 +51,5 @@ services:
       - "4317:4317"
 
 volumes:
-  postgres:
+  postgres-db:
   redisinsight:

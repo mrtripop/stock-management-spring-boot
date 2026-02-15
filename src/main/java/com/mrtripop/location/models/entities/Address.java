@@ -51,8 +51,8 @@ public class Address {
   @Column(name = "postal_code", columnDefinition = "TEXT")
   private String postalCode;
 
-  @JsonIgnore
-  @OneToMany(mappedBy = "address")
+//  @JsonIgnore
+  @OneToMany(mappedBy = "address", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
   private List<Warehouse> warehouses;
 
   @JsonIgnore
