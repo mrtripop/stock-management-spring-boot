@@ -9,7 +9,7 @@ public enum ErrorCode implements BaseStatusCode {
   GB4044_GLOBAL_ERROR_IS_OCCURRED("GB4044", "Global error is occurred"),
   PRO1001_CANNOT_GET_ALL_PRODUCTS("PRO1001", "Cannot get all products"),
   PRO1002_CANNOT_CREATE_NEW_PRODUCT("PRO1002", "Cannot create new product"),
-  PRO1003_CANNOT_GET_PRODUCT_BY_ID("PRO1003", "Cannot get product by ID"),
+  PRO1003_CANNOT_GET_PRODUCT_BY_ID("PRO1003", "Your product ID is not valid"),
   PRO1004_CANNOT_UPDATE_EXISTING_PRODUCT("PRO1004", "Cannot update existing product"),
   PRO1005_CANNOT_DELETE_EXISTING_PRODUCT("PRO1005", "Cannot delete the product"),
   PRO1007_CANNOT_GET_ALL_PRODUCT_HISTORIES("PRO1007", "Cannot get all products histories"),
@@ -19,7 +19,13 @@ public enum ErrorCode implements BaseStatusCode {
   PRO1009_CANNOT_CONVERT_PRODUCT_TO_PRODUCT_HISTORY(
       "PRO1009", "Cannot convert product DTO to product"),
   PRO1010_CANNOT_CONVERT_PRODUCT_OBJECT_TO_PRODUCT_DTO(
-      "PRO1010", "Cannot convert product object to product DTO");
+      "PRO1010", "Cannot convert product object to product DTO"),
+  PRO4001_USER_NEED_TO_UPLOAD_PRODUCT_CSV_FILE(
+      "PRO4001", "CSV content missing, please upload a products CSV file"),
+  PRO5001_READ_PRODUCTS_FROM_CSV_FAILED("PRO5001", "Read products from CSV failed"),
+  PRO5002_CANNOT_UPDATE_PRODUCTS_FROM_CSV_FILE(
+      "PRO5002", "Cannot update products due to internal error");
+
   private final String code;
   private final String message;
 

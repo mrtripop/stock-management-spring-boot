@@ -3,7 +3,7 @@ package com.mrtripop.order.services;
 import com.mrtripop.users.models.User;
 import com.mrtripop.users.repositories.UserRepository;
 import com.mrtripop.location.repositories.AddressRepository;
-import com.mrtripop.model.QueryParams;
+import com.mrtripop.model.BaseQueryParams;
 import com.mrtripop.order.models.Order;
 import com.mrtripop.order.repositories.OrderRepository;
 import com.mrtripop.transaction.service.TransactionService;
@@ -37,7 +37,7 @@ public class OrderService {
     this.transactionService = transactionService;
   }
 
-  public List<Order> retrieveUserOrders(Long userId, QueryParams queryParams) {
+  public List<Order> retrieveUserOrders(Long userId, BaseQueryParams queryParams) {
     try {
       boolean existUser = userRepository.existsById(userId);
       if (existUser) {

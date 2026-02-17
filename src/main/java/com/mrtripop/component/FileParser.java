@@ -1,4 +1,4 @@
-package learning.patterns.strategies;
+package com.mrtripop.component;
 
 
 public interface FileParser {

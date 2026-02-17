@@ -13,11 +13,12 @@ public interface ProductMapper {
   ProductHistory toProductHistory(Product product);
 
   ProductHistory toProductHistory(ProductDTO productDTO);
-  
+
   Product toProduct(ProductDTO productDTO);
-  
+
   ProductDTO toProductDTO(Product product);
-  
+
   ProductDTO toProductDTO(ProductHistory productHistory);
-  
+
+  ProductDTO toProductDTO(ProductDTO productDTO);
 }

@@ -6,7 +6,7 @@ import lombok.Getter;
 import org.springframework.data.domain.Sort;
 
 @Getter
-public class QueryParams {
+public class BaseQueryParams {
 
   @Min(value = 1, message = "Input page must not less than one")
   @NotNull(message = "Input page must not be null")

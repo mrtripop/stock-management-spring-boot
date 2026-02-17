@@ -1,8 +1,8 @@
 package com.mrtripop.product.controllers;
 
 import com.mrtripop.constant.BaseStatusCode;
-import com.mrtripop.exception.GlobalThrowable;
-import com.mrtripop.model.QueryParams;
+import com.mrtripop.exception.ApplicationException;
+import com.mrtripop.model.BaseQueryParams;
 import com.mrtripop.model.ResponseBody;
 import com.mrtripop.product.constant.ErrorCode;
 import com.mrtripop.product.constant.SuccessCode;
@@ -26,8 +26,8 @@ public class ProductHistoryController {
   private ProductHistoryService productHistoryService;
 
   @GetMapping
-  public ResponseEntity<Object> getProductsHistories(@Valid QueryParams queryParams)
-      throws GlobalThrowable {
+  public ResponseEntity<Object> getProductsHistories(@Valid BaseQueryParams queryParams)
+      throws ApplicationException {
     try {
       List<ProductDTO> productHistories =
           this.productHistoryService.getProductsHistories(queryParams);
@@ -40,7 +40,7 @@ public class ProductHistoryController {
           .toResponseEntity(HttpStatus.OK);
     } catch (Exception e) {
       log.error("Cannot get product histories: {}", e.getMessage());
-      throw new GlobalThrowable(
+      throw new ApplicationException(
           ErrorCode.PRO1007_CANNOT_GET_ALL_PRODUCT_HISTORIES, HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
@@ -52,8 +52,8 @@ public class ProductHistoryController {
           @NotNull(message = "Product code query param must not be null")
           @NotEmpty(message = "Product code query param must not be empty")
           String productCode,
-      @Valid QueryParams queryParams)
-      throws GlobalThrowable {
+      @Valid BaseQueryParams queryParams)
+      throws ApplicationException {
     try {
       List<ProductDTO> productHistories =
           this.productHistoryService.getProductHistoriesByCode(productCode, queryParams);
@@ -66,7 +66,7 @@ public class ProductHistoryController {
           .toResponseEntity(HttpStatus.OK);
     } catch (Exception e) {
       log.error("Cannot get product histories by product code: {}", e.getMessage());
-      throw new GlobalThrowable(
+      throw new ApplicationException(
           ErrorCode.PRO1011_CANNOT_GET_PRODUCT_HISTORIES_BY_CODE, HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }

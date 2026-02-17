@@ -1,7 +1,7 @@
 package com.mrtripop.product.component;
 
 import com.mrtripop.constant.BaseStatusCode;
-import com.mrtripop.exception.GlobalThrowable;
+import com.mrtripop.exception.ApplicationException;
 import com.mrtripop.model.ResponseBody;
 import com.mrtripop.product.constant.ErrorCode;
 import java.util.HashMap;
@@ -28,8 +28,8 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 @ControllerAdvice(annotations = RestController.class)
 public class ControllerExceptionHandler {
 
-  @ExceptionHandler(GlobalThrowable.class)
-  public ResponseEntity<Object> handleGlobalThrowable(GlobalThrowable ex) {
+  @ExceptionHandler(ApplicationException.class)
+  public ResponseEntity<Object> handleGlobalThrowable(ApplicationException ex) {
     BaseStatusCode errorCode = ex.getErrorCode();
     return ResponseBody.builder()
         .code(errorCode.getCode())

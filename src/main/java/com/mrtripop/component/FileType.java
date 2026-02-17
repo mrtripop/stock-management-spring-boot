@@ -1,4 +1,4 @@
-package learning.patterns.strategies;
+package com.mrtripop.component;
 
 public class FileType {
   public static final String CSV = "csv";

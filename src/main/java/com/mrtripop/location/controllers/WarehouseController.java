@@ -1,13 +1,13 @@
 package com.mrtripop.location.controllers;
 
 import com.mrtripop.constant.BaseStatusCode;
-import com.mrtripop.exception.GlobalThrowable;
+import com.mrtripop.exception.ApplicationException;
 import com.mrtripop.location.constant.ErrorCode;
 import com.mrtripop.location.constant.SuccessCode;
 import com.mrtripop.location.models.dtos.WarehouseDTO;
 import com.mrtripop.location.models.entities.Warehouse;
 import com.mrtripop.location.services.WarehouseServiceImpl;
-import com.mrtripop.model.QueryParams;
+import com.mrtripop.model.BaseQueryParams;
 import com.mrtripop.model.ResponseBody;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -28,8 +28,8 @@ public class WarehouseController {
   }
 
   @GetMapping
-  public ResponseEntity<Object> getWarehouses(@Valid QueryParams queryParams)
-      throws GlobalThrowable {
+  public ResponseEntity<Object> getWarehouses(@Valid BaseQueryParams queryParams)
+      throws ApplicationException {
     try {
       List<Warehouse> warehouses = warehouseService.getAllWarehouse(queryParams);
       BaseStatusCode status = SuccessCode.SUCCESS;
@@ -41,14 +41,14 @@ public class WarehouseController {
           .toResponseEntity(HttpStatus.OK);
     } catch (Exception e) {
       log.error("Cannot get all warehouse: {}", e.getMessage());
-      throw new GlobalThrowable(
+      throw new ApplicationException(
           ErrorCode.UAD5001_CANNOT_RETRIEVE_ADDRESSES, HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 
   @GetMapping("/{warehouse_id}")
   public ResponseEntity<Object> getWarehouseByWarehouseId(
-      @PathVariable(name = "warehouse_id") Long warehouseId) throws GlobalThrowable {
+      @PathVariable(name = "warehouse_id") Long warehouseId) throws ApplicationException {
     try {
       Warehouse warehouse = warehouseService.getWarehouseById(warehouseId);
       BaseStatusCode status = SuccessCode.SUCCESS;
@@ -60,14 +60,14 @@ public class WarehouseController {
           .toResponseEntity(HttpStatus.OK);
     } catch (Exception e) {
       log.error("Cannot get warehouse by warehouse Id({}): {}", warehouseId, e.getMessage());
-      throw new GlobalThrowable(
+      throw new ApplicationException(
           ErrorCode.UAD5001_CANNOT_RETRIEVE_ADDRESSES, HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 
   @PostMapping
   public ResponseEntity<Object> addNewWarehouse(@RequestBody WarehouseDTO newWarehouse)
-      throws GlobalThrowable {
+      throws ApplicationException {
     try {
       Warehouse warehouse = warehouseService.addNewWarehouse(newWarehouse);
       BaseStatusCode status = SuccessCode.SUCCESS;
@@ -79,7 +79,7 @@ public class WarehouseController {
           .toResponseEntity(HttpStatus.OK);
     } catch (Exception e) {
       log.error("Cannot add a new warehouse: {}", e.getMessage());
-      throw new GlobalThrowable(
+      throw new ApplicationException(
           ErrorCode.UAD5001_CANNOT_RETRIEVE_ADDRESSES, HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }

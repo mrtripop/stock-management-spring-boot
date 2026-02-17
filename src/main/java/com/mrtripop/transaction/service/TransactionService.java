@@ -1,6 +1,6 @@
 package com.mrtripop.transaction.service;
 
-import com.mrtripop.model.QueryParams;
+import com.mrtripop.model.BaseQueryParams;
 import com.mrtripop.transaction.models.Transaction;
 import com.mrtripop.transaction.repository.TransactionRepository;
 import com.mrtripop.util.DatabaseHelper;
@@ -22,7 +22,7 @@ public class TransactionService {
     this.transactionRepository = transactionRepository;
   }
 
-  public List<Transaction> getTransactions(QueryParams queryParams) {
+  public List<Transaction> getTransactions(BaseQueryParams queryParams) {
     try {
       Pageable pageable = DatabaseHelper.initPageableWithSort(queryParams);
       Page<Transaction> transactionPage = transactionRepository.findAll(pageable);

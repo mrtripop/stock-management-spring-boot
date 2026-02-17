@@ -1,7 +1,7 @@
 package com.mrtripop.product.services.impl;
 
-import com.mrtripop.exception.GlobalThrowable;
-import com.mrtripop.model.QueryParams;
+import com.mrtripop.exception.ApplicationException;
+import com.mrtripop.model.BaseQueryParams;
 import com.mrtripop.product.component.ProductMapper;
 import com.mrtripop.product.constant.ErrorCode;
 import com.mrtripop.product.models.db.ProductHistory;
@@ -25,21 +25,21 @@ public class ProductHistoryServiceImpl implements ProductHistoryService {
   private static final ProductMapper productMapper = ProductMapper.INSTANCE;
 
   @Override
-  public List<ProductDTO> getProductsHistories(QueryParams queryParams) throws GlobalThrowable {
+  public List<ProductDTO> getProductsHistories(BaseQueryParams queryParams) throws ApplicationException {
     try {
       Pageable pageable = ProductUtil.initPageableWithSort(queryParams);
       Page<ProductHistory> productHistoriesPages = productHistoryRepository.findAll(pageable);
       return productHistoriesPages.getContent().stream().map(productMapper::toProductDTO).toList();
     } catch (Exception e) {
       log.error("Cannot get product histories: {}", e.getMessage());
-      throw new GlobalThrowable(
+      throw new ApplicationException(
           ErrorCode.PRO1007_CANNOT_GET_ALL_PRODUCT_HISTORIES, HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 
   @Override
-  public List<ProductDTO> getProductHistoriesByCode(String code, QueryParams queryParams)
-      throws GlobalThrowable {
+  public List<ProductDTO> getProductHistoriesByCode(String code, BaseQueryParams queryParams)
+      throws ApplicationException {
     try {
       // create a specification for query column
       // create a sort and pagination
@@ -50,7 +50,7 @@ public class ProductHistoryServiceImpl implements ProductHistoryService {
       return productHistoriesPages.getContent().stream().map(productMapper::toProductDTO).toList();
     } catch (Exception e) {
       log.error("Cannot get product histories by code: {}", e.getMessage());
-      throw new GlobalThrowable(
+      throw new ApplicationException(
           ErrorCode.PRO1011_CANNOT_GET_PRODUCT_HISTORIES_BY_CODE, HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
