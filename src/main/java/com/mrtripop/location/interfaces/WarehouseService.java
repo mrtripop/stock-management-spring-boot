@@ -1,20 +1,20 @@
 package com.mrtripop.location.interfaces;
 
-import com.mrtripop.exception.GlobalThrowable;
+import com.mrtripop.exception.ApplicationException;
 import com.mrtripop.location.models.dtos.WarehouseDTO;
 import com.mrtripop.location.models.entities.Warehouse;
-import com.mrtripop.model.QueryParams;
+import com.mrtripop.model.BaseQueryParams;
 import java.util.List;
 
 public interface WarehouseService {
 
-  List<Warehouse> getAllWarehouse(QueryParams queryParams) throws GlobalThrowable;
+  List<Warehouse> getAllWarehouse(BaseQueryParams queryParams) throws ApplicationException;
 
-  Warehouse getWarehouseById(Long warehouseId) throws GlobalThrowable;
+  Warehouse getWarehouseById(Long warehouseId) throws ApplicationException;
 
-  Warehouse addNewWarehouse(WarehouseDTO newWarehouse) throws GlobalThrowable;
+  Warehouse addNewWarehouse(WarehouseDTO newWarehouse) throws ApplicationException;
 
-  Warehouse updateWarehouse(Long warehouseId, WarehouseDTO newWarehouse) throws GlobalThrowable;
+  Warehouse updateWarehouse(Long warehouseId, WarehouseDTO newWarehouse) throws ApplicationException;
 
-  void deleteWarehouse(Long warehouseId) throws GlobalThrowable;
+  void deleteWarehouse(Long warehouseId) throws ApplicationException;
 }

@@ -4,7 +4,7 @@ import com.mrtripop.users.models.User;
 import com.mrtripop.users.services.UserService;
 import com.mrtripop.constant.ErrorCode;
 import com.mrtripop.constant.SuccessCode;
-import com.mrtripop.model.QueryParams;
+import com.mrtripop.model.BaseQueryParams;
 import com.mrtripop.model.ResponseBody;
 import jakarta.validation.Valid;
 import java.net.URI;
@@ -44,7 +44,7 @@ public class UserController {
   }
 
   @GetMapping
-  public ResponseEntity<Object> retrieveUsers(@Valid QueryParams queryParams) {
+  public ResponseEntity<Object> retrieveUsers(@Valid BaseQueryParams queryParams) {
     try {
       List<User> result = userService.retrieveUsers(queryParams);
       log.debug("Retrieve users: {}", result.toString());

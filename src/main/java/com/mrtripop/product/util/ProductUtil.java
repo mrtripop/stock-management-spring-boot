@@ -1,6 +1,6 @@
 package com.mrtripop.product.util;
 
-import com.mrtripop.model.QueryParams;
+import com.mrtripop.model.BaseQueryParams;
 import com.mrtripop.product.models.db.ProductHistory;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -25,7 +25,7 @@ public class ProductUtil {
     return PageRequest.of(page - 1, size);
   }
 
-  public static Pageable initPageableWithSort(QueryParams queryParams) {
+  public static Pageable initPageableWithSort(BaseQueryParams queryParams) {
     PageRequest pageRequest = initPageable(queryParams.getPage(), queryParams.getSize());
     return initSortOrder(pageRequest, queryParams.getOrderBy());
   }

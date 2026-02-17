@@ -1,7 +1,7 @@
 package com.mrtripop.location.controllers;
 
 import com.mrtripop.constant.BaseStatusCode;
-import com.mrtripop.exception.GlobalThrowable;
+import com.mrtripop.exception.ApplicationException;
 import com.mrtripop.location.constant.ErrorCode;
 import com.mrtripop.location.constant.SuccessCode;
 import com.mrtripop.location.interfaces.AddressService;
@@ -9,7 +9,7 @@ import com.mrtripop.location.models.dtos.AddressDTO;
 import com.mrtripop.location.models.entities.Address;
 import com.mrtripop.location.services.AddressServiceImpl;
 import com.mrtripop.location.utils.AddressUtil;
-import com.mrtripop.model.QueryParams;
+import com.mrtripop.model.BaseQueryParams;
 import com.mrtripop.model.ResponseBody;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
@@ -31,8 +31,8 @@ public class AddressController {
   }
 
   @GetMapping
-  public ResponseEntity<Object> getAddresses(@Valid QueryParams queryParams)
-      throws GlobalThrowable {
+  public ResponseEntity<Object> getAddresses(@Valid BaseQueryParams queryParams)
+      throws ApplicationException {
     try {
       List<Address> addresses = addressService.getAllAddress(queryParams);
       List<AddressDTO> response = addresses.stream().map(AddressUtil::addressToDTO).toList();
@@ -45,7 +45,7 @@ public class AddressController {
           .toResponseEntity(HttpStatus.OK);
     } catch (Exception e) {
       log.error("Cannot get addresses: {}", e.getMessage());
-      throw new GlobalThrowable(
+      throw new ApplicationException(
           ErrorCode.UAD5001_CANNOT_RETRIEVE_ADDRESSES, HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
@@ -53,7 +53,7 @@ public class AddressController {
   @GetMapping("/{addressId}")
   public ResponseEntity<Object> getAddressesById(
       @PathVariable @Min(value = 1, message = "Address ID is invalid") Long addressId)
-      throws GlobalThrowable {
+      throws ApplicationException {
     try {
       Address address = addressService.getAddressById(addressId);
       AddressDTO response = AddressUtil.addressToDTO(address);
@@ -66,14 +66,14 @@ public class AddressController {
           .toResponseEntity(HttpStatus.OK);
     } catch (Exception e) {
       log.error("Cannot get an addresses: {}", e.getMessage());
-      throw new GlobalThrowable(
+      throw new ApplicationException(
           ErrorCode.UAD5003_NOT_FOUND_ADDRESSES_FOR_ADDRESS_ID, HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 
   @PostMapping
   public ResponseEntity<Object> addNewAddress(@RequestBody @Valid AddressDTO addressDTO)
-      throws GlobalThrowable {
+      throws ApplicationException {
     try {
       Address createdAddress = addressService.addNewAddress(addressDTO);
       AddressDTO response = AddressUtil.addressToDTO(createdAddress);
@@ -86,7 +86,7 @@ public class AddressController {
           .toResponseEntity(HttpStatus.OK);
     } catch (Exception e) {
       log.error("Cannot create a new address: {}", e.getMessage());
-      throw new GlobalThrowable(
+      throw new ApplicationException(
           ErrorCode.UAD5003_NOT_FOUND_ADDRESSES_FOR_ADDRESS_ID, HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
@@ -95,7 +95,7 @@ public class AddressController {
   public ResponseEntity<Object> updateAddress(
       @PathVariable(name = "addressId") Long addressId,
       @RequestBody @Valid AddressDTO addressDetails)
-      throws GlobalThrowable {
+      throws ApplicationException {
     try {
       Address updatedAddress = addressService.updateAddress(addressId, addressDetails);
       AddressDTO response = AddressUtil.addressToDTO(updatedAddress);
@@ -108,14 +108,14 @@ public class AddressController {
           .toResponseEntity(HttpStatus.OK);
     } catch (Exception e) {
       log.error("Cannot update the existing address: {}", e.getMessage());
-      throw new GlobalThrowable(
+      throw new ApplicationException(
           ErrorCode.UAD5004_CANNOT_UPDATE_THE_ADDRESS, HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 
   @DeleteMapping("/{addressId}")
   public ResponseEntity<Object> deleteAddress(@PathVariable(name = "addressId") Long addressId)
-      throws GlobalThrowable {
+      throws ApplicationException {
     try {
       addressService.deleteAddressById(addressId);
       BaseStatusCode code = SuccessCode.SUCCESS;
@@ -126,7 +126,7 @@ public class AddressController {
           .toResponseEntity(HttpStatus.OK);
     } catch (Exception e) {
       log.error("Cannot delete the address: {}", e.getMessage());
-      throw new GlobalThrowable(
+      throw new ApplicationException(
           ErrorCode.UAD5006_CANNOT_DELETE_THE_ADDRESS, HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }

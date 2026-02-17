@@ -1,6 +1,6 @@
 package com.mrtripop.transaction.controller;
 
-import com.mrtripop.model.QueryParams;
+import com.mrtripop.model.BaseQueryParams;
 import com.mrtripop.transaction.models.Transaction;
 import com.mrtripop.transaction.service.TransactionService;
 import jakarta.validation.Valid;
@@ -22,7 +22,7 @@ public class TransactionController {
   }
 
   @GetMapping
-  public ResponseEntity<List<Transaction>> getTransaction(@Valid QueryParams queryParams) {
+  public ResponseEntity<List<Transaction>> getTransaction(@Valid BaseQueryParams queryParams) {
     try {
       List<Transaction> transactions = this.transactionService.getTransactions(queryParams);
       return new ResponseEntity<>(transactions, HttpStatus.OK);

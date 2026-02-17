@@ -2,7 +2,7 @@ package com.mrtripop.users.services;
 
 import com.mrtripop.users.models.User;
 import com.mrtripop.users.repositories.UserRepository;
-import com.mrtripop.model.QueryParams;
+import com.mrtripop.model.BaseQueryParams;
 import com.mrtripop.util.DatabaseHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -29,7 +29,7 @@ public class UserService {
     this.userRepository = userRepository;
   }
 
-  public List<User> retrieveUsers(QueryParams queryParams) {
+  public List<User> retrieveUsers(BaseQueryParams queryParams) {
     try {
       Pageable pageSize = DatabaseHelper.initPageableWithSort(queryParams);
       Page<User> pageUser = userRepository.findAll(pageSize);

@@ -99,6 +99,7 @@ http://localhost:8080/swagger-ui/index.html
 - [Java Code Style Guild](https://www.cs.cornell.edu/courses/JavaAndDS/JavaStyle.html)
 - [Read request body in SNAKE](https://stackoverflow.com/questions/70710979/how-to-auto-convert-camel-case-request-body-to-snake-case-protobuf-message-in-sp)
 - [Data Transfer Object(DTO)](https://www.javaguides.net/2022/12/spring-boot-dto-example-tutorial.html)
+- [Canonical Logging Context]
 
 **Code Pattern**
 
@@ -136,8 +137,9 @@ http://localhost:8080/swagger-ui/index.html
 
 **Java**
 
-- [BigDecimal ใน Java](https://medium.com/@mrtripop/ทำความรู้จักกับ-bigdecimalใน-java-กัน-a8fe3cd26640)
-- [Object field mapping using MapStruct](https://phayao.medium.com/มาใช้-mapstruct-ใน-java-กันเถอะ-4b54bd0a3219)
+- [Stream Internals - Java 8](https://www.linkedin.com/pulse/stream-internals-java-8-dhinesh-kumar/)
+- [Object mapping - MapStruct](https://phayao.medium.com/มาใช้-mapstruct-ใน-java-กันเถอะ-4b54bd0a3219)
+- [BigDecimal in Java](https://medium.com/@mrtripop/ทำความรู้จักกับ-bigdecimalใน-java-กัน-a8fe3cd26640)
 
 **Spring Boot**
 
@@ -197,18 +199,21 @@ http://localhost:8080/swagger-ui/index.html
 ### Learning Path
 
 **Phase 1: Fundamentals**
+
 1. Understanding Reactive Streams concepts
 2. Mono and Flux basics
 3. Operators: map, filter, flatMap
 4. Error handling in reactive streams
 
 **Phase 2: Spring WebFlux**
+
 1. WebFlux configuration
 2. Reactive controllers and handlers
 3. WebClient for reactive HTTP calls
 4. Reactive data access with R2DBC
 
 **Phase 3: Advanced Topics**
+
 1. Backpressure handling
 2. Custom operators
 3. Reactive security

@@ -1,6 +1,6 @@
 package com.mrtripop.order.controllers;
 
-import com.mrtripop.model.QueryParams;
+import com.mrtripop.model.BaseQueryParams;
 import com.mrtripop.order.models.Order;
 import com.mrtripop.order.services.OrderService;
 import jakarta.transaction.Transactional;
@@ -23,7 +23,7 @@ public class OrderController {
 
   @GetMapping("/users/{userId}/orders")
   public ResponseEntity<List<Order>> retrieveOrders(
-      @PathVariable(name = "userId") Long userId, QueryParams queryParams) {
+      @PathVariable(name = "userId") Long userId, BaseQueryParams queryParams) {
     try {
       List<Order> result = orderService.retrieveUserOrders(userId, queryParams);
       return new ResponseEntity<>(result, HttpStatus.OK);
