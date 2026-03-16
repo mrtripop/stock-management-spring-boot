@@ -15,11 +15,11 @@ import com.mrtripop.product.util.ProductUtil;
 import com.mrtripop.util.CsvHelper;
 import com.mrtripop.util.Helper;
 import jakarta.transaction.Transactional;
-import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
-
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -57,16 +57,14 @@ public class ProductServiceImpl implements ProductService {
   @Cacheable(value = "product", key = "#id", unless = "#result==null")
   public ProductDTO getProductById(Long id) throws ApplicationException {
     Optional<Product> haveProduct = productRepository.findById(id);
-    Product product =
-        haveProduct.orElseThrow(
-            () ->
-                new ApplicationException(
-                    ErrorCode.PRO1003_CANNOT_GET_PRODUCT_BY_ID, HttpStatus.NOT_FOUND));
+    Product product = haveProduct.orElseThrow(
+        () -> new ApplicationException(
+            ErrorCode.PRO1003_CANNOT_GET_PRODUCT_BY_ID, HttpStatus.NOT_FOUND));
     return productMapper.toProductDTO(product);
   }
 
   @Override
-  @Transactional(rollbackOn = {ApplicationException.class})
+  @Transactional(rollbackOn = { ApplicationException.class })
   public ProductDTO createProduct(ProductDTO productDTO) throws ApplicationException {
     try {
       Product product = productMapper.toProduct(productDTO);
@@ -83,7 +81,7 @@ public class ProductServiceImpl implements ProductService {
 
   @Override
   @CachePut(value = "product", key = "#id")
-  @Transactional(rollbackOn = {ApplicationException.class})
+  @Transactional(rollbackOn = { ApplicationException.class })
   public ProductDTO updateProduct(Long id, ProductDTO updateProduct) throws ApplicationException {
     try {
       ProductDTO existingProduct = getProductById(id);
@@ -98,7 +96,7 @@ public class ProductServiceImpl implements ProductService {
 
   @Override
   @CacheEvict(value = "product", allEntries = true)
-  @Transactional(rollbackOn = {ApplicationException.class})
+  @Transactional(rollbackOn = { ApplicationException.class })
   public void deleteProduct(Long id) throws ApplicationException {
     try {
       ProductDTO existingProduct = getProductById(id);
@@ -114,7 +112,7 @@ public class ProductServiceImpl implements ProductService {
   }
 
   @Override
-  public List<ProductDTO> updateProductByCsv(MultipartFile csvFile) throws ApplicationException {
+  public List<ProductDTO> uploadProductByCsv(MultipartFile csvFile) throws ApplicationException {
     if (!CsvHelper.hasCsvFormat(csvFile)) {
       throw new ApplicationException(
           ErrorCode.PRO4001_USER_NEED_TO_UPLOAD_PRODUCT_CSV_FILE, HttpStatus.BAD_REQUEST);
@@ -126,11 +124,10 @@ public class ProductServiceImpl implements ProductService {
               // find products by list of ID
               List<Long> productIds = productDTOs.stream().map(ProductDTO::getId).toList();
               List<Product> products = productRepository.findAllById(productIds);
-              HashMap<Long, Product> productsMap = new HashMap<>();
-              products.forEach(product -> productsMap.put(product.getId(), product));
+              Map<Long, Product> productsMap = products.stream()
+                  .collect(Collectors.toMap(Product::getId, Function.identity()));
               // update products
-              List<Product> updateProducts =
-                  productDTOs.stream().map(addOrUpdateProduct(productsMap)).toList();
+              List<Product> updateProducts = productDTOs.stream().map(addOrUpdateProduct(productsMap)).toList();
               // insert all
               productHistoryRepository.saveAll(
                   updateProducts.stream().map(addProductHistory()).toList());
@@ -148,10 +145,10 @@ public class ProductServiceImpl implements ProductService {
     };
   }
 
-  private Function<ProductDTO, Product> addOrUpdateProduct(HashMap<Long, Product> productsMap) {
+  private Function<ProductDTO, Product> addOrUpdateProduct(Map<Long, Product> productsMap) {
     return productDTO -> {
       Product existingProduct = productsMap.get(productDTO.getId());
-      if (Optional.ofNullable(existingProduct).isPresent()) {
+      if (existingProduct != null) {
         Product updateProduct = productMapper.toProduct(productDTO);
         updateProduct.setId(existingProduct.getId());
         return updateProduct;

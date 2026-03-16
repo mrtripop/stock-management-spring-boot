@@ -46,10 +46,7 @@ public class ProductController {
 
   @GetMapping("/{product_id}")
   public ResponseEntity<Object> getProductById(
-      @PathVariable(name = "product_id")
-          @Min(value = 1, message = "Product ID must not less than one")
-          @NotNull(message = "Product ID must not be null")
-          Long productId)
+      @PathVariable(name = "product_id") @Min(value = 1, message = "Product ID must not less than one") @NotNull(message = "Product ID must not be null") Long productId)
       throws ApplicationException {
     try {
       ProductDTO product = this.productService.getProductById(productId);
@@ -88,10 +85,7 @@ public class ProductController {
 
   @PutMapping("/{product_id}")
   public ResponseEntity<Object> updateProductById(
-      @PathVariable(name = "product_id")
-          @Min(value = 1, message = "Product ID must not less than one")
-          @NotNull(message = "Product ID must not be null")
-          Long productId,
+      @PathVariable(name = "product_id") @Min(value = 1, message = "Product ID must not less than one") @NotNull(message = "Product ID must not be null") Long productId,
       @RequestBody @Valid ProductDTO product)
       throws ApplicationException {
     try {
@@ -112,10 +106,7 @@ public class ProductController {
 
   @DeleteMapping("/{product_id}")
   public ResponseEntity<Object> deleteProductById(
-      @PathVariable(name = "product_id")
-          @Min(value = 1, message = "Product ID must not less than one")
-          @NotNull(message = "Product ID must not be null")
-          Long productId)
+      @PathVariable(name = "product_id") @Min(value = 1, message = "Product ID must not less than one") @NotNull(message = "Product ID must not be null") Long productId)
       throws ApplicationException {
     try {
       productService.deleteProduct(productId);
@@ -132,17 +123,17 @@ public class ProductController {
     }
   }
 
-  /// Update product via CSV file
+  /// Upload products via CSV file
 
-  @PostMapping("/bulk")
-  public ResponseEntity<Object> updateProductByCsv(@RequestParam("file") MultipartFile csvFile)
+  @PutMapping("/upload")
+  public ResponseEntity<Object> uploadProductsByCsv(@RequestParam("file") MultipartFile csvFile)
       throws ApplicationException {
     try {
-      BaseStatusCode successCode = SuccessCode.PRO2007_UPDATE_PRODUCTS_BY_CSV_SUCCESS;
+      BaseStatusCode successCode = SuccessCode.PRO2007_UPLOAD_PRODUCTS_BY_CSV_SUCCESS;
       return ResponseBody.builder()
           .code(successCode.getCode())
           .message(successCode.getMessage())
-          .data(productService.updateProductByCsv(csvFile))
+          .data(productService.uploadProductByCsv(csvFile))
           .build()
           .toResponseEntity(HttpStatus.OK);
     } catch (Exception e) {
