@@ -1,17 +1,15 @@
 package com.mrtripop.clinical.services.impl;
 
 import com.mrtripop.clinical.component.ClinicalMapper;
-import com.mrtripop.clinical.models.db.AuditLedger;
 import com.mrtripop.clinical.models.db.Brand;
 import com.mrtripop.clinical.models.db.Molecule;
 import com.mrtripop.clinical.models.dto.BrandDto;
 import com.mrtripop.clinical.models.dto.MoleculeDto;
-import com.mrtripop.clinical.repository.AuditLedgerRepository;
 import com.mrtripop.clinical.repository.BrandRepository;
 import com.mrtripop.clinical.repository.MoleculeRepository;
+import com.mrtripop.clinical.services.AuditService;
 import com.mrtripop.clinical.services.MasterCatalogService;
 import com.mrtripop.exception.NotFoundException;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -30,7 +28,7 @@ public class MasterCatalogServiceImpl implements MasterCatalogService {
 
   private final MoleculeRepository moleculeRepository;
   private final BrandRepository brandRepository;
-  private final AuditLedgerRepository auditLedgerRepository;
+  private final AuditService auditService;
   private final ClinicalMapper clinicalMapper;
 
   @Override
@@ -40,6 +38,8 @@ public class MasterCatalogServiceImpl implements MasterCatalogService {
     try {
       Molecule molecule = clinicalMapper.toMolecule(moleculeDto);
       Molecule saved = moleculeRepository.save(molecule);
+      auditService.recordAudit("CREATE_MOLECULE", "Molecule", saved.getId().toString(),
+          null, saved.getGenericName());
       return clinicalMapper.toMoleculeDto(saved);
     } catch (DataIntegrityViolationException e) {
       throw new DuplicateMoleculeException(
@@ -62,6 +62,8 @@ public class MasterCatalogServiceImpl implements MasterCatalogService {
     Brand brand = clinicalMapper.toBrand(brandDto);
     brand.setMolecule(molecule);
     Brand saved = brandRepository.save(brand);
+    auditService.recordAudit("CREATE_BRAND", "Brand", saved.getId().toString(),
+        null, saved.getBrandName());
     return clinicalMapper.toBrandDto(saved);
   }
 
@@ -103,17 +105,7 @@ public class MasterCatalogServiceImpl implements MasterCatalogService {
             saved.getTherapeuticClass(), saved.getRegulatorySchedule());
 
     if (!Objects.equals(oldValues, newValues)) {
-      AuditLedger audit =
-          AuditLedger.builder()
-              .timestamp(LocalDateTime.now())
-              .userId("SYSTEM")
-              .actionType("UPDATE_METADATA")
-              .entityName("Molecule")
-              .entityId(id.toString())
-              .oldValue(oldValues)
-              .newValue(newValues)
-              .build();
-      auditLedgerRepository.save(audit);
+      auditService.recordAudit("UPDATE_METADATA", "Molecule", id.toString(), oldValues, newValues);
     }
 
     return clinicalMapper.toMoleculeDto(saved);

@@ -5,16 +5,20 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 import com.mrtripop.clinical.component.ClinicalMapper;
+import com.mrtripop.clinical.fixture.BrandFixture;
+import com.mrtripop.clinical.fixture.MoleculeFixture;
 import com.mrtripop.clinical.models.db.Brand;
 import com.mrtripop.clinical.models.db.Molecule;
 import com.mrtripop.clinical.models.dto.BrandDto;
 import com.mrtripop.clinical.models.dto.MoleculeDto;
-import com.mrtripop.clinical.repository.AuditLedgerRepository;
 import com.mrtripop.clinical.repository.BrandRepository;
 import com.mrtripop.clinical.repository.MoleculeRepository;
+import com.mrtripop.clinical.services.AuditService;
 import com.mrtripop.exception.NotFoundException;
 import java.util.Optional;
 import java.util.UUID;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -23,76 +27,152 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataIntegrityViolationException;
 
 @ExtendWith(MockitoExtension.class)
+@DisplayName("MasterCatalogServiceImpl")
 class MasterCatalogServiceImplTest {
 
   @Mock private MoleculeRepository moleculeRepository;
   @Mock private BrandRepository brandRepository;
-  @Mock private AuditLedgerRepository auditLedgerRepository;
+  @Mock private AuditService auditService;
   @Mock private ClinicalMapper clinicalMapper;
 
   @InjectMocks private MasterCatalogServiceImpl masterCatalogService;
 
-  @Test
-  void createMolecule_ShouldSaveAndReturnDto() {
-    MoleculeDto input = MoleculeDto.builder().genericName("Paracetamol").build();
-    Molecule saved = Molecule.builder().id(UUID.randomUUID()).genericName("Paracetamol").build();
+  @Nested
+  @DisplayName("createMolecule")
+  class CreateMolecule {
 
-    when(clinicalMapper.toMolecule(input)).thenReturn(
-        Molecule.builder().genericName("Paracetamol").build());
-    when(moleculeRepository.save(any(Molecule.class))).thenReturn(saved);
-    when(clinicalMapper.toMoleculeDto(saved)).thenReturn(
-        MoleculeDto.builder().id(saved.getId()).genericName("Paracetamol").build());
+    @Test
+    @DisplayName("should save and return molecule DTO")
+    void shouldSaveAndReturnDto() {
+      MoleculeDto input = MoleculeFixture.validDto();
+      Molecule saved = MoleculeFixture.defaultEntity();
 
-    MoleculeDto result = masterCatalogService.createMolecule(input);
+      when(clinicalMapper.toMolecule(input)).thenReturn(
+          Molecule.builder().genericName("Paracetamol").build());
+      when(moleculeRepository.save(any(Molecule.class))).thenReturn(saved);
+      when(clinicalMapper.toMoleculeDto(saved)).thenReturn(
+          MoleculeDto.builder().id(saved.getId()).genericName("Paracetamol").build());
 
-    assertNotNull(result.getId());
-    assertEquals("Paracetamol", result.getGenericName());
-    verify(moleculeRepository).save(any(Molecule.class));
+      // Act
+      MoleculeDto result = masterCatalogService.createMolecule(input);
+
+      // Assert
+      assertNotNull(result.getId());
+      assertEquals("Paracetamol", result.getGenericName());
+      verify(moleculeRepository).save(any(Molecule.class));
+      verify(auditService).recordAudit(eq("CREATE_MOLECULE"), eq("Molecule"),
+          eq(saved.getId().toString()), isNull(), eq("Paracetamol"));
+    }
+
+    @Test
+    @DisplayName("should throw DuplicateMoleculeException when generic name already exists")
+    void whenGenericNameExists_ShouldThrowDuplicate() {
+      MoleculeDto input = MoleculeFixture.validDto();
+
+      when(clinicalMapper.toMolecule(input)).thenReturn(
+          Molecule.builder().genericName("Paracetamol").build());
+      when(moleculeRepository.save(any(Molecule.class)))
+          .thenThrow(new DataIntegrityViolationException("duplicate key"));
+
+      assertThrows(
+          MasterCatalogServiceImpl.DuplicateMoleculeException.class,
+          () -> masterCatalogService.createMolecule(input));
+      verify(auditService, never()).recordAudit(any(), any(), any(), any(), any());
+    }
   }
 
-  @Test
-  void createMolecule_ShouldThrowDuplicate_WhenGenericNameExists() {
-    MoleculeDto input = MoleculeDto.builder().genericName("Paracetamol").build();
+  @Nested
+  @DisplayName("createBrand")
+  class CreateBrand {
 
-    when(clinicalMapper.toMolecule(input)).thenReturn(
-        Molecule.builder().genericName("Paracetamol").build());
-    when(moleculeRepository.save(any(Molecule.class)))
-        .thenThrow(new DataIntegrityViolationException("duplicate key"));
+    @Test
+    @DisplayName("should link to molecule and save")
+    void shouldLinkToMoleculeAndSave() {
+      UUID molId = UUID.randomUUID();
+      BrandDto input = BrandFixture.validDto(molId);
+      Molecule molecule = Molecule.builder().id(molId).genericName("Paracetamol").build();
+      Brand saved = BrandFixture.defaultEntity(molId);
 
-    assertThrows(
-        MasterCatalogServiceImpl.DuplicateMoleculeException.class,
-        () -> masterCatalogService.createMolecule(input));
+      when(moleculeRepository.findById(molId)).thenReturn(Optional.of(molecule));
+      when(clinicalMapper.toBrand(input)).thenReturn(Brand.builder().brandName("Tylenol").build());
+      when(brandRepository.save(any(Brand.class))).thenReturn(saved);
+      when(clinicalMapper.toBrandDto(saved)).thenReturn(
+          BrandDto.builder().id(saved.getId()).moleculeId(molId).brandName("Tylenol").build());
+
+      // Act
+      BrandDto result = masterCatalogService.createBrand(input);
+
+      // Assert
+      assertNotNull(result.getId());
+      assertEquals("Tylenol", result.getBrandName());
+      verify(auditService).recordAudit(eq("CREATE_BRAND"), eq("Brand"),
+          eq(saved.getId().toString()), isNull(), eq("Tylenol"));
+    }
+
+    @Test
+    @DisplayName("should throw NotFoundException when molecule not found")
+    void whenMoleculeNotFound_ShouldThrowException() {
+      UUID molId = UUID.randomUUID();
+      BrandDto input = BrandFixture.validDto(molId);
+
+      when(moleculeRepository.findById(molId)).thenReturn(Optional.empty());
+
+      assertThrows(NotFoundException.class, () -> masterCatalogService.createBrand(input));
+      verify(brandRepository, never()).save(any(Brand.class));
+    }
   }
 
-  @Test
-  void createBrand_ShouldLinkToMoleculeAndSave() {
-    UUID molId = UUID.randomUUID();
-    BrandDto input = BrandDto.builder().moleculeId(molId).brandName("Tylenol").build();
-    Molecule molecule = Molecule.builder().id(molId).genericName("Paracetamol").build();
-    Brand saved = Brand.builder().id(UUID.randomUUID()).brandName("Tylenol").molecule(molecule).build();
+  @Nested
+  @DisplayName("updateMoleculeMetadata")
+  class UpdateMoleculeMetadata {
 
-    when(moleculeRepository.findById(molId)).thenReturn(Optional.of(molecule));
-    when(clinicalMapper.toBrand(input)).thenReturn(Brand.builder().brandName("Tylenol").build());
-    when(brandRepository.save(any(Brand.class))).thenReturn(saved);
-    when(clinicalMapper.toBrandDto(saved)).thenReturn(
-        BrandDto.builder().id(saved.getId()).moleculeId(molId).brandName("Tylenol").build());
+    @Test
+    @DisplayName("should update fields and record audit when values change")
+    void shouldUpdateAndRecordAudit_WhenValuesChange() {
+      UUID id = UUID.randomUUID();
+      MoleculeDto input = MoleculeFixture.validDtoWithSchedule();
+      Molecule existing = Molecule.builder().id(id).genericName("Diazepam")
+          .therapeuticClass("Sedative").build();
+      Molecule updated = Molecule.builder().id(id).genericName("Diazepam")
+          .therapeuticClass("Anxiolytic").regulatorySchedule("Rx").build();
 
-    BrandDto result = masterCatalogService.createBrand(input);
+      when(moleculeRepository.findById(id)).thenReturn(Optional.of(existing));
+      when(moleculeRepository.save(any(Molecule.class))).thenReturn(updated);
+      when(clinicalMapper.toMoleculeDto(updated)).thenReturn(
+          MoleculeDto.builder().id(id).genericName("Diazepam")
+              .therapeuticClass("Anxiolytic").regulatorySchedule("Rx").build());
 
-    assertNotNull(result.getId());
-    assertEquals("Tylenol", result.getBrandName());
-    assertEquals(molId, result.getMoleculeId());
-    verify(brandRepository).save(any(Brand.class));
-  }
+      // Act
+      MoleculeDto result = masterCatalogService.updateMoleculeMetadata(id, input);
 
-  @Test
-  void createBrand_ShouldThrowException_WhenMoleculeNotFound() {
-    UUID molId = UUID.randomUUID();
-    BrandDto input = BrandDto.builder().moleculeId(molId).brandName("Tylenol").build();
+      // Assert
+      assertEquals("Anxiolytic", result.getTherapeuticClass());
+      assertEquals("Rx", result.getRegulatorySchedule());
+      verify(auditService).recordAudit(eq("UPDATE_METADATA"), eq("Molecule"), eq(id.toString()),
+          anyString(), anyString());
+    }
 
-    when(moleculeRepository.findById(molId)).thenReturn(Optional.empty());
+    @Test
+    @DisplayName("should not record audit when values do not change")
+    void shouldNotRecordAudit_WhenValuesUnchanged() {
+      UUID id = UUID.randomUUID();
+      MoleculeDto input = MoleculeFixture.validDtoWithTherapeuticClass();
+      Molecule existing = Molecule.builder().id(id).genericName("Amoxicillin")
+          .therapeuticClass("Antibiotic").build();
+      Molecule updated = Molecule.builder().id(id).genericName("Amoxicillin")
+          .therapeuticClass("Antibiotic").build();
 
-    assertThrows(NotFoundException.class, () -> masterCatalogService.createBrand(input));
-    verify(brandRepository, never()).save(any(Brand.class));
+      when(moleculeRepository.findById(id)).thenReturn(Optional.of(existing));
+      when(moleculeRepository.save(any(Molecule.class))).thenReturn(updated);
+      when(clinicalMapper.toMoleculeDto(updated)).thenReturn(
+          MoleculeDto.builder().id(id).genericName("Amoxicillin")
+              .therapeuticClass("Antibiotic").build());
+
+      // Act
+      masterCatalogService.updateMoleculeMetadata(id, input);
+
+      // Assert
+      verify(auditService, never()).recordAudit(any(), any(), any(), any(), any());
+    }
   }
 }

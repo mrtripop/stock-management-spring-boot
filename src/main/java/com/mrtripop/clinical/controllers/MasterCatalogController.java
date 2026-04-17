@@ -42,7 +42,7 @@ public class MasterCatalogController {
 
   @PatchMapping("/molecules/{id}/metadata")
   public ResponseEntity<ResponseBody<MoleculeDto>> updateMoleculeMetadata(
-      @PathVariable UUID id, @Valid @RequestBody MoleculeDto moleculeDto) {
+      @PathVariable UUID id, @RequestBody MoleculeDto moleculeDto) {
     MoleculeDto updated = masterCatalogService.updateMoleculeMetadata(id, moleculeDto);
     return ResponseEntity.ok(
         new ResponseBody<>(String.valueOf(HttpStatus.OK.value()), "Molecule metadata updated successfully", updated));
