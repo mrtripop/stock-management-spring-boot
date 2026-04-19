@@ -10,8 +10,12 @@ public final class BrandFixture {
   private BrandFixture() {}
 
   public static BrandDto validDto(UUID moleculeId) {
-    return BrandDto.builder().moleculeId(moleculeId).brandName("Tylenol").strength("500mg")
-        .form("Tablet").build();
+    return BrandDto.builder()
+        .moleculeId(moleculeId)
+        .brandName("Tylenol")
+        .strength("500mg")
+        .form("Tablet")
+        .build();
   }
 
   public static Brand defaultEntity(UUID moleculeId) {

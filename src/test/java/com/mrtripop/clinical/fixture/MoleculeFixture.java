@@ -13,10 +13,7 @@ public final class MoleculeFixture {
   }
 
   public static MoleculeDto validDtoWithTherapeuticClass() {
-    return MoleculeDto.builder()
-        .genericName("Amoxicillin")
-        .therapeuticClass("Antibiotic")
-        .build();
+    return MoleculeDto.builder().genericName("Amoxicillin").therapeuticClass("Antibiotic").build();
   }
 
   public static MoleculeDto validDtoWithSchedule() {

@@ -16,7 +16,12 @@ public final class StoreProductFixture {
     Store store = Store.builder().id(storeId).name("Test Store").type(StoreType.PHYSICAL).build();
     Molecule molecule = Molecule.builder().id(UUID.randomUUID()).genericName("Paracetamol").build();
     Brand brand =
-        Brand.builder().id(brandId).molecule(molecule).brandName("Tylenol").strength("500mg").build();
+        Brand.builder()
+            .id(brandId)
+            .molecule(molecule)
+            .brandName("Tylenol")
+            .strength("500mg")
+            .build();
 
     return StoreProduct.builder()
         .id(UUID.randomUUID())
@@ -31,15 +36,14 @@ public final class StoreProductFixture {
   public static StoreProduct activeEntity(UUID storeId, UUID brandId, UUID spId) {
     Store store = Store.builder().id(storeId).name("Test Store").type(StoreType.PHYSICAL).build();
     Molecule molecule =
-        Molecule.builder().id(UUID.randomUUID()).genericName("Ibuprofen").therapeuticClass("NSAID").build();
+        Molecule.builder()
+            .id(UUID.randomUUID())
+            .genericName("Ibuprofen")
+            .therapeuticClass("NSAID")
+            .build();
     Brand brand =
         Brand.builder().id(brandId).molecule(molecule).brandName("Advil").form("Tablet").build();
 
-    return StoreProduct.builder()
-        .id(spId)
-        .store(store)
-        .brand(brand)
-        .isActive(true)
-        .build();
+    return StoreProduct.builder().id(spId).store(store).brand(brand).isActive(true).build();
   }
 }
