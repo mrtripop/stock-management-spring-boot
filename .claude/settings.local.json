@@ -66,7 +66,8 @@
       "Bash(grep *)",
       "Read(*)",
       "Write(src/*)",
-      "Write(pom.xml)"
+      "Write(pom.xml)",
+      "Write(_bmad-output)"
     ],
     "deny": [
       "Bash(rm -rf *)",
