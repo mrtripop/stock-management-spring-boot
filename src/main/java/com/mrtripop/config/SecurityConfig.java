@@ -15,32 +15,16 @@ import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
-//@EnableWebSecurity
+@EnableWebSecurity
 public class SecurityConfig {
 
-//  @Bean
-//  public PasswordEncoder passwordEncoder() {
-//    return new BCryptPasswordEncoder();
-//  }
+  @Bean
+  public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    http.authorizeHttpRequests(registry -> registry.anyRequest().permitAll());
 
-//  @Bean
-//  public UserDetailsService userDetailsService(PasswordEncoder encoder) {
-//    String password = encoder.encode("Password");
-//    UserDetails userDetails = User.withUsername("user").password(password).roles("USER").build();
-//    return new InMemoryUserDetailsManager(userDetails);
-//  }
+    // Disable CSRF
+    http.csrf(AbstractHttpConfigurer::disable);
 
-//  @Bean
-//  public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-//    http.authorizeHttpRequests(registry -> registry.anyRequest().permitAll());
-//
-//    // Use HTTP basic authentication
-//    http.httpBasic(Customizer.withDefaults());
-//
-//    // Disable CSRF
-//    // in general, not require for stateless REST APIs
-//    http.csrf(AbstractHttpConfigurer::disable);
-//
-//    return http.build();
-//  }
+    return http.build();
+  }
 }

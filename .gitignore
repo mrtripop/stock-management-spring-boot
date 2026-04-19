@@ -147,3 +147,7 @@ replay_pid*
 # custom
 target
 commitlint/node_modules
+_bmad
+_bmad-output
+.claude
+.gemini

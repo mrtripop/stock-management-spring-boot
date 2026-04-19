@@ -11,6 +11,18 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 @ControllerAdvice
 public class CustomControllerAdvice {
 
+  @ExceptionHandler(NotFoundException.class)
+  public ResponseEntity<ErrorResponse> handleNotFoundException(NotFoundException e) {
+    String stackTrace = ExceptionUtils.getStackTrace(e);
+    HttpStatus status = HttpStatus.NOT_FOUND;
+    ErrorResponse error =
+        new ErrorResponse.ErrorResponseBuilder(status.toString(), status.value(), e.getMessage())
+            .withStacktrace(stackTrace)
+            .withTimestamp()
+            .build();
+    return new ResponseEntity<>(error, status);
+  }
+
   @ExceptionHandler(NullPointerException.class)
   public ResponseEntity<ErrorResponse> handleNullPointerExceptions(Exception e) {
     String stackTrace = ExceptionUtils.getStackTrace(e);

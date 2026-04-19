@@ -297,5 +297,43 @@ mvn spring-boot:run -Dspring.profiles.active=reactive
 ## API Testing
 
 
+```
+
+Two Ways to Run Agent Teams
+                                                                                                                                                                                                 
+  1. Sequential (Standard — what you've been doing)
+                                                                                                                                                                                                 
+  Run agents one at a time, each in a fresh chat, in the order the phases dictate:
+
+  Chat 1: /bmad-brainstorming → /bmad-create-prd
+  Chat 2: /bmad-create-architecture
+  Chat 3: /bmad-create-epics-and-stories
+  Chat 4: /bmad-sprint-planning                                                                                                                                                                  
+  Chat 5: /bmad-create-story → /bmad-dev-story → /bmad-code-review
+                                                                                                                                                                                                 
+  Each agent reads the artifacts the previous one produced. This is the recommended default — it's how the framework is designed.
+
+  2. Party Mode (Multi-Agent Discussion)
+
+  Invoke /bmad-party-mode to bring multiple agents into one conversation:
+
+  /bmad-party-mode Should we use monolith or microservices for this pharmacy system?
+
+  BMad Master (orchestrator) selects the most relevant agents (Architect, Dev, PM) and they debate in character — agreeing, disagreeing, building on each other's ideas. You steer the           
+  discussion.
+                                                                                                                                                                                                 
+  Best for: Big decisions, brainstorming, retrospectives, or when you want diverse perspectives fast.
+
+  Key Rules
+
+  - Always start fresh chats between different workflows/skills
+  - Invoke agents by name to load their persona: /bmad-agent-pm, /bmad-agent-architect, /bmad-agent-dev
+  - Use /bmad-help anytime to know what to run next — it tracks what's done
+  - Party Mode is the only multi-agent-in-one-room feature; the rest is sequential handoff                                                                                                       
+   
+  For your current project, you're already following the sequential flow correctly. If you ever hit a decision point where you want the whole team to weigh in, that's when Party Mode shines.   
+                  
+```
+
 
 

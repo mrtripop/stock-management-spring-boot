@@ -1,4 +1,4 @@
-package com.mrtripop.component;
+package com.mrtripop.component.fileparser;
 
 public class FileType {
   public static final String CSV = "csv";

@@ -1,0 +1,34 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=PostgreSQL
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+  cache:
+    type: none
+  data:
+    redis:
+      repositories:
+        enabled: false
+      url: redis://localhost:6379
+      username:
+      password:
+      timeout: 1000
+
+CACHE_REDIS_TTL: 60000
+JPA_PROPERTIES_HIBERNATE_FORMAT_SQL: true
+JPA_PROPERTIES_SHOW_SQL: true
+LOGGING_LEVEL_COM_MRTRIPOP: DEBUG
+
+logging:
+  level:
+    com:
+      mrtripop: DEBUG

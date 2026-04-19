@@ -1,4 +1,4 @@
-package com.mrtripop.component;
+package com.mrtripop.component.fileparser;
 
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;

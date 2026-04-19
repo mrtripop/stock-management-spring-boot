@@ -12,8 +12,11 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -21,9 +24,10 @@ import org.springframework.web.multipart.MultipartFile;
 @Slf4j
 @RestController
 @RequestMapping("/api/inventory/products")
+@RequiredArgsConstructor
 public class ProductController {
 
-  private ProductService productService;
+  private final ProductService productService;
 
   @GetMapping
   public ResponseEntity<Object> getProducts(@Valid BaseQueryParams queryParams)
@@ -46,7 +50,10 @@ public class ProductController {
 
   @GetMapping("/{product_id}")
   public ResponseEntity<Object> getProductById(
-      @PathVariable(name = "product_id") @Min(value = 1, message = "Product ID must not less than one") @NotNull(message = "Product ID must not be null") Long productId)
+      @PathVariable(name = "product_id")
+          @Min(value = 1, message = "Product ID must not less than one")
+          @NotNull(message = "Product ID must not be null")
+          Long productId)
       throws ApplicationException {
     try {
       ProductDTO product = this.productService.getProductById(productId);
@@ -85,7 +92,10 @@ public class ProductController {
 
   @PutMapping("/{product_id}")
   public ResponseEntity<Object> updateProductById(
-      @PathVariable(name = "product_id") @Min(value = 1, message = "Product ID must not less than one") @NotNull(message = "Product ID must not be null") Long productId,
+      @PathVariable(name = "product_id")
+          @Min(value = 1, message = "Product ID must not less than one")
+          @NotNull(message = "Product ID must not be null")
+          Long productId,
       @RequestBody @Valid ProductDTO product)
       throws ApplicationException {
     try {
@@ -106,7 +116,10 @@ public class ProductController {
 
   @DeleteMapping("/{product_id}")
   public ResponseEntity<Object> deleteProductById(
-      @PathVariable(name = "product_id") @Min(value = 1, message = "Product ID must not less than one") @NotNull(message = "Product ID must not be null") Long productId)
+      @PathVariable(name = "product_id")
+          @Min(value = 1, message = "Product ID must not less than one")
+          @NotNull(message = "Product ID must not be null")
+          Long productId)
       throws ApplicationException {
     try {
       productService.deleteProduct(productId);
@@ -125,7 +138,7 @@ public class ProductController {
 
   /// Upload products via CSV file
 
-  @PutMapping("/upload")
+  @PostMapping("/upload")
   public ResponseEntity<Object> uploadProductsByCsv(@RequestParam("file") MultipartFile csvFile)
       throws ApplicationException {
     try {
@@ -141,5 +154,35 @@ public class ProductController {
       throw new ApplicationException(
           ErrorCode.PRO5002_CANNOT_UPDATE_PRODUCTS_FROM_CSV_FILE, HttpStatus.INTERNAL_SERVER_ERROR);
     }
+  }
+
+  /// Export products to file (CSV, JSON, XML)
+
+  @GetMapping("/export")
+  public ResponseEntity<byte[]> exportProducts(
+      @RequestParam(name = "fileType", defaultValue = "csv") String fileType)
+      throws ApplicationException {
+    try {
+      byte[] data = productService.exportProducts(fileType);
+      String filename = "products." + fileType.toLowerCase();
+      String contentType = getContentType(fileType);
+
+      return ResponseEntity.ok()
+          .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
+          .contentType(MediaType.parseMediaType(contentType))
+          .body(data);
+    } catch (Exception e) {
+      log.error("Could not export products: {}", e.getMessage());
+      throw new ApplicationException(
+          ErrorCode.PRO1001_CANNOT_GET_ALL_PRODUCTS, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  private String getContentType(String fileType) {
+    return switch (fileType.toLowerCase()) {
+      case "json" -> MediaType.APPLICATION_JSON_VALUE;
+      case "xml" -> MediaType.APPLICATION_XML_VALUE;
+      default -> "text/csv";
+    };
   }
 }

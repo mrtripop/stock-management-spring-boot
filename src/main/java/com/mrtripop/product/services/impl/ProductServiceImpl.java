@@ -1,5 +1,7 @@
 package com.mrtripop.product.services.impl;
 
+import com.mrtripop.component.fileparser.FileParser;
+import com.mrtripop.component.fileparser.FileParserFactory;
 import com.mrtripop.exception.ApplicationException;
 import com.mrtripop.model.BaseQueryParams;
 import com.mrtripop.product.component.ProductMapper;
@@ -43,6 +45,7 @@ public class ProductServiceImpl implements ProductService {
   private final ProductRepository productRepository;
   private final ProductHistoryRepository productHistoryRepository;
   private final ProductManager productManager;
+  private final FileParserFactory fileParserFactory;
   private static final ProductMapper productMapper = ProductMapper.INSTANCE;
 
   @Override
@@ -57,14 +60,16 @@ public class ProductServiceImpl implements ProductService {
   @Cacheable(value = "product", key = "#id", unless = "#result==null")
   public ProductDTO getProductById(Long id) throws ApplicationException {
     Optional<Product> haveProduct = productRepository.findById(id);
-    Product product = haveProduct.orElseThrow(
-        () -> new ApplicationException(
-            ErrorCode.PRO1003_CANNOT_GET_PRODUCT_BY_ID, HttpStatus.NOT_FOUND));
+    Product product =
+        haveProduct.orElseThrow(
+            () ->
+                new ApplicationException(
+                    ErrorCode.PRO1003_CANNOT_GET_PRODUCT_BY_ID, HttpStatus.NOT_FOUND));
     return productMapper.toProductDTO(product);
   }
 
   @Override
-  @Transactional(rollbackOn = { ApplicationException.class })
+  @Transactional(rollbackOn = {ApplicationException.class})
   public ProductDTO createProduct(ProductDTO productDTO) throws ApplicationException {
     try {
       Product product = productMapper.toProduct(productDTO);
@@ -81,7 +86,7 @@ public class ProductServiceImpl implements ProductService {
 
   @Override
   @CachePut(value = "product", key = "#id")
-  @Transactional(rollbackOn = { ApplicationException.class })
+  @Transactional(rollbackOn = {ApplicationException.class})
   public ProductDTO updateProduct(Long id, ProductDTO updateProduct) throws ApplicationException {
     try {
       ProductDTO existingProduct = getProductById(id);
@@ -96,7 +101,7 @@ public class ProductServiceImpl implements ProductService {
 
   @Override
   @CacheEvict(value = "product", allEntries = true)
-  @Transactional(rollbackOn = { ApplicationException.class })
+  @Transactional(rollbackOn = {ApplicationException.class})
   public void deleteProduct(Long id) throws ApplicationException {
     try {
       ProductDTO existingProduct = getProductById(id);
@@ -124,10 +129,11 @@ public class ProductServiceImpl implements ProductService {
               // find products by list of ID
               List<Long> productIds = productDTOs.stream().map(ProductDTO::getId).toList();
               List<Product> products = productRepository.findAllById(productIds);
-              Map<Long, Product> productsMap = products.stream()
-                  .collect(Collectors.toMap(Product::getId, Function.identity()));
+              Map<Long, Product> productsMap =
+                  products.stream().collect(Collectors.toMap(Product::getId, Function.identity()));
               // update products
-              List<Product> updateProducts = productDTOs.stream().map(addOrUpdateProduct(productsMap)).toList();
+              List<Product> updateProducts =
+                  productDTOs.stream().map(addOrUpdateProduct(productsMap)).toList();
               // insert all
               productHistoryRepository.saveAll(
                   updateProducts.stream().map(addProductHistory()).toList());
@@ -135,6 +141,20 @@ public class ProductServiceImpl implements ProductService {
                   .map(productMapper::toProductDTO);
             })
         .toList();
+  }
+
+  @Override
+  public byte[] exportProducts(String fileType) throws ApplicationException {
+    log.info("Exporting products with file type: {}", fileType);
+    List<Product> products = productRepository.findAll();
+    List<ProductDTO> productDTOs = products.stream().map(productMapper::toProductDTO).toList();
+
+    FileParser fileParser = fileParserFactory.get(fileType);
+    if (fileParser == null) {
+      throw new ApplicationException(ErrorCode.PRO1001_CANNOT_GET_ALL_PRODUCTS, HttpStatus.BAD_REQUEST);
+    }
+
+    return fileParser.export(productDTOs);
   }
 
   private Function<Product, ProductHistory> addProductHistory() {
