@@ -184,6 +184,8 @@ Quick reference:
 - SQL query tests only for integration tests — no API/HTTP integration tests
 - Fixture classes in `src/test/java/{domain}/fixture/` (e.g., `MoleculeFixture`, `BrandFixture`)
 - H2 in-memory with `create-drop` for test isolation
+- `@DisplayName` with clear business intention and test purpose (e.g., "should find all brands associated with a specific molecule")
+- Each @DisplayName should explain why the test exists and what business behavior it verifies
 
 ## Notes
 

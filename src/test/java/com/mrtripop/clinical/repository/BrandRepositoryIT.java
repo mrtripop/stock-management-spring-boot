@@ -30,37 +30,26 @@ class BrandRepositoryIT {
   }
 
   @Nested
-  @DisplayName("findByMoleculeId")
-  class FindByMoleculeId {
+  @DisplayName("Find all brands associated with a specific molecule")
+  class FindBrandsByMoleculeId {
 
     @Test
-  @DisplayName("should find brands by molecule ID")
-    void shouldFindByMoleculeId() {
-      Molecule molecule = Molecule.builder()
-          .genericName("Paracetamol")
-          .therapeuticClass("Analgesic")
-          .build();
+    @DisplayName("should retrieve all brands linked to a molecule")
+    void shouldRetrieveBrandsLinkedToMolecule() {
+      Molecule molecule =
+          Molecule.builder().genericName("Paracetamol").therapeuticClass("Analgesic").build();
       molecule = moleculeRepository.save(molecule);
 
-      Brand brand1 = Brand.builder()
-          .molecule(molecule)
-          .brandName("Panadol")
-          .strength("500mg")
-          .build();
+      Brand brand1 =
+          Brand.builder().molecule(molecule).brandName("Panadol").strength("500mg").build();
       brandRepository.save(brand1);
 
-      Brand brand2 = Brand.builder()
-          .molecule(molecule)
-          .brandName("Calpol")
-          .strength("250mg")
-          .build();
+      Brand brand2 =
+          Brand.builder().molecule(molecule).brandName("Calpol").strength("250mg").build();
       brandRepository.save(brand2);
 
-      Brand brand3 = Brand.builder()
-          .molecule(molecule)
-          .brandName("Dolomite")
-          .strength("650mg")
-          .build();
+      Brand brand3 =
+          Brand.builder().molecule(molecule).brandName("Dolomite").strength("650mg").build();
       brandRepository.save(brand3);
 
       List<Brand> result = brandRepository.findByMoleculeId(molecule.getId());
@@ -72,12 +61,10 @@ class BrandRepositoryIT {
     }
 
     @Test
-    @DisplayName("should return empty list when no brands for molecule")
-    void shouldReturnEmptyWhenNoBrands() {
-      Molecule molecule = Molecule.builder()
-          .genericName("Paracetamol")
-          .therapeuticClass("Analgesic")
-          .build();
+    @DisplayName("should return empty list when molecule has no associated brands")
+    void shouldReturnEmptyWhenMoleculeHasNoBrands() {
+      Molecule molecule =
+          Molecule.builder().genericName("Paracetamol").therapeuticClass("Analgesic").build();
       molecule = moleculeRepository.save(molecule);
 
       List<Brand> result = brandRepository.findByMoleculeId(molecule.getId());
@@ -86,8 +73,8 @@ class BrandRepositoryIT {
     }
 
     @Test
-    @DisplayName("should return empty list when molecule does not exist")
-    void shouldReturnEmptyWhenMoleculeNotExists() {
+    @DisplayName("should return empty list when querying non-existent molecule ID")
+    void shouldReturnEmptyWhenQueryingNonExistentMolecule() {
       List<Brand> result = brandRepository.findByMoleculeId(UUID.randomUUID());
 
       assertTrue(result.isEmpty());
