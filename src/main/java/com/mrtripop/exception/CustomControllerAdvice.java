@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.ResponseStatus;
 
 @Slf4j
 @ControllerAdvice
@@ -37,11 +38,16 @@ public class CustomControllerAdvice {
 
   @ExceptionHandler(Exception.class)
   public ResponseEntity<ErrorResponse> handleExceptions(Exception e) {
-    HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR; // 500
+    ResponseStatus responseStatus = e.getClass().getAnnotation(ResponseStatus.class);
+    HttpStatus status =
+        responseStatus != null ? responseStatus.value() : HttpStatus.INTERNAL_SERVER_ERROR;
+    String message =
+        responseStatus != null
+            ? (e.getMessage() != null ? e.getMessage() : status.getReasonPhrase())
+            : status.getReasonPhrase();
     String stackTrace = ExceptionUtils.getStackTrace(e);
     ErrorResponse error =
-        new ErrorResponse.ErrorResponseBuilder(
-                status.toString(), status.value(), status.getReasonPhrase())
+        new ErrorResponse.ErrorResponseBuilder(status.toString(), status.value(), message)
             .withStacktrace(stackTrace)
             .withTimestamp()
             .build();

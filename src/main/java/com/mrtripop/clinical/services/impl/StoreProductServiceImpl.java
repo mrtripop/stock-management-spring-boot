@@ -37,7 +37,7 @@ public class StoreProductServiceImpl implements StoreProductService {
   public StoreProductDto activateProduct(UUID storeId, UUID brandId) {
     log.info("Activating product brand {} for store {}", brandId, storeId);
     Store store = findStoreOrThrow(storeId);
-    findBrandOrThrow(brandId);
+    Brand brand = findBrandOrThrow(brandId);
 
     if (storeProductRepository.existsByStoreIdAndBrandId(storeId, brandId)) {
       throw new DuplicateStoreProductException(
@@ -47,7 +47,7 @@ public class StoreProductServiceImpl implements StoreProductService {
     StoreProduct storeProduct =
         StoreProduct.builder()
             .store(store)
-            .brand(Brand.builder().id(brandId).build())
+            .brand(brand)
             .isActive(true)
             .build();
 
@@ -127,6 +127,10 @@ public class StoreProductServiceImpl implements StoreProductService {
                 () ->
                     new NotFoundException(
                         "StoreProduct not found with id: " + productId + " for store: " + storeId));
+
+    if (!storeProduct.getIsActive()) {
+      return;
+    }
 
     storeProduct.setIsActive(false);
     storeProductRepository.save(storeProduct);
