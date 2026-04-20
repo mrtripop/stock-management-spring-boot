@@ -90,15 +90,15 @@ Endpoint styles:
 - Clinical: `/api/v1/clinical/catalog/{resource}s` (e.g., `/api/v1/clinical/catalog/molecules`)
 - **Prefer `/api/v1/{domain}/{resource}s` for new domains**
 
-Response wrapping (both use `com.mrtripop.model.ResponseBody<T>`):
+Response wrapping — **always use `ResponseBody.builder()` + `.toResponseEntity()`, no exceptions** (`com.mrtripop.model.ResponseBody<T>`):
 ```java
-// Clinical style (direct ResponseEntity)
-ResponseEntity.status(HttpStatus.CREATED)
-    .body(new ResponseBody<>(String.valueOf(status.value()), "message", data));
-
-// Product style (builder + toResponseEntity)
+// REQUIRED for all endpoints — builder style
 ResponseBody.builder().code(code).message("msg").data(result)
     .build().toResponseEntity(HttpStatus.OK);
+
+// WRONG — do not use direct constructor
+ResponseEntity.status(HttpStatus.CREATED)
+    .body(new ResponseBody<>(String.valueOf(status.value()), "message", data));
 ```
 
 Validation: `@Valid @RequestBody` on POST/PUT, omit `@Valid` on PATCH for partial updates
@@ -132,7 +132,7 @@ Error codes: enum implementing `BaseStatusCode` (`getCode()`, `getMessage()`)
 
 ## Code Style
 
-See `.claude/standards/naming-style.md` for full naming and style standards.
+See `.claude/rules/coding-style.md` for full naming, style, and no-hardcoding standards.
 
 Quick reference:
 - Google Java Format (100 char line limit, no wildcard imports)
@@ -141,12 +141,6 @@ Quick reference:
 - `@Slf4j` for logging (never manual `LoggerFactory`)
 - `@RequiredArgsConstructor` for constructor injection (not `@Autowired`)
 - Prefer MapStruct over manual mapping
-
-## No Hardcoding
-
-See `.claude/standards/hardcoding.md` for full no-hardcoding standards.
-
-Quick reference:
 - No magic numbers/strings — use constants or enums (except `0`, `1`, `-1`, `""`)
 - Config values in `application.yml`, not in code
 - Error messages from error code enums, not inline strings
@@ -154,7 +148,7 @@ Quick reference:
 
 ## Security
 
-See `.claude/standards/security.md` for full security standards.
+See `.claude/rules/security.md` for full security standards.
 
 Quick reference:
 - `@Valid @RequestBody` on all POST/PUT endpoints
@@ -166,7 +160,7 @@ Quick reference:
 
 ## Performance
 
-See `.claude/standards/performance.md` for full performance standards.
+See `.claude/rules/performance.md` for full performance standards.
 
 Quick reference:
 - Always paginate list endpoints — never unbounded results
@@ -177,7 +171,7 @@ Quick reference:
 
 ## Testing
 
-See `.claude/standards/testing.md` for full testing standards.
+See `.claude/rules/testing.md` for full testing standards.
 
 Quick reference:
 - `@ExtendWith(MockitoExtension.class)` for unit tests
@@ -192,4 +186,4 @@ Quick reference:
 - `learning/` package is practice code — do not copy its patterns into production code
 - `src/main/java/com/mrtripop/constant/ErrorCode.java` (root) is legacy — per-domain error codes are canonical
 - GEMINI.md exists for cross-tool compatibility; CLAUDE.md is the authoritative context
-- Clinical response style (direct `ResponseEntity`) diverges from Product/Location (`ResponseBody.builder`). Follow whichever domain you are extending
+- All domains must use `ResponseBody.builder().toResponseEntity()` — no direct `ResponseEntity` construction in controllers
