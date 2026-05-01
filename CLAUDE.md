@@ -132,19 +132,29 @@ Error codes: enum implementing `BaseStatusCode` (`getCode()`, `getMessage()`)
 
 ## Code Style
 
-See `.claude/rules/coding-style.md` for full naming, style, and no-hardcoding standards.
+See `.claude/rules/coding-style.md` for full naming, style, and Java language standards.
 
 Quick reference:
 - Google Java Format (100 char line limit, no wildcard imports)
 - camelCase methods/variables, PascalCase classes
 - Conventional Commits enforced via commitlint
 - `@Slf4j` for logging (never manual `LoggerFactory`)
-- `@RequiredArgsConstructor` for constructor injection (not `@Autowired`)
-- Prefer MapStruct over manual mapping
 - No magic numbers/strings — use constants or enums (except `0`, `1`, `-1`, `""`)
+
+## Spring Boot
+
+See `.claude/rules/spring-boot-practices.md` for full Spring Boot framework standards.
+
+Quick reference:
+- `@RequiredArgsConstructor` for constructor injection (not `@Autowired`)
+- `@Service` interface + `Impl` suffix for service implementations
+- `@Transactional` on service methods only — never on controllers
+- `@Cacheable` with explicit key and `unless = "#result == null"`
+- Prefer MapStruct `componentModel = "spring"` for new mappers
 - Config values in `application.yml`, not in code
 - Error messages from error code enums, not inline strings
-- No string concatenation in queries
+- No string concatenation in queries — use parameterized `@Query`
+- Never return JPA entities from controllers — use DTOs
 
 ## Security
 
@@ -186,4 +196,3 @@ Quick reference:
 - `learning/` package is practice code — do not copy its patterns into production code
 - `src/main/java/com/mrtripop/constant/ErrorCode.java` (root) is legacy — per-domain error codes are canonical
 - GEMINI.md exists for cross-tool compatibility; CLAUDE.md is the authoritative context
-- All domains must use `ResponseBody.builder().toResponseEntity()` — no direct `ResponseEntity` construction in controllers

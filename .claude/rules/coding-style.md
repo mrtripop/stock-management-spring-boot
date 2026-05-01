@@ -5,12 +5,16 @@ Concise rules for AI agents. Each rule has a correct and incorrect example.
 ## Variable Naming
 
 - Use descriptive names that reveal intent. Never single letters except loop indices `i`, `j`.
+- Use full words — no abbreviations except universally known ones: `url`, `id`, `dto`, `api`, `html`.
 - Boolean variables/methods: prefix with `is`, `has`, `should`, `can`.
 
 ```java
 // Wrong
 int d; // elapsed time in days
 String msg;
+String desc;
+String btn;
+int cnt;
 List cl;
 boolean flag;
 User usr;
@@ -18,6 +22,9 @@ User usr;
 // Right
 int elapsedTimeInDays;
 String message;
+String description;
+String button;
+int count;
 List<Customer> customerList;
 boolean isEmailVerified;
 User user;
@@ -90,24 +97,6 @@ com.mrtripop.product
 com.mrtripop.product.services.impl
 ```
 
-## No Abbreviations
-
-- Use full words except universally known ones: `url`, `id`, `dto`, `api`, `html`.
-
-```java
-// Wrong
-String desc;
-String btn;
-String pwd;
-int cnt;
-
-// Right
-String description;
-String button;
-String password;
-int count;
-```
-
 ## Comments
 
 - Do not comment obvious code. Only comment: hidden constraints, workarounds, non-obvious WHY.
@@ -163,7 +152,7 @@ if (price < 0) { throw new InvalidPriceException(); }
 
 ## No Magic Strings
 
-- Every string literal (except `""`, `""` for empty, `"UTC"`, content strings) must be a named constant or enum.
+- Every string literal (except `""` for empty, `"UTC"`, content strings) must be a named constant or enum.
 - Role names, status names, type identifiers — all must be enums or constants.
 
 ```java
@@ -178,78 +167,115 @@ if (fileType.equals(FileType.CSV.getExtension())) { ... }
 throw new ApplicationException(ErrorCode.USER_NOT_FOUND);
 ```
 
-## Configuration Values
+## Immutability
 
-- Timeouts, URLs, thresholds, batch sizes — all in `application.yml` via `@Value` or `@ConfigurationProperties`.
-- Never hardcoded in service or controller code.
+- Prefer immutable classes where possible. Use `final` fields and no setters.
+- Use Lombok `@Value` for immutable DTOs when mutability is not needed.
 
 ```java
 // Wrong
-RestTemplate restTemplate = new RestTemplate();
-restTemplate.setReadTimeout(30_000);
-
-@Value("${api.timeout}")
-private int timeout; // This is fine
+public class Money {
+  private BigDecimal amount;
+  public void setAmount(BigDecimal amount) { this.amount = amount; }
+}
 
 // Right
-@ConfigurationProperties(prefix = "app.api")
-@Data
-public class ApiProperties {
-  private Duration readTimeout;
-  private String baseUrl;
-  private int maxRetries;
+@Value
+public class Money {
+  BigDecimal amount;
 }
 ```
 
-## Error Messages
+## Program to Interfaces
 
-- Use error code enums (per-domain `constant/ErrorCode.java`), not inline strings.
-- User-facing messages can be in the enum or externalized via `messages.properties`.
+- Declare variables and return types as interfaces, not concrete implementations.
 
 ```java
 // Wrong
-throw new ApplicationException("PRO1001", "Product not found");
+ArrayList<String> names = new ArrayList<>();
+HashMap<String, String> map = new HashMap<>();
 
 // Right
-throw new ApplicationException(ErrorCode.PRODUCT_NOT_FOUND);
+List<String> names = new ArrayList<>();
+Map<String, String> map = new HashMap<>();
 ```
 
-## Database Queries
+## Collections
 
-- Query parameters only. Never concatenate user input into SQL/JPQL strings.
+- Use `isEmpty()` over `size() == 0`.
+- Return empty collections, never `null`.
+- Use `for-each` over index-based loops.
 
 ```java
 // Wrong
-@Query("SELECT p FROM Product p WHERE p.name = '" + name + "'")
-List<Product> findByName(String name);
+if (names.size() == 0) { ... }
+if (items == null) { return null; }
+for (int i = 0; i < items.size(); i++) { ... }
 
 // Right
-@Query("SELECT p FROM Product p WHERE p.name = :name")
-List<Product> findByName(@Param("name") String name);
+if (names.isEmpty()) { ... }
+if (items == null) { return Collections.emptyList(); }
+for (Item item : items) { ... }
 ```
 
-## No Hardcoded File Paths
+## Date and Time
 
-- Use Spring `Resource` abstraction or externalized config for file paths.
+- Use `java.time` API (`LocalDate`, `Instant`, `ZonedDateTime`, `Duration`). Never use `java.util.Date` or `java.util.Calendar`.
 
 ```java
 // Wrong
-File file = new File("/opt/app/data/export.csv");
+Date now = new Date();
+Calendar cal = Calendar.getInstance();
 
 // Right
-@Value("classpath:data/export.csv")
-Resource exportTemplate;
+LocalDate today = LocalDate.now();
+Instant now = Instant.now();
+ZonedDateTime meeting = ZonedDateTime.of(2026, 5, 1, 9, 30, 0, 0, ZoneId.of("UTC"));
 ```
 
-## Feature Flags / Toggles
+## Strings
 
-- External configuration only. Never `boolean featureEnabled = true` in source code.
+- Use text blocks (`"""`) for multi-line strings (SQL, JSON, XML). Never use string concatenation with `\n`.
 
 ```java
 // Wrong
-private boolean isNewPaymentFlow = true;
+String sql = "SELECT id, name\n" + "FROM products\n" + "WHERE status = 'ACTIVE'";
 
 // Right
-@Value("${feature.new-payment-flow.enabled:false}")
-private boolean isNewPaymentFlowEnabled;
+String sql = """
+    SELECT id, name
+    FROM products
+    WHERE status = 'ACTIVE'
+    """;
+```
+
+## Concurrency
+
+- Use `java.util.concurrent` (ExecutorService, CompletableFuture). Never create raw `Thread` instances.
+- Use `volatile` only for simple flags. For compound operations, use `AtomicInteger`/`AtomicReference`.
+
+```java
+// Wrong
+new Thread(() -> processOrder(order)).start();
+
+// Right
+ExecutorService executor = Executors.newFixedThreadPool(10);
+executor.submit(() -> processOrder(order));
+```
+
+## Streams
+
+- No side effects in `map`/`filter`. Use `forEach` only for terminal side-effect operations.
+- Prefer method references over lambdas.
+
+```java
+// Wrong
+List<String> names = new ArrayList<>();
+customers.stream().forEach(c -> names.add(c.getName()));
+customers.stream().map(c -> c.getName()).toList();
+
+// Right
+List<String> names = customers.stream()
+    .map(Customer::getName)
+    .toList();
 ```
