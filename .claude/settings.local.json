@@ -1,4 +1,31 @@
 {
+  "permissions": {
+    "allow": [
+      "Bash(mvn *)",
+      "Bash(./mvnw *)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git status *)",
+      "Bash(git diff *)",
+      "Bash(git log *)",
+      "Bash(ls *)",
+      "Bash(find *)",
+      "Bash(grep *)",
+      "Read(*)",
+      "Write(src/*)",
+      "Write(pom.xml)",
+      "Write(_bmad-output)",
+      "WebSearch"
+    ],
+    "deny": [
+      "Bash(rm -rf *)",
+      "Bash(curl * | bash)",
+      "Bash(wget * | sh)",
+      "Write(.env*)",
+      "Write(src/main/resources/application-prod*)"
+    ],
+    "defaultMode": "auto"
+  },
   "hooks": {
     "Notification": [
       {
@@ -52,29 +79,8 @@
       }
     ]
   },
-  "permissions": {
-    "allow": [
-      "Bash(mvn *)",
-      "Bash(./mvnw *)",
-      "Bash(git add *)",
-      "Bash(git commit *)",
-      "Bash(git status *)",
-      "Bash(git diff *)",
-      "Bash(git log *)",
-      "Bash(ls *)",
-      "Bash(find *)",
-      "Bash(grep *)",
-      "Read(*)",
-      "Write(src/*)",
-      "Write(pom.xml)",
-      "Write(_bmad-output)"
-    ],
-    "deny": [
-      "Bash(rm -rf *)",
-      "Bash(curl * | bash)",
-      "Bash(wget * | sh)",
-      "Write(.env*)",
-      "Write(src/main/resources/application-prod*)"
-    ]
+  "sandbox": {
+    "enabled": true,
+    "autoAllowBashIfSandboxed": true
   }
 }
