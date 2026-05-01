@@ -176,6 +176,21 @@
             </plugin>
             <!--Download OpenTelemetry Java Agent-->
 
+            <!-- Surefire plugin: runs unit tests during `mvn test`. The add-opens flags
+                 bypass Java 17+ strong encapsulation so JUnit 5, Mockito, and other
+                 classpath-based test libraries can reflectively access internal JDK modules. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <argLine>
+                        --add-opens java.base/java.lang=ALL-UNNAMED
+                        --add-opens java.base/java.lang.reflect=ALL-UNNAMED
+                        --add-opens java.base/sun.reflect.annotation=ALL-UNNAMED
+                    </argLine>
+                </configuration>
+            </plugin>
+
             <!-- MapStruct plugin -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
