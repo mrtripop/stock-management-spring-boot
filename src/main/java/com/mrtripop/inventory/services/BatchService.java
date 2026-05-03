@@ -2,6 +2,8 @@ package com.mrtripop.inventory.services;
 
 import com.mrtripop.exception.ApplicationException;
 import com.mrtripop.inventory.models.dto.BatchDto;
+import com.mrtripop.inventory.models.dto.StockDeductionRequest;
+import com.mrtripop.inventory.models.dto.StockDeductionResponseDto;
 import com.mrtripop.inventory.models.dto.StockEntryRequest;
 import com.mrtripop.inventory.models.dto.StockEntryResponseDto;
 import com.mrtripop.inventory.models.dto.StoreStockDto;
@@ -12,6 +14,9 @@ import org.springframework.data.domain.Pageable;
 public interface BatchService {
 
   StockEntryResponseDto createBatchFromBarcode(StockEntryRequest request)
+      throws ApplicationException;
+
+  StockDeductionResponseDto deductStock(StockDeductionRequest request)
       throws ApplicationException;
 
   BatchDto getBatchById(Long id) throws ApplicationException;

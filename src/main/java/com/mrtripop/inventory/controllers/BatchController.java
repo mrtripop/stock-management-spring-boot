@@ -8,6 +8,8 @@ import com.mrtripop.exception.ApplicationException;
 import com.mrtripop.inventory.component.BatchMapper;
 import com.mrtripop.inventory.constant.ErrorCode;
 import com.mrtripop.inventory.models.dto.BatchDto;
+import com.mrtripop.inventory.models.dto.StockDeductionRequest;
+import com.mrtripop.inventory.models.dto.StockDeductionResponseDto;
 import com.mrtripop.inventory.models.dto.StockEntryRequest;
 import com.mrtripop.inventory.models.dto.StockEntryResponseDto;
 import com.mrtripop.inventory.models.dto.StoreStockDto;
@@ -56,6 +58,18 @@ public class BatchController {
         .data(result)
         .build()
         .toResponseEntity(HttpStatus.CREATED);
+  }
+
+  @PostMapping("/stock/deduct")
+  public ResponseEntity<Object> deductStock(@Valid @RequestBody StockDeductionRequest request)
+      throws ApplicationException {
+    StockDeductionResponseDto result = batchService.deductStock(request);
+    return ResponseBody.builder()
+        .code("STOCK_DEDUCTED")
+        .message("Stock deducted successfully")
+        .data(result)
+        .build()
+        .toResponseEntity(HttpStatus.OK);
   }
 
   @GetMapping("/batches/{id}")

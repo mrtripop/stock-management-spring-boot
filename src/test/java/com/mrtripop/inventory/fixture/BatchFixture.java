@@ -5,6 +5,7 @@ import com.mrtripop.clinical.models.db.Molecule;
 import com.mrtripop.inventory.models.db.Batch;
 import com.mrtripop.inventory.models.db.BatchStatus;
 import com.mrtripop.inventory.models.dto.BatchDto;
+import com.mrtripop.inventory.models.dto.StockDeductionRequest;
 import com.mrtripop.inventory.models.dto.StockEntryRequest;
 import java.time.LocalDate;
 import java.util.UUID;
@@ -37,6 +38,30 @@ public final class BatchFixture {
         .build();
   }
 
+  public static Batch batchWithExpiry(LocalDate expiryDate) {
+    Molecule molecule = Molecule.builder().id(UUID.randomUUID()).genericName("Paracetamol").build();
+    Brand brand = Brand.builder().id(UUID.randomUUID()).brandName("Tylenol").molecule(molecule).build();
+    return Batch.builder()
+        .id(1L)
+        .brand(brand)
+        .batchNumber("BATCH-001")
+        .expiryDate(expiryDate)
+        .quantity(100L)
+        .status(BatchStatus.AVAILABLE)
+        .build();
+  }
+
+  public static Batch batchWithExpiry(LocalDate expiryDate, UUID brandId, Brand brand) {
+    return Batch.builder()
+        .id(1L)
+        .brand(brand)
+        .batchNumber("BATCH-" + brandId.toString().substring(0, 4))
+        .expiryDate(expiryDate)
+        .quantity(100L)
+        .status(BatchStatus.AVAILABLE)
+        .build();
+  }
+
   public static StockEntryRequest validStockEntryRequest() {
     return StockEntryRequest.builder()
         .barcode("1234567890123")
@@ -48,5 +73,12 @@ public final class BatchFixture {
         .manufacturerLotNumber("LOT-001")
         .storageConditions("Room temperature")
         .build();
+  }
+
+  public static StockDeductionRequest.StockDeductionRequestBuilder validStockDeductionRequest() {
+    return StockDeductionRequest.builder()
+        .barcode("1234567890123")
+        .quantity(50L)
+        .storeId(UUID.randomUUID());
   }
 }

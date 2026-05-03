@@ -26,4 +26,8 @@ public final class StoreStockFixture {
     Batch batch = BatchFixture.defaultBatch();
     return StoreStock.builder().id(1L).store(store).batch(batch).quantity(100L).build();
   }
+
+  public static StoreStock storeStockWithQuantity(Batch batch, Store store, Long quantity) {
+    return StoreStock.builder().id(1L).store(store).batch(batch).quantity(quantity).build();
+  }
 }

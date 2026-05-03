@@ -12,12 +12,17 @@ import com.mrtripop.inventory.models.db.Batch;
 import com.mrtripop.inventory.models.db.BatchStatus;
 import com.mrtripop.inventory.models.db.StoreStock;
 import com.mrtripop.inventory.models.dto.BatchDto;
+import com.mrtripop.inventory.models.dto.DeductedBatchDto;
+import com.mrtripop.inventory.models.dto.StockDeductionRequest;
+import com.mrtripop.inventory.models.dto.StockDeductionResponseDto;
 import com.mrtripop.inventory.models.dto.StockEntryRequest;
 import com.mrtripop.inventory.models.dto.StockEntryResponseDto;
 import com.mrtripop.inventory.models.dto.StoreStockDto;
 import com.mrtripop.inventory.repository.BatchRepository;
 import com.mrtripop.inventory.repository.StoreStockRepository;
 import com.mrtripop.inventory.services.BatchService;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -77,11 +82,7 @@ public class BatchServiceImpl implements BatchService {
     }
 
     StoreStock storeStock =
-        StoreStock.builder()
-            .store(store)
-            .batch(batch)
-            .quantity(request.getQuantity())
-            .build();
+        StoreStock.builder().store(store).batch(batch).quantity(request.getQuantity()).build();
 
     storeStock = storeStockRepository.save(storeStock);
 
@@ -94,6 +95,81 @@ public class BatchServiceImpl implements BatchService {
     return StockEntryResponseDto.builder()
         .batch(batchDto)
         .storeStock(storeStockDto)
+        .build();
+  }
+
+  @Override
+  @Transactional(rollbackFor = ApplicationException.class)
+  public StockDeductionResponseDto deductStock(StockDeductionRequest request)
+      throws ApplicationException {
+    Brand brand =
+        brandRepository
+            .findByBarcode(request.getBarcode())
+            .orElseThrow(
+                () ->
+                    new ApplicationException(
+                        ErrorCode.BARCODE_NOT_RECOGNIZED, HttpStatus.NOT_FOUND));
+
+    storeRepository
+        .findById(request.getStoreId())
+        .orElseThrow(
+            () -> new ApplicationException(ErrorCode.STORE_NOT_FOUND, HttpStatus.NOT_FOUND));
+
+    List<StoreStock> availableStock =
+        storeStockRepository.findAvailableStockByStoreIdAndBrandIdOrderByExpiryDate(
+            request.getStoreId(), brand.getId());
+
+    if (availableStock.isEmpty()) {
+      throw new ApplicationException(ErrorCode.NO_AVAILABLE_BATCHES, HttpStatus.CONFLICT);
+    }
+
+    List<DeductedBatchDto> deductionItems = new ArrayList<>();
+    long remaining = request.getQuantity();
+
+    for (StoreStock stock : availableStock) {
+      if (remaining <= 0) {
+        break;
+      }
+
+      long oldQuantity = stock.getQuantity();
+      long toDeduct = Math.min(remaining, stock.getQuantity());
+
+      int updated = storeStockRepository.deductQuantity(stock.getId(), toDeduct);
+      if (updated == 0) {
+        log.warn(
+            "FEFO deduction race condition: stock id={} had {} but deduction of {} failed",
+            stock.getId(),
+            oldQuantity,
+            toDeduct);
+        continue;
+      }
+
+      stock.setQuantity(oldQuantity - toDeduct);
+      long newQuantity = stock.getQuantity();
+
+      auditService.recordAudit(
+          "INVENTORY_OUT",
+          "StoreStock",
+          stock.getId().toString(),
+          String.valueOf(oldQuantity),
+          String.valueOf(newQuantity));
+
+      deductionItems.add(
+          batchMapper.toDeductedBatchDto(stock, toDeduct));
+      remaining -= toDeduct;
+    }
+
+    if (remaining > 0) {
+      throw new ApplicationException(ErrorCode.INSUFFICIENT_QUANTITY, HttpStatus.CONFLICT);
+    }
+
+    return StockDeductionResponseDto.builder()
+        .barcode(request.getBarcode())
+        .brandId(brand.getId())
+        .brandName(brand.getBrandName())
+        .requestedQuantity(request.getQuantity())
+        .deductedQuantity(request.getQuantity() - remaining)
+        .items(deductionItems)
         .build();
   }
 
