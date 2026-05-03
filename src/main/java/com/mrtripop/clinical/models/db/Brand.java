@@ -6,6 +6,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
@@ -24,7 +25,7 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "brands")
+@Table(name = "brands", indexes = {@Index(name = "idx_brands_barcode", columnList = "barcode")})
 public class Brand extends AuditEntity {
   @Id
   @GeneratedValue(strategy = GenerationType.UUID)
@@ -45,4 +46,7 @@ public class Brand extends AuditEntity {
 
   @Column(name = "base_unit")
   private String baseUnit;
+
+  @Column(name = "barcode", length = 50)
+  private String barcode;
 }

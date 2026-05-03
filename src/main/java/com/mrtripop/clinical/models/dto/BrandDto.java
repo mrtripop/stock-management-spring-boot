@@ -24,6 +24,7 @@ public class BrandDto {
   private String strength;
   private String form;
   private String baseUnit;
+  private String barcode;
   private Long createdAt;
   private Long updatedAt;
 }
