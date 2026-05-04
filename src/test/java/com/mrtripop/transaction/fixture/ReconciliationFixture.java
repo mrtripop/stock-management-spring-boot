@@ -30,7 +30,7 @@ public final class ReconciliationFixture {
   public static final BigDecimal LEDGER_AMOUNT = new BigDecimal("150.00");
   public static final BigDecimal DISCREPANCY_ZERO = BigDecimal.ZERO;
 
-  public static final String ACTION_INVOICE_CREATED = "INVOICE_CREATED";
+  public static final String ACTION_INVOICE_CREATED = "CREATE";
   public static final String ACTION_INVENTORY_OUT = "INVENTORY_OUT";
   public static final String ENTITY_NAME_INVOICE = "Invoice";
   public static final String ENTITY_ID_INVOICE_1 = "1001";

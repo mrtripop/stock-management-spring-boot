@@ -1,5 +1,7 @@
 package com.mrtripop;
 
+import com.mrtripop.config.AuthProperties;
+import com.mrtripop.config.TotpProperties;
 import com.mrtripop.inventory.config.ActionQueueProperties;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -14,7 +16,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 @EnableJpaAuditing
 @SpringBootApplication
 @EnableTransactionManagement
-@EnableConfigurationProperties(ActionQueueProperties.class)
+@EnableConfigurationProperties({ActionQueueProperties.class, AuthProperties.class, TotpProperties.class})
 public class Application {
 
   public static void main(String[] args) {

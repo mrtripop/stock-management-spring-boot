@@ -7,7 +7,7 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public enum SuccessCode implements BaseStatusCode {
-  INV2003_RECALL_BATCH_IS_SUCCESS("INV2003", "Recall batch is success");
+  INV2003_RECALL_BATCH_IS_SUCCESS("INV2003", "Batch recalled successfully");
 
   private final String code;
   private final String message;

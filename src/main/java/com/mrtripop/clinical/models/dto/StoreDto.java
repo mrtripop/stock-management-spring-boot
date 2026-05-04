@@ -17,4 +17,5 @@ public class StoreDto {
   private StoreType type;
   private Long createdAt;
   private Long updatedAt;
+  private boolean active;
 }

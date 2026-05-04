@@ -20,8 +20,6 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -33,7 +31,7 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class ReconciliationServiceImpl implements ReconciliationService {
 
-  private static final String ACTION_INVOICE_CREATED = "INVOICE_CREATED";
+  private static final String ACTION_INVOICE_CREATED = "CREATE";
   private static final String ACTION_INVENTORY_OUT = "INVENTORY_OUT";
   private static final int MONEY_SCALE = 2;
 
@@ -54,6 +52,10 @@ public class ReconciliationServiceImpl implements ReconciliationService {
         .atZone(ZoneId.systemDefault())
         .toLocalDateTime();
 
+    // TODO: AuditLedger lacks a storeId column, so ledger queries cannot be scoped per-store.
+    // The query below fetches all audit entries globally within the time range. Once a storeId
+    // column is added to audit_ledger, filter by store to avoid cross-store contamination.
+
     List<AuditLedger> ledgerEntries = auditLedgerRepository.findByTimestampBetween(
         periodStartDateTime, periodEndDateTime);
 
@@ -64,12 +66,12 @@ public class ReconciliationServiceImpl implements ReconciliationService {
     BigDecimal invoiceTotal = calculateInvoiceTotal(completedInvoices);
     BigDecimal discrepancy = invoiceTotal.subtract(ledgerTotal).setScale(MONEY_SCALE, RoundingMode.HALF_UP);
 
-    Set<String> invoiceCreatedEntityIds = ledgerEntries.stream()
-        .filter(entry -> ACTION_INVOICE_CREATED.equals(entry.getActionType()))
-        .map(AuditLedger::getEntityId)
-        .collect(Collectors.toSet());
+    // TODO: Orphan detection requires storeId on AuditLedger to match INVENTORY_OUT entries
+    // against INVOICE_CREATED entries for the same store. Without storeId, cross-entity
+    // matching compares StoreStock IDs against Invoice IDs which are unrelated entity types.
+    // Enable orphan detection once AuditLedger schema supports per-store scoping.
 
-    List<ReconciliationEntryDto> entries = buildReconciliationEntries(ledgerEntries, invoiceCreatedEntityIds);
+    List<ReconciliationEntryDto> entries = buildReconciliationEntries(ledgerEntries);
 
     int discrepancyCount = countDiscrepancies(entries);
 
@@ -112,11 +114,9 @@ public class ReconciliationServiceImpl implements ReconciliationService {
   }
 
   private List<ReconciliationEntryDto> buildReconciliationEntries(
-      List<AuditLedger> ledgerEntries, Set<String> invoiceCreatedEntityIds) {
+      List<AuditLedger> ledgerEntries) {
     List<ReconciliationEntryDto> entries = new ArrayList<>();
     for (AuditLedger entry : ledgerEntries) {
-      boolean isOrphaned = ACTION_INVENTORY_OUT.equals(entry.getActionType())
-          && !invoiceCreatedEntityIds.contains(entry.getEntityId());
       entries.add(ReconciliationEntryDto.builder()
           .actionType(entry.getActionType())
           .entityName(entry.getEntityName())
@@ -124,7 +124,7 @@ public class ReconciliationServiceImpl implements ReconciliationService {
           .oldValue(entry.getOldValue())
           .newValue(entry.getNewValue())
           .timestamp(entry.getTimestamp())
-          .orphaned(isOrphaned)
+          .orphaned(false)
           .build());
     }
     return entries;

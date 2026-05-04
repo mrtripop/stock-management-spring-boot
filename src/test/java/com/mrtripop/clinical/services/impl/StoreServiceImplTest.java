@@ -50,7 +50,7 @@ class StoreServiceImplTest {
       Store saved = StoreFixture.defaultEntity();
       StoreDto dto = StoreDto.builder().id(StoreFixture.STORE_ID).name(StoreFixture.STORE_NAME).type(StoreType.PHYSICAL).build();
 
-      when(storeRepository.existsByName(StoreFixture.STORE_NAME)).thenReturn(false);
+      when(storeRepository.existsByNameAndActiveTrue(StoreFixture.STORE_NAME)).thenReturn(false);
       when(storeMapper.toEntity(request)).thenReturn(saved);
       when(storeRepository.save(any(Store.class))).thenReturn(saved);
       when(storeMapper.toDto(saved)).thenReturn(dto);
@@ -66,7 +66,7 @@ class StoreServiceImplTest {
     @DisplayName("should throw CL4002 when store name already exists")
     void shouldThrowDuplicateName() {
       CreateStoreRequest request = StoreFixture.validCreateRequest();
-      when(storeRepository.existsByName(StoreFixture.STORE_NAME)).thenReturn(true);
+      when(storeRepository.existsByNameAndActiveTrue(StoreFixture.STORE_NAME)).thenReturn(true);
 
       ApplicationException ex = assertThrows(ApplicationException.class, () -> storeService.create(request));
       assertEquals(ErrorCode.DUPLICATE_STORE_NAME, ex.getErrorCode());
@@ -84,7 +84,7 @@ class StoreServiceImplTest {
       Store store = StoreFixture.defaultEntity();
       StoreDto dto = StoreDto.builder().id(StoreFixture.STORE_ID).name(StoreFixture.STORE_NAME).type(StoreType.PHYSICAL).build();
       Page<Store> page = new PageImpl<>(List.of(store));
-      when(storeRepository.findAll(any(Pageable.class))).thenReturn(page);
+      when(storeRepository.findByActiveTrue(any(Pageable.class))).thenReturn(page);
       when(storeMapper.toDto(store)).thenReturn(dto);
 
       Page<StoreDto> result = storeService.findAll(Pageable.unpaged());
@@ -103,7 +103,7 @@ class StoreServiceImplTest {
     void shouldReturnStoreDto() throws ApplicationException {
       Store store = StoreFixture.defaultEntity();
       StoreDto dto = StoreDto.builder().id(StoreFixture.STORE_ID).name(StoreFixture.STORE_NAME).type(StoreType.PHYSICAL).build();
-      when(storeRepository.findById(StoreFixture.STORE_ID)).thenReturn(Optional.of(store));
+      when(storeRepository.findByIdAndActiveTrue(StoreFixture.STORE_ID)).thenReturn(Optional.of(store));
       when(storeMapper.toDto(store)).thenReturn(dto);
 
       StoreDto result = storeService.findById(StoreFixture.STORE_ID);
@@ -114,7 +114,7 @@ class StoreServiceImplTest {
     @Test
     @DisplayName("should throw CL4001 when store not found")
     void shouldThrowNotFound() {
-      when(storeRepository.findById(StoreFixture.STORE_ID)).thenReturn(Optional.empty());
+      when(storeRepository.findByIdAndActiveTrue(StoreFixture.STORE_ID)).thenReturn(Optional.empty());
 
       ApplicationException ex = assertThrows(ApplicationException.class, () -> storeService.findById(StoreFixture.STORE_ID));
       assertEquals(ErrorCode.STORE_NOT_FOUND, ex.getErrorCode());
@@ -132,8 +132,8 @@ class StoreServiceImplTest {
       UpdateStoreRequest request = StoreFixture.updateNameRequest();
       StoreDto dto = StoreDto.builder().id(StoreFixture.STORE_ID).name(StoreFixture.STORE_NAME_UPDATED).type(StoreType.PHYSICAL).build();
 
-      when(storeRepository.findById(StoreFixture.STORE_ID)).thenReturn(Optional.of(existing));
-      when(storeRepository.existsByName(StoreFixture.STORE_NAME_UPDATED)).thenReturn(false);
+      when(storeRepository.findByIdAndActiveTrue(StoreFixture.STORE_ID)).thenReturn(Optional.of(existing));
+      when(storeRepository.existsByNameAndActiveTrue(StoreFixture.STORE_NAME_UPDATED)).thenReturn(false);
       when(storeRepository.save(any(Store.class))).thenReturn(existing);
       when(storeMapper.toDto(any(Store.class))).thenReturn(dto);
 
@@ -149,7 +149,7 @@ class StoreServiceImplTest {
       UpdateStoreRequest request = StoreFixture.updateTypeRequest();
       StoreDto dto = StoreDto.builder().id(StoreFixture.STORE_ID).name(StoreFixture.STORE_NAME).type(StoreType.LOGICAL).build();
 
-      when(storeRepository.findById(StoreFixture.STORE_ID)).thenReturn(Optional.of(existing));
+      when(storeRepository.findByIdAndActiveTrue(StoreFixture.STORE_ID)).thenReturn(Optional.of(existing));
       when(storeRepository.save(any(Store.class))).thenReturn(existing);
       when(storeMapper.toDto(any(Store.class))).thenReturn(dto);
 
@@ -165,8 +165,8 @@ class StoreServiceImplTest {
       UpdateStoreRequest request = StoreFixture.updateBothRequest();
       StoreDto dto = StoreDto.builder().id(StoreFixture.STORE_ID).name(StoreFixture.STORE_NAME_UPDATED).type(StoreType.LOGICAL).build();
 
-      when(storeRepository.findById(StoreFixture.STORE_ID)).thenReturn(Optional.of(existing));
-      when(storeRepository.existsByName(StoreFixture.STORE_NAME_UPDATED)).thenReturn(false);
+      when(storeRepository.findByIdAndActiveTrue(StoreFixture.STORE_ID)).thenReturn(Optional.of(existing));
+      when(storeRepository.existsByNameAndActiveTrue(StoreFixture.STORE_NAME_UPDATED)).thenReturn(false);
       when(storeRepository.save(any(Store.class))).thenReturn(existing);
       when(storeMapper.toDto(any(Store.class))).thenReturn(dto);
 
@@ -182,8 +182,8 @@ class StoreServiceImplTest {
       Store existing = StoreFixture.defaultEntity();
       UpdateStoreRequest request = StoreFixture.updateNameRequest();
 
-      when(storeRepository.findById(StoreFixture.STORE_ID)).thenReturn(Optional.of(existing));
-      when(storeRepository.existsByName(StoreFixture.STORE_NAME_UPDATED)).thenReturn(true);
+      when(storeRepository.findByIdAndActiveTrue(StoreFixture.STORE_ID)).thenReturn(Optional.of(existing));
+      when(storeRepository.existsByNameAndActiveTrue(StoreFixture.STORE_NAME_UPDATED)).thenReturn(true);
 
       ApplicationException ex = assertThrows(ApplicationException.class, () -> storeService.update(StoreFixture.STORE_ID, request));
       assertEquals(ErrorCode.DUPLICATE_STORE_NAME, ex.getErrorCode());
@@ -194,7 +194,7 @@ class StoreServiceImplTest {
     @DisplayName("should throw CL4001 when store not found for update")
     void shouldThrowNotFoundForUpdate() {
       UpdateStoreRequest request = StoreFixture.updateNameRequest();
-      when(storeRepository.findById(StoreFixture.STORE_ID)).thenReturn(Optional.empty());
+      when(storeRepository.findByIdAndActiveTrue(StoreFixture.STORE_ID)).thenReturn(Optional.empty());
 
       ApplicationException ex = assertThrows(ApplicationException.class, () -> storeService.update(StoreFixture.STORE_ID, request));
       assertEquals(ErrorCode.STORE_NOT_FOUND, ex.getErrorCode());
@@ -209,7 +209,7 @@ class StoreServiceImplTest {
     @DisplayName("should soft-delete store by setting active to false")
     void shouldSoftDeleteStore() throws ApplicationException {
       Store store = StoreFixture.defaultEntity();
-      when(storeRepository.findById(StoreFixture.STORE_ID)).thenReturn(Optional.of(store));
+      when(storeRepository.findByIdAndActiveTrue(StoreFixture.STORE_ID)).thenReturn(Optional.of(store));
       when(storeRepository.save(any(Store.class))).thenReturn(store);
 
       assertDoesNotThrow(() -> storeService.delete(StoreFixture.STORE_ID));
@@ -220,7 +220,7 @@ class StoreServiceImplTest {
     @Test
     @DisplayName("should throw CL4001 when store not found for delete")
     void shouldThrowNotFoundForDelete() {
-      when(storeRepository.findById(StoreFixture.STORE_ID)).thenReturn(Optional.empty());
+      when(storeRepository.findByIdAndActiveTrue(StoreFixture.STORE_ID)).thenReturn(Optional.empty());
 
       ApplicationException ex = assertThrows(ApplicationException.class, () -> storeService.delete(StoreFixture.STORE_ID));
       assertEquals(ErrorCode.STORE_NOT_FOUND, ex.getErrorCode());

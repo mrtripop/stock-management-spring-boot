@@ -28,13 +28,13 @@ public class StoreServiceImpl implements StoreService {
   @Override
   @Transactional(readOnly = true)
   public Page<StoreDto> findAll(Pageable pageable) {
-    return storeRepository.findAll(pageable).map(storeMapper::toDto);
+    return storeRepository.findByActiveTrue(pageable).map(storeMapper::toDto);
   }
 
   @Override
   @Transactional(readOnly = true)
   public StoreDto findById(UUID id) throws ApplicationException {
-    Store store = storeRepository.findById(id)
+    Store store = storeRepository.findByIdAndActiveTrue(id)
         .orElseThrow(() -> new ApplicationException(ErrorCode.STORE_NOT_FOUND, HttpStatus.NOT_FOUND));
     return storeMapper.toDto(store);
   }
@@ -42,7 +42,7 @@ public class StoreServiceImpl implements StoreService {
   @Override
   @Transactional(rollbackFor = ApplicationException.class)
   public StoreDto create(CreateStoreRequest request) throws ApplicationException {
-    if (storeRepository.existsByName(request.getName())) {
+    if (storeRepository.existsByNameAndActiveTrue(request.getName())) {
       throw new ApplicationException(ErrorCode.DUPLICATE_STORE_NAME, HttpStatus.CONFLICT);
     }
     Store store = storeMapper.toEntity(request);
@@ -53,11 +53,11 @@ public class StoreServiceImpl implements StoreService {
   @Override
   @Transactional(rollbackFor = ApplicationException.class)
   public StoreDto update(UUID id, UpdateStoreRequest request) throws ApplicationException {
-    Store store = storeRepository.findById(id)
+    Store store = storeRepository.findByIdAndActiveTrue(id)
         .orElseThrow(() -> new ApplicationException(ErrorCode.STORE_NOT_FOUND, HttpStatus.NOT_FOUND));
 
     if (request.getName() != null && !request.getName().equals(store.getName())) {
-      if (storeRepository.existsByName(request.getName())) {
+      if (storeRepository.existsByNameAndActiveTrue(request.getName())) {
         throw new ApplicationException(ErrorCode.DUPLICATE_STORE_NAME, HttpStatus.CONFLICT);
       }
     }
@@ -70,7 +70,7 @@ public class StoreServiceImpl implements StoreService {
   @Override
   @Transactional(rollbackFor = ApplicationException.class)
   public void delete(UUID id) throws ApplicationException {
-    Store store = storeRepository.findById(id)
+    Store store = storeRepository.findByIdAndActiveTrue(id)
         .orElseThrow(() -> new ApplicationException(ErrorCode.STORE_NOT_FOUND, HttpStatus.NOT_FOUND));
     store.setActive(false);
     storeRepository.save(store);

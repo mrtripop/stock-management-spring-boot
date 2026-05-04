@@ -15,7 +15,9 @@ public enum ErrorCode implements BaseStatusCode {
   STORE_NOT_FOUND("TXN4006", "Store not found"),
   BRAND_NOT_FOUND("TXN4007", "Brand not found"),
   BATCH_NOT_FOUND("TXN4008", "Batch not found"),
-  RECEIPT_NOT_FOUND("TXN4009", "Receipt not found");
+  RECEIPT_NOT_FOUND("TXN4009", "Receipt not found"),
+  INVALID_RECONCILIATION_PERIOD("TXN4010", "Period end must be greater than or equal to period start"),
+  RECEIPT_NOT_AVAILABLE("TXN4011", "Receipt is not available for this invoice status");
 
   private final String code;
   private final String message;

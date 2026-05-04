@@ -15,7 +15,10 @@ public enum ErrorCode implements BaseStatusCode {
   AUTH_TOKEN_EXPIRED("USR4006", "Token has expired"),
   AUTH_TOKEN_INVALID("USR4007", "Invalid token"),
   AUTH_USERNAME_EXISTS("USR4008", "Username already exists"),
-  AUTH_ACCESS_DENIED("USR4009", "Access denied");
+  AUTH_ACCESS_DENIED("USR4009", "Access denied"),
+  STORE_NOT_FOUND("USR4010", "Store not found"),
+  MFA_NOT_CONFIGURED("USR4011", "MFA is not configured for this user"),
+  CONCURRENT_MODIFICATION("USR4012", "Concurrent modification detected");
 
   private final String code;
   private final String message;

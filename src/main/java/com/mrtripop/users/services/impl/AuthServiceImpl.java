@@ -5,6 +5,8 @@ import com.mrtripop.users.component.AuthUserMapper;
 import com.mrtripop.users.component.JwtService;
 import com.mrtripop.users.component.TotpService;
 import com.mrtripop.users.constant.ErrorCode;
+import com.mrtripop.users.constant.SuccessCode;
+import com.mrtripop.users.models.UserRole;
 import com.mrtripop.users.models.db.AuthUser;
 import com.mrtripop.users.models.dto.AuthResponse;
 import com.mrtripop.users.models.dto.AuthUserDto;
@@ -19,7 +21,9 @@ import com.mrtripop.clinical.repository.StoreRepository;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -50,7 +54,7 @@ public class AuthServiceImpl implements AuthService {
       return LoginResponse.builder()
           .mfaRequired(true)
           .tempToken(tempToken)
-          .message("MFA verification required")
+          .message(SuccessCode.AUTH_MFA_REQUIRED.getMessage())
           .build();
     }
 
@@ -58,7 +62,7 @@ public class AuthServiceImpl implements AuthService {
     return LoginResponse.builder()
         .mfaRequired(false)
         .tempToken(accessToken)
-        .message("Login successful")
+        .message(SuccessCode.AUTH_LOGIN_SUCCESS.getMessage())
         .build();
   }
 
@@ -77,6 +81,10 @@ public class AuthServiceImpl implements AuthService {
 
     if (!user.isMfaEnabled()) {
       throw new ApplicationException(ErrorCode.AUTH_MFA_NOT_ENABLED, HttpStatus.BAD_REQUEST);
+    }
+
+    if (user.getMfaSecret() == null) {
+      throw new ApplicationException(ErrorCode.MFA_NOT_CONFIGURED, HttpStatus.BAD_REQUEST);
     }
 
     if (!totpService.validateCode(user.getMfaSecret(), request.getTotpCode())) {
@@ -101,7 +109,7 @@ public class AuthServiceImpl implements AuthService {
         .orElseThrow(() -> new ApplicationException(ErrorCode.AUTH_USER_NOT_FOUND, HttpStatus.NOT_FOUND));
 
     if (!storeRepository.existsById(storeId)) {
-      throw new ApplicationException(ErrorCode.AUTH_USER_NOT_FOUND, HttpStatus.NOT_FOUND);
+      throw new ApplicationException(ErrorCode.STORE_NOT_FOUND, HttpStatus.NOT_FOUND);
     }
 
     String accessToken = jwtService.generateAccessToken(user.getId(), user.getUsername(), user.getRole(), storeId);
@@ -126,7 +134,11 @@ public class AuthServiceImpl implements AuthService {
 
     user.setMfaSecret(secret);
     user.setMfaEnabled(true);
-    authUserRepository.save(user);
+    try {
+      authUserRepository.save(user);
+    } catch (ObjectOptimisticLockingFailureException e) {
+      throw new ApplicationException(ErrorCode.CONCURRENT_MODIFICATION, HttpStatus.CONFLICT);
+    }
 
     return MfaSetupResponse.builder()
         .secret(secret)
@@ -152,11 +164,15 @@ public class AuthServiceImpl implements AuthService {
     AuthUser user = AuthUser.builder()
         .username(request.getUsername())
         .password(passwordEncoder.encode(request.getPassword()))
-        .role(request.getRole())
+        .role(UserRole.EMPLOYEE)
         .mfaEnabled(false)
         .build();
 
-    AuthUser saved = authUserRepository.save(user);
-    return authUserMapper.toDto(saved);
+    try {
+      AuthUser saved = authUserRepository.save(user);
+      return authUserMapper.toDto(saved);
+    } catch (DataIntegrityViolationException e) {
+      throw new ApplicationException(ErrorCode.AUTH_USERNAME_EXISTS, HttpStatus.CONFLICT);
+    }
   }
 }

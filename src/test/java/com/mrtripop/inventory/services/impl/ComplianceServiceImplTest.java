@@ -34,7 +34,7 @@ import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
 @ExtendWith(MockitoExtension.class)
-@MockitoSettings(strictness = Strictness.LENIENT)
+@MockitoSettings(strictness = Strictness.STRICT_STUBS)
 @DisplayName("ComplianceServiceImpl")
 class ComplianceServiceImplTest {
 
@@ -76,7 +76,7 @@ class ComplianceServiceImplTest {
       StoreStock stock1 = buildStoreStock(STORE_ID_1, 50L);
       StoreStock stock2 = buildStoreStock(STORE_ID_2, 30L);
       when(batchRepository.findById(BATCH_ID)).thenReturn(Optional.of(batch));
-      when(batchRepository.save(any(Batch.class))).thenAnswer(inv -> inv.getArgument(0));
+      when(batchRepository.recallBatch(BATCH_ID)).thenReturn(1);
       when(storeStockRepository.findByBatchIdAndQuantityGreaterThan(BATCH_ID, 0L))
           .thenReturn(List.of(stock1, stock2));
       AtomicLong taskIdCounter = new AtomicLong(100L);
@@ -122,6 +122,7 @@ class ComplianceServiceImplTest {
       Brand brand = Brand.builder().id(UUID.randomUUID()).brandName(BRAND_NAME).build();
       Batch batch = Batch.builder().id(BATCH_ID).batchNumber(BATCH_NUMBER).brand(brand).status(BatchStatus.RECALLED).build();
       when(batchRepository.findById(BATCH_ID)).thenReturn(Optional.of(batch));
+      when(batchRepository.recallBatch(BATCH_ID)).thenReturn(0);
 
       // Act & Assert
       ApplicationException ex = assertThrows(ApplicationException.class, () -> complianceService.recallBatch(BATCH_ID));
@@ -135,6 +136,7 @@ class ComplianceServiceImplTest {
       Brand brand = Brand.builder().id(UUID.randomUUID()).brandName(BRAND_NAME).build();
       Batch batch = Batch.builder().id(BATCH_ID).batchNumber(BATCH_NUMBER).brand(brand).status(BatchStatus.QUARANTINED).build();
       when(batchRepository.findById(BATCH_ID)).thenReturn(Optional.of(batch));
+      when(batchRepository.recallBatch(BATCH_ID)).thenReturn(0);
 
       // Act & Assert
       ApplicationException ex = assertThrows(ApplicationException.class, () -> complianceService.recallBatch(BATCH_ID));
@@ -147,7 +149,7 @@ class ComplianceServiceImplTest {
       // Arrange
       Batch batch = buildAvailableBatch();
       when(batchRepository.findById(BATCH_ID)).thenReturn(Optional.of(batch));
-      when(batchRepository.save(any(Batch.class))).thenAnswer(inv -> inv.getArgument(0));
+      when(batchRepository.recallBatch(BATCH_ID)).thenReturn(1);
       when(storeStockRepository.findByBatchIdAndQuantityGreaterThan(BATCH_ID, 0L))
           .thenReturn(Collections.emptyList());
 
@@ -156,7 +158,7 @@ class ComplianceServiceImplTest {
 
       // Assert
       assertEquals(0, result.getAffectedStores());
-      verify(taskRepository).saveAll(Collections.emptyList());
+      verify(taskRepository, never()).saveAll(anyList());
     }
   }
 }

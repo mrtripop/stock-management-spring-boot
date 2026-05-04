@@ -1,5 +1,6 @@
 package com.mrtripop.transaction.models.dto;
 
+import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.NotNull;
 import java.time.LocalDate;
 import java.util.UUID;
@@ -25,4 +26,12 @@ public class ReconciliationRequest {
 
   @NotNull(message = "Period end is required")
   private Long periodEnd;
+
+  @AssertTrue(message = "Period end must be greater than or equal to period start")
+  private boolean isPeriodValid() {
+    if (periodStart == null || periodEnd == null) {
+      return true;
+    }
+    return periodEnd >= periodStart;
+  }
 }

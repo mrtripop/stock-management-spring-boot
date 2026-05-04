@@ -148,7 +148,7 @@ class MasterCatalogServiceImplTest {
 
       // Assert
       assertEquals("Anxiolytic", result.getTherapeuticClass());
-      assertEquals("Rx", result.getRegulatorySchedule());
+      assertEquals("RX", result.getRegulatorySchedule());
       verify(auditService).recordAudit(eq("UPDATE_METADATA"), eq("Molecule"), eq(id.toString()),
           anyString(), anyString());
     }

@@ -10,13 +10,14 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
+import jakarta.persistence.Version;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import lombok.Builder;
 import lombok.experimental.SuperBuilder;
 
 @Getter
@@ -42,4 +43,7 @@ public class Store extends AuditEntity {
   @Builder.Default
   @Column(name = "active", nullable = false)
   private boolean active = true;
+
+  @Version
+  private Long version;
 }

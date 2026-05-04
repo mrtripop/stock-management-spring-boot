@@ -102,8 +102,8 @@ class ReceiptServiceImplTest {
               .insuranceCoveragePercent(60)
               .build();
 
-      when(invoiceRepository.findById(INVOICE_ID)).thenReturn(Optional.of(invoice));
-      when(invoiceItemRepository.findByInvoiceId(INVOICE_ID)).thenReturn(List.of(invoiceItem));
+      when(invoiceRepository.findWithStoreById(INVOICE_ID)).thenReturn(Optional.of(invoice));
+      when(invoiceItemRepository.findWithDetailsByInvoiceId(INVOICE_ID)).thenReturn(List.of(invoiceItem));
 
       // Act
       ReceiptDto result = receiptService.generateReceipt(INVOICE_ID);
@@ -170,8 +170,8 @@ class ReceiptServiceImplTest {
               .insuranceCoveragePercent(0)
               .build();
 
-      when(invoiceRepository.findById(INVOICE_ID)).thenReturn(Optional.of(invoice));
-      when(invoiceItemRepository.findByInvoiceId(INVOICE_ID)).thenReturn(List.of(invoiceItem));
+      when(invoiceRepository.findWithStoreById(INVOICE_ID)).thenReturn(Optional.of(invoice));
+      when(invoiceItemRepository.findWithDetailsByInvoiceId(INVOICE_ID)).thenReturn(List.of(invoiceItem));
 
       // Act
       ReceiptDto result = receiptService.generateReceipt(INVOICE_ID);
@@ -190,7 +190,7 @@ class ReceiptServiceImplTest {
     @DisplayName("should throw RECEIPT_NOT_FOUND with 404 when invoice does not exist")
     void generateReceipt_invoiceNotFound_throwsReceiptNotFound() {
       // Arrange
-      when(invoiceRepository.findById(999L)).thenReturn(Optional.empty());
+      when(invoiceRepository.findWithStoreById(999L)).thenReturn(Optional.empty());
 
       // Act & Assert
       ApplicationException ex =
@@ -216,8 +216,8 @@ class ReceiptServiceImplTest {
               .insuranceClaimAmount(BigDecimal.ZERO)
               .build();
 
-      when(invoiceRepository.findById(INVOICE_ID)).thenReturn(Optional.of(invoice));
-      when(invoiceItemRepository.findByInvoiceId(INVOICE_ID)).thenReturn(List.of());
+      when(invoiceRepository.findWithStoreById(INVOICE_ID)).thenReturn(Optional.of(invoice));
+      when(invoiceItemRepository.findWithDetailsByInvoiceId(INVOICE_ID)).thenReturn(List.of());
 
       // Act
       ReceiptDto result = receiptService.generateReceipt(INVOICE_ID);

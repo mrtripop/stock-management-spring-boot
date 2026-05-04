@@ -90,7 +90,9 @@ public class InvoiceServiceImpl implements InvoiceService {
 
       Optional<StoreStock> storeStock =
           storeStockRepository.findByStoreIdAndBatchId(request.getStoreId(), itemRequest.getBatchId());
-      if (storeStock.isEmpty() || storeStock.get().getQuantity() < itemRequest.getQuantity()) {
+      if (storeStock.isEmpty()
+          || storeStock.get().getQuantity() == null
+          || storeStock.get().getQuantity() < itemRequest.getQuantity()) {
         throw new ApplicationException(ErrorCode.INSUFFICIENT_STOCK, HttpStatus.BAD_REQUEST);
       }
 
@@ -98,7 +100,10 @@ public class InvoiceServiceImpl implements InvoiceService {
           .findByStoreIdAndBrandId(request.getStoreId(), itemRequest.getBrandId())
           .orElseThrow(() -> new ApplicationException(ErrorCode.INVALID_INVOICE_ITEM, HttpStatus.BAD_REQUEST));
 
-      BigDecimal unitPrice = storeProduct.getPrice() != null ? storeProduct.getPrice() : BigDecimal.ZERO;
+      if (storeProduct.getPrice() == null) {
+        throw new ApplicationException(ErrorCode.INVALID_INVOICE_ITEM, HttpStatus.BAD_REQUEST);
+      }
+      BigDecimal unitPrice = storeProduct.getPrice();
       BigDecimal lineTotal = unitPrice.multiply(BigDecimal.valueOf(itemRequest.getQuantity()));
       int coveragePercent = itemRequest.getInsuranceCoveragePercent() != null
           ? itemRequest.getInsuranceCoveragePercent()
@@ -141,7 +146,7 @@ public class InvoiceServiceImpl implements InvoiceService {
     invoiceItemRepository.saveAll(invoiceItems);
 
     recordAudit("CREATE", "Invoice", String.valueOf(savedInvoice.getId()), null,
-        "Invoice created with " + invoiceItems.size() + " items");
+        savedInvoice.getTotalAmount().toPlainString());
 
     InvoiceDto dto = invoiceMapper.toDto(savedInvoice);
     dto.setItems(invoiceMapper.toItemDtoList(invoiceItems));
@@ -165,7 +170,8 @@ public class InvoiceServiceImpl implements InvoiceService {
     invoice.setStatus(InvoiceStatus.COMPLETED);
     Invoice savedInvoice = invoiceRepository.save(invoice);
 
-    recordAudit("COMPLETE", "Invoice", String.valueOf(id), oldValue, InvoiceStatus.COMPLETED.name());
+    recordAudit("COMPLETE", "Invoice", String.valueOf(id), oldValue,
+        savedInvoice.getTotalAmount().toPlainString());
 
     InvoiceDto dto = invoiceMapper.toDto(savedInvoice);
     List<InvoiceItem> items = invoiceItemRepository.findByInvoiceId(id);
@@ -187,7 +193,8 @@ public class InvoiceServiceImpl implements InvoiceService {
     invoice.setStatus(InvoiceStatus.VOIDED);
     Invoice savedInvoice = invoiceRepository.save(invoice);
 
-    recordAudit("VOID", "Invoice", String.valueOf(id), oldValue, InvoiceStatus.VOIDED.name());
+    recordAudit("VOID", "Invoice", String.valueOf(id), oldValue,
+        savedInvoice.getTotalAmount().toPlainString());
 
     InvoiceDto dto = invoiceMapper.toDto(savedInvoice);
     List<InvoiceItem> items = invoiceItemRepository.findByInvoiceId(id);
@@ -197,10 +204,6 @@ public class InvoiceServiceImpl implements InvoiceService {
 
   private void recordAudit(String actionType, String entityName, String entityId, String oldValue,
       String newValue) {
-    try {
-      auditService.recordAudit(actionType, entityName, entityId, oldValue, newValue);
-    } catch (Exception e) {
-      log.warn("Failed to record audit for {} {}: {}", entityName, entityId, e.getMessage());
-    }
+    auditService.recordAudit(actionType, entityName, entityId, oldValue, newValue);
   }
 }

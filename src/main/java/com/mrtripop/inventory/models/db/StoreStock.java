@@ -25,7 +25,8 @@ import lombok.experimental.SuperBuilder;
 @Table(
     name = "store_stocks",
     indexes = {
-      @Index(name = "idx_store_stocks_store_batch", columnList = "store_id, batch_id", unique = true)
+      @Index(name = "idx_store_stocks_store_batch", columnList = "store_id, batch_id", unique = true),
+      @Index(name = "idx_store_stocks_batch_id", columnList = "batch_id")
     }
 )
 @SuperBuilder

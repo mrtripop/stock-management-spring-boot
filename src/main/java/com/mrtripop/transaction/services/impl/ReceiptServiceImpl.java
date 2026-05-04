@@ -5,6 +5,7 @@ import com.mrtripop.clinical.models.db.Molecule;
 import com.mrtripop.exception.ApplicationException;
 import com.mrtripop.transaction.constant.ErrorCode;
 import com.mrtripop.transaction.models.db.Invoice;
+import com.mrtripop.transaction.models.db.InvoiceStatus;
 import com.mrtripop.transaction.models.db.InvoiceItem;
 import com.mrtripop.transaction.models.dto.ReceiptDto;
 import com.mrtripop.transaction.models.dto.ReceiptItemDto;
@@ -13,7 +14,6 @@ import com.mrtripop.transaction.repository.InvoiceRepository;
 import com.mrtripop.transaction.services.ReceiptService;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -38,11 +38,15 @@ public class ReceiptServiceImpl implements ReceiptService {
 
     Invoice invoice =
         invoiceRepository
-            .findById(invoiceId)
+            .findWithStoreById(invoiceId)
             .orElseThrow(
                 () -> new ApplicationException(ErrorCode.RECEIPT_NOT_FOUND, HttpStatus.NOT_FOUND));
 
-    List<InvoiceItem> invoiceItems = invoiceItemRepository.findByInvoiceId(invoiceId);
+    if (invoice.getStatus() != InvoiceStatus.COMPLETED) {
+      throw new ApplicationException(ErrorCode.RECEIPT_NOT_AVAILABLE, HttpStatus.BAD_REQUEST);
+    }
+
+    List<InvoiceItem> invoiceItems = invoiceItemRepository.findWithDetailsByInvoiceId(invoiceId);
     List<ReceiptItemDto> receiptItems = invoiceItems.stream().map(this::buildReceiptItem).toList();
 
     return ReceiptDto.builder()

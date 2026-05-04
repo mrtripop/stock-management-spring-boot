@@ -115,7 +115,7 @@ class ReconciliationServiceImplTest {
     }
 
     @Test
-    @DisplayName("should mark INVENTORY_OUT entry as orphaned when no matching INVOICE_CREATED exists")
+    @DisplayName("should not mark INVENTORY_OUT entry as orphaned when orphan detection is disabled")
     void shouldMarkOrphanedInventoryOutEntry() throws ApplicationException {
       // Arrange
       ReconciliationRequest request = ReconciliationFixture.validRequest();
@@ -141,8 +141,8 @@ class ReconciliationServiceImplTest {
       assertNotNull(result);
       assertEquals(2, result.getEntries().size());
       assertFalse(result.getEntries().get(0).isOrphaned());
-      assertTrue(result.getEntries().get(1).isOrphaned());
-      assertEquals(1, result.getDiscrepancyCount());
+      assertFalse(result.getEntries().get(1).isOrphaned());
+      assertEquals(0, result.getDiscrepancyCount());
     }
 
     @Test

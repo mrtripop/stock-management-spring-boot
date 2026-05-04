@@ -1,6 +1,5 @@
 package com.mrtripop.users.component;
 
-import com.mrtripop.users.models.UserRole;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
