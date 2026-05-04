@@ -1,0 +1,14 @@
+package com.mrtripop.inventory.constant;
+
+import com.mrtripop.constant.BaseStatusCode;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+
+@Getter
+@RequiredArgsConstructor
+public enum SuccessCode implements BaseStatusCode {
+  INV2003_RECALL_BATCH_IS_SUCCESS("INV2003", "Recall batch is success");
+
+  private final String code;
+  private final String message;
+}

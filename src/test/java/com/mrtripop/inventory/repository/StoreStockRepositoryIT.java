@@ -12,6 +12,7 @@ import com.mrtripop.clinical.repository.StoreRepository;
 import com.mrtripop.inventory.models.db.Batch;
 import com.mrtripop.inventory.models.db.BatchStatus;
 import com.mrtripop.inventory.models.db.StoreStock;
+import com.mrtripop.inventory.models.dto.MeshStockDto;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -453,6 +454,109 @@ class StoreStockRepositoryIT {
       StoreStock unchangedStock =
           storeStockRepository.findById(stock.getId()).orElseThrow();
       assertEquals(10L, unchangedStock.getQuantity());
+    }
+  }
+
+  @Nested
+  @DisplayName("aggregateStockByMolecule")
+  class AggregateStockByMolecule {
+
+    @Test
+    @DisplayName("should aggregate per-store per-brand quantities")
+    void shouldAggregatePerStorePerBrand() {
+      Store anotherStore =
+          Store.builder().name("Branch Store").type(StoreType.PHYSICAL).build();
+      anotherStore = storeRepository.save(anotherStore);
+
+      Batch batch2 =
+          Batch.builder()
+              .brand(brand)
+              .batchNumber("BATCH-002")
+              .expiryDate(LocalDate.now().plusYears(1))
+              .quantity(100L)
+              .status(BatchStatus.AVAILABLE)
+              .build();
+      batch2 = batchRepository.save(batch2);
+
+      storeStockRepository.save(
+          StoreStock.builder().store(store).batch(batch).quantity(50L).build());
+      storeStockRepository.save(
+          StoreStock.builder().store(store).batch(batch2).quantity(30L).build());
+      storeStockRepository.save(
+          StoreStock.builder().store(anotherStore).batch(batch).quantity(40L).build());
+
+      List<MeshStockDto> result =
+          storeStockRepository.aggregateStockByMolecule(brand.getMolecule().getId());
+
+      assertEquals(2, result.size());
+    }
+
+    @Test
+    @DisplayName("should exclude expired batches")
+    void shouldExcludeExpiredBatches() {
+      Batch expiredBatch =
+          Batch.builder()
+              .brand(brand)
+              .batchNumber("BATCH-EXPIRED")
+              .expiryDate(LocalDate.now().minusDays(1))
+              .quantity(100L)
+              .status(BatchStatus.AVAILABLE)
+              .build();
+      expiredBatch = batchRepository.save(expiredBatch);
+
+      storeStockRepository.save(
+          StoreStock.builder().store(store).batch(expiredBatch).quantity(50L).build());
+
+      List<MeshStockDto> result =
+          storeStockRepository.aggregateStockByMolecule(brand.getMolecule().getId());
+
+      assertTrue(result.isEmpty());
+    }
+
+    @Test
+    @DisplayName("should exclude RECALLED and QUARANTINED batches")
+    void shouldExcludeRecalledAndQuarantined() {
+      Batch recalledBatch =
+          Batch.builder()
+              .brand(brand)
+              .batchNumber("BATCH-RECALLED")
+              .expiryDate(LocalDate.now().plusYears(1))
+              .quantity(100L)
+              .status(BatchStatus.RECALLED)
+              .build();
+      recalledBatch = batchRepository.save(recalledBatch);
+
+      Batch quarantinedBatch =
+          Batch.builder()
+              .brand(brand)
+              .batchNumber("BATCH-QUARANTINED")
+              .expiryDate(LocalDate.now().plusYears(1))
+              .quantity(100L)
+              .status(BatchStatus.QUARANTINED)
+              .build();
+      quarantinedBatch = batchRepository.save(quarantinedBatch);
+
+      storeStockRepository.save(
+          StoreStock.builder().store(store).batch(recalledBatch).quantity(50L).build());
+      storeStockRepository.save(
+          StoreStock.builder().store(store).batch(quarantinedBatch).quantity(30L).build());
+
+      List<MeshStockDto> result =
+          storeStockRepository.aggregateStockByMolecule(brand.getMolecule().getId());
+
+      assertTrue(result.isEmpty());
+    }
+
+    @Test
+    @DisplayName("should exclude zero-quantity store stocks")
+    void shouldExcludeZeroQuantity() {
+      storeStockRepository.save(
+          StoreStock.builder().store(store).batch(batch).quantity(0L).build());
+
+      List<MeshStockDto> result =
+          storeStockRepository.aggregateStockByMolecule(brand.getMolecule().getId());
+
+      assertTrue(result.isEmpty());
     }
   }
 }

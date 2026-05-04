@@ -39,4 +39,10 @@ public class Molecule extends AuditEntity {
   @Enumerated(EnumType.STRING)
   @Column(name = "regulatory_schedule")
   private RegulatorySchedule regulatorySchedule;
+
+  @Column(name = "dosage_instructions", columnDefinition = "TEXT")
+  private String dosageInstructions;
+
+  @Column(name = "safety_warnings", columnDefinition = "TEXT")
+  private String safetyWarnings;
 }

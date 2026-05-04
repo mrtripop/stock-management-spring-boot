@@ -23,7 +23,12 @@ public enum ErrorCode implements BaseStatusCode {
   INVALID_TASK_STATUS("INV4014", "Invalid task status for this operation"),
   CONTROLLED_SUBSTANCE_REQUIRES_SIGNATURE("INV4015", "Controlled substance requires pharmacist digital signature"),
   INVALID_DIGITAL_SIGNATURE("INV4016", "Invalid digital signature: license number or signature payload is malformed"),
-  SIGNATURE_VERIFICATION_FAILED("INV4017", "Digital signature verification failed");
+  SIGNATURE_VERIFICATION_FAILED("INV4017", "Digital signature verification failed"),
+  MESH_SEARCH_REQUIRES_PARAM("INV4018", "At least one search parameter (moleculeId or genericName) is required"),
+  MOLECULE_NOT_FOUND("INV4019", "Molecule not found"),
+  BATCH_NOT_RECALLABLE("INV4020", "Batch not found or cannot be recalled"),
+  BATCH_ALREADY_RECALLED("INV4021", "Batch is already recalled"),
+  BATCH_ALREADY_QUARANTINED("INV4022", "Batch is already quarantined");
 
   private final String code;
   private final String message;

@@ -19,6 +19,8 @@ public class MoleculeDto {
 
   private String therapeuticClass;
   private String regulatorySchedule;
+  private String dosageInstructions;
+  private String safetyWarnings;
   private Long createdAt;
   private Long updatedAt;
 }
