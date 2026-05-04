@@ -9,8 +9,10 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -24,7 +26,7 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "stores")
+@Table(name = "stores", uniqueConstraints = @UniqueConstraint(name = "stores_name_key", columnNames = "name"))
 public class Store extends AuditEntity {
   @Id
   @GeneratedValue(strategy = GenerationType.UUID)
@@ -36,4 +38,8 @@ public class Store extends AuditEntity {
   @Enumerated(EnumType.STRING)
   @Column(name = "type", nullable = false, length = 20)
   private StoreType type;
+
+  @Builder.Default
+  @Column(name = "active", nullable = false)
+  private boolean active = true;
 }
