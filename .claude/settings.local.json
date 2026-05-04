@@ -14,7 +14,8 @@
       "Read(*)",
       "Write(src/*)",
       "Write(pom.xml)",
-      "Write(_bmad-output)",
+      "Write(_bmad-output/*)",
+      "Write(_bmad/*)",
       "WebSearch"
     ],
     "deny": [
