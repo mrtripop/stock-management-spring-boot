@@ -2,10 +2,6 @@ server:
   port: 8080
 
 spring:
-  security:
-    user:
-      name: user
-      password: password
   jackson:
     property-naming-strategy: SNAKE_CASE
   datasource:
@@ -57,5 +53,15 @@ config:
       enabled: ${ACTION_QUEUE_ENABLED:true}
   spotify:
     url: https://spotify23.p.rapidapi.com
+
+auth:
+  jwt:
+    secret: ${AUTH_JWT_SECRET}
+    access-token-expiration: ${AUTH_JWT_ACCESS_TOKEN_EXPIRATION:86400000}
+    temp-token-expiration: ${AUTH_JWT_TEMP_TOKEN_EXPIRATION:300000}
+  totp:
+    issuer: ${AUTH_TOTP_ISSUER:StockManagement}
+    digits: 6
+    period: 30
 
 

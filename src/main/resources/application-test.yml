@@ -44,3 +44,13 @@ config:
     local-url: http://localhost:8080
     dev-url: http://dev-inventory.mrtripop-int.com
     stg-url: http://inventory.mrtripop-int.com
+
+auth:
+  jwt:
+    secret: test-secret-key-for-testing-purpose-only-minimum-256-bits-required-for-hs256
+    access-token-expiration: 3600000
+    temp-token-expiration: 60000
+  totp:
+    issuer: TestApp
+    digits: 6
+    period: 30

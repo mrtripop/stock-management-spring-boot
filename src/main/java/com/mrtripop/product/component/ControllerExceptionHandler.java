@@ -14,6 +14,7 @@ import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.*;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingPathVariableException;
@@ -36,6 +37,16 @@ public class ControllerExceptionHandler {
         .message(errorCode.getMessage())
         .build()
         .toResponseEntity(ex.getHttpStatus());
+  }
+
+  @ExceptionHandler(AuthenticationException.class)
+  public ResponseEntity<Object> handleAuthenticationException(AuthenticationException ex) {
+    BaseStatusCode errorCode = com.mrtripop.users.constant.ErrorCode.AUTH_TOKEN_INVALID;
+    return ResponseBody.builder()
+        .code(errorCode.getCode())
+        .message(errorCode.getMessage())
+        .build()
+        .toResponseEntity(HttpStatus.UNAUTHORIZED);
   }
 
   @ExceptionHandler({HttpMessageNotReadableException.class, MissingPathVariableException.class})
