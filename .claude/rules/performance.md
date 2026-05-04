@@ -1,6 +1,8 @@
 # Performance Standards
 
-Concise rules for AI agents. Each rule has a correct and incorrect example.
+Performance-specific rules for database queries, data access, and resource management. Each rule has a correct and incorrect example.
+
+**Note:** Transaction boundaries (`@Transactional` placement) and caching (`@Cacheable`) are in `spring-boot-practices.md`. Pagination in endpoints is in `api-design.md`.
 
 ## N+1 Query Prevention
 
@@ -23,26 +25,9 @@ List<Order> findAllWithItems();
 List<Order> findAll();
 ```
 
-## Pagination
-
-- Always paginate list endpoints. Never return unbounded result sets.
-
-```java
-// Wrong
-@GetMapping("/products")
-public List<ProductDto> getAll() { ... } // could return millions of rows
-
-// Right
-@GetMapping("/products")
-public Page<ProductDto> getAll(@Valid BaseQueryParams params) {
-  return productService.findAll(params.toPageable()).map(mapper::toDto);
-}
-```
-
 ## Database Indexes
 
 - Index columns used in `WHERE`, `JOIN`, `ORDER BY`, and `GROUP BY` clauses.
-- Use the existing `@Index` pattern in entity definitions.
 
 ```java
 // Wrong
@@ -60,43 +45,44 @@ public Page<ProductDto> getAll(@Valid BaseQueryParams params) {
 
 ## Select Only Needed Columns
 
-- Use JPQL projections or DTO projections for partial data. Avoid fetching full entities when only a few fields are needed.
+- Use native SQL projections for partial data. Avoid fetching full entities when only a few fields are needed.
+- Use text blocks (`"""`) for multi-line SQL queries.
 
 ```java
 // Wrong — fetches full Product entity with all columns and relationships
 @Query("SELECT p FROM Product p WHERE p.category.id = :categoryId")
 List<Product> findByCategory(@Param("categoryId") Long categoryId);
 
-// Right — fetches only needed fields
-@Query("SELECT new com.mrtripop.product.models.dto.ProductSummary(p.id, p.name, p.price) "
-    + "FROM Product p WHERE p.category.id = :categoryId")
+// Right — native SQL fetches only needed fields
+@Query(
+    value = """
+        SELECT p.id, p.name, p.price
+        FROM products p
+        WHERE p.category_id = :categoryId
+        """,
+    nativeQuery = true)
 List<ProductSummary> findSummariesByCategory(@Param("categoryId") Long categoryId);
 ```
 
-## Caching
+## Batch Operations
 
-- Use `@Cacheable` for frequently read, rarely updated data.
-- Set appropriate TTLs. Never cache data that changes frequently.
-- Always use `@CacheEvict` or `@CachePut` on write operations.
+- Use `saveAll()` instead of individual `save()` in loops.
+- For large batches (> 1000 rows), use `@Modifying` bulk queries or native batch inserts.
 
 ```java
 // Wrong
-@Cacheable("products") // no TTL, caches forever
-public ProductDto findById(Long id) { ... }
+for (ProductDto dto : dtos) {
+  productRepository.save(mapper.toEntity(dto));
+}
 
 // Right
-@Cacheable(value = "products", key = "#id", unless = "#result == null")
-public ProductDto findById(Long id) { ... }
-
-@CacheEvict(value = "products", key = "#id")
-public ProductDto update(Long id, ProductDto dto) { ... }
+productRepository.saveAll(dtos.stream().map(mapper::toEntity).toList());
 ```
 
 ## Stream API Usage
 
 - Prefer Java Streams for in-memory collection processing.
 - Use `flatMap` instead of nested loops.
-- For small collections (< 10 elements), plain loops may be more readable — use judgment.
 
 ```java
 // Wrong — nested loops
@@ -116,60 +102,37 @@ List<OrderItem> allItems = orders.stream()
 ## Connection Management
 
 - Rely on Spring's HikariCP connection pool. Never manage connections manually.
-- Use `@Transactional` boundaries to control connection lifecycle.
 - Keep transactions short — do not make external API calls inside `@Transactional`.
 
-```java
-// Wrong — long transaction with external call
-@Transactional
-public OrderDto createOrder(OrderDto dto) {
-  Order order = orderRepository.save(mapper.toEntity(dto));
-  paymentService.callExternalPaymentGateway(order); // slow external call
-  return mapper.toDto(order);
-}
+## DTO Mapping at Service Layer
 
-// Right — external call outside transaction
-public OrderDto createOrder(OrderDto dto) {
-  Order order = saveOrderInternal(dto);
-  paymentService.processPayment(order.getId()); // not in transaction
-  return mapper.toDto(order);
-}
-
-@Transactional
-private Order saveOrderInternal(OrderDto dto) {
-  return orderRepository.save(mapper.toEntity(dto));
-}
-```
-
-## Lazy Loading
-
-- Default to `FetchType.LAZY` for all relationships.
-- Use `EAGER` only when justified — document the reason.
+- Map entities to DTOs in the service layer, not the controller.
+- This prevents accidental serialization of lazy-loaded relationships.
 
 ```java
-// Wrong
-@ManyToOne(fetch = FetchType.EAGER) // default, loads category for every product
-private Category category;
-
-// Right
-@ManyToOne(fetch = FetchType.LAZY)
-@JoinColumn(name = "category_id")
-private Category category;
-```
-
-## Batch Operations
-
-- Use `saveAll()` instead of individual `save()` in loops.
-- For large batches (> 1000 rows), use `@Modifying` bulk queries or native batch inserts.
-
-```java
-// Wrong
-for (ProductDto dto : dtos) {
-  productRepository.save(mapper.toEntity(dto)); // N individual INSERT statements
+// Wrong — mapping in controller, risks lazy-loaded relationship serialization
+@GetMapping("/products/{id}")
+public ResponseEntity<Object> getById(@PathVariable Long id) {
+  Product product = productRepository.findById(id).orElseThrow();
+  return ResponseBody.builder()
+      .code(success.getCode())
+      .message(success.getMessage())
+      .data(productMapper.toDto(product))
+      .build()
+      .toResponseEntity(HttpStatus.OK);
 }
 
-// Right
-productRepository.saveAll(dtos.stream().map(mapper::toEntity).toList()); // single batch
+// Right — mapping inside service
+@GetMapping("/products/{id}")
+public ResponseEntity<Object> getById(@PathVariable Long id) {
+  ProductDto result = productService.findById(id);
+  return ResponseBody.builder()
+      .code(success.getCode())
+      .message(success.getMessage())
+      .data(result)
+      .build()
+      .toResponseEntity(HttpStatus.OK);
+}
 ```
 
 ## Async for I/O
@@ -186,22 +149,10 @@ public CompletableFuture<Void> sendOrderConfirmationEmail(Long orderId) {
 }
 ```
 
-## DTO Mapping at Service Layer
+## Do NOT
 
-- Map entities to DTOs in the service layer, not the controller.
-- This prevents accidental serialization of lazy-loaded relationships.
-
-```java
-// Wrong
-@GetMapping("/products/{id}")
-public ProductDto getById(@PathVariable Long id) {
-  Product product = productRepository.findById(id).orElseThrow();
-  return productMapper.toDto(product); // mapping in controller
-}
-
-// Right
-@GetMapping("/products/{id}")
-public ProductDto getById(@PathVariable Long id) {
-  return productService.findById(id); // mapping inside service
-}
-```
+- Never access lazy relationships in a loop without `JOIN FETCH` or `@EntityGraph`
+- Never fetch full entities when only a few fields are needed
+- Never call `repository.save()` in a loop — use `saveAll()`
+- Never make external API calls inside `@Transactional`
+- Never map entities to DTOs in the controller — do it in the service layer

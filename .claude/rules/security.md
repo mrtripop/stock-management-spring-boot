@@ -1,38 +1,8 @@
 # Security Standards
 
-Concise rules for AI agents. Each rule has a correct and incorrect example.
+Security-specific rules that go beyond standard API design and Spring Boot practices. Each rule has a correct and incorrect example.
 
-## Input Validation
-
-- Always validate at system boundaries (controllers). Trust nothing from HTTP requests.
-- Use `@Valid @RequestBody` on POST/PUT. Use `@Validated` on query params.
-
-```java
-// Wrong
-@PostMapping("/products")
-public ResponseEntity<?> create(@RequestBody ProductDto dto) { ... }
-
-// Right
-@PostMapping("/products")
-public ResponseEntity<?> create(@Valid @RequestBody ProductDto dto) { ... }
-```
-
-## SQL Injection Prevention
-
-- Use JPA repository methods, `@Query` with named params, or `CriteriaBuilder`. Never concatenate user input into queries.
-
-```java
-// Wrong
-@Query(value = "SELECT * FROM products WHERE name = '" + name + "'", nativeQuery = true)
-List<Product> search(String name);
-
-// Right
-@Query("SELECT p FROM Product p WHERE p.name LIKE %:keyword%")
-List<Product> search(@Param("keyword") String keyword);
-
-// Also right: derived query
-List<Product> findByNameContainingIgnoreCase(String keyword);
-```
+**Note:** Input validation (`@Valid @RequestBody`) and response wrapping are in `api-design.md`. Repository query safety (parameterized queries) is in `spring-boot-practices.md`.
 
 ## XSS Prevention
 
@@ -66,7 +36,6 @@ public void deleteUser(Long id) {
   if (!currentUser.getRole().equals("ADMIN")) {
     throw new AccessDeniedException();
   }
-  // ...
 }
 
 // Right
@@ -87,10 +56,6 @@ private static final String DB_PASSWORD = "super_secret_123";
 spring:
   datasource:
     password: ${DB_PASSWORD}
-
-// Right (environment variable)
-@Value("${stripe.api-key}")
-private String stripeApiKey;
 ```
 
 ## CORS Configuration
@@ -112,45 +77,10 @@ CorsConfigurationSource corsConfigurationSource() {
 }
 ```
 
-## HTTP Method Restrictions
-
-- Use specific mappings (`@GetMapping`, `@PostMapping`). Never `@RequestMapping` without method.
-- Sensitive actions (delete, update) must not accept GET requests.
-
-```java
-// Wrong
-@RequestMapping("/products/{id}") // accepts all methods
-
-// Right
-@GetMapping("/products/{id}")
-public ProductDto getById(@PathVariable Long id) { ... }
-
-@DeleteMapping("/products/{id}")
-@PreAuthorize("hasRole('ADMIN')")
-public void delete(@PathVariable Long id) { ... }
-```
-
 ## Response Filtering
 
-- Never return JPA entities directly from controllers. Always use DTOs.
 - Never expose internal IDs, stack traces, or system details in error responses.
-
-```java
-// Wrong
-@GetMapping("/users/{id}")
-public User getUser(@PathVariable Long id) { ... } // returns entity with password hash
-
-// Right
-@GetMapping("/users/{id}")
-public UserDto getUser(@PathVariable Long id) {
-  return userMapper.toDto(userService.findById(id));
-}
-```
-
-## Logging Security
-
 - Never log passwords, tokens, PII, or full request/response bodies containing sensitive data.
-- Use data masking for sensitive fields in log output.
 
 ```java
 // Wrong
@@ -166,3 +96,11 @@ log.debug("Request: endpoint={}, method={}", request.getRequestURI(), request.ge
 
 - Keep dependencies updated. Check for known CVEs.
 - No libraries with known unpatched vulnerabilities.
+
+## Do NOT
+
+- Never implement custom authentication — use Spring Security
+- Never commit secrets to source code — use env vars or config
+- Never use `@CrossOrigin(origins = "*")` in production — configure CORS in `SecurityConfig`
+- Never expose stack traces or internal IDs in error responses
+- Never log passwords, tokens, or PII
