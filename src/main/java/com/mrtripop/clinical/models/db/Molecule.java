@@ -3,6 +3,8 @@ package com.mrtripop.clinical.models.db;
 import com.mrtripop.product.models.db.AuditEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -34,6 +36,7 @@ public class Molecule extends AuditEntity {
   @Column(name = "therapeutic_class")
   private String therapeuticClass;
 
+  @Enumerated(EnumType.STRING)
   @Column(name = "regulatory_schedule")
-  private String regulatorySchedule;
+  private RegulatorySchedule regulatorySchedule;
 }

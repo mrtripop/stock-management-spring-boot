@@ -16,4 +16,5 @@ public class DeductedBatchDto {
   private LocalDate expiryDate;
   private Long deductedQuantity;
   private Long remainingQuantity;
+  private String baseUnit;
 }

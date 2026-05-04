@@ -1,0 +1,105 @@
+{
+  "workflow_version": "1.2.0",
+  "timestamps": {
+    "started": "2026-04-23T00:00:00.000Z",
+    "last_updated": "2026-04-23T00:10:00.000Z",
+    "completed": "2026-04-23T00:10:00.000Z"
+  },
+  "mode": "initial_scan",
+  "scan_level": "quick",
+  "project_root": ".",
+  "project_knowledge": "./docs",
+  "completed_steps": [
+    {
+      "step": "step_1",
+      "status": "completed",
+      "timestamp": "2026-04-23T00:01:00.000Z",
+      "summary": "Classified as monolith with 1 part"
+    },
+    {
+      "step": "step_2",
+      "status": "completed",
+      "timestamp": "2026-04-23T00:02:00.000Z",
+      "summary": "Found 10 existing docs"
+    },
+    {
+      "step": "step_3",
+      "status": "completed",
+      "timestamp": "2026-04-23T00:03:00.000Z",
+      "summary": "Tech stack: Spring Boot 3.4.2 on Java 17"
+    },
+    {
+      "step": "step_4",
+      "status": "completed",
+      "timestamp": "2026-04-23T00:04:00.000Z",
+      "summary": "Conditional analysis complete, 3 files written"
+    },
+    {
+      "step": "step_5",
+      "status": "completed",
+      "timestamp": "2026-04-23T00:05:00.000Z",
+      "summary": "Source tree documented"
+    },
+    {
+      "step": "step_6",
+      "status": "completed",
+      "timestamp": "2026-04-23T00:06:00.000Z",
+      "summary": "Dev/deployment guides written"
+    },
+    {
+      "step": "step_8",
+      "status": "completed",
+      "timestamp": "2026-04-23T00:07:00.000Z",
+      "summary": "Architecture doc written for 1 part"
+    },
+    {
+      "step": "step_9",
+      "status": "completed",
+      "timestamp": "2026-04-23T00:08:00.000Z",
+      "summary": "All supporting docs written"
+    },
+    {
+      "step": "step_10",
+      "status": "completed",
+      "timestamp": "2026-04-23T00:09:00.000Z",
+      "summary": "Master index generated"
+    },
+    {
+      "step": "step_11",
+      "status": "completed",
+      "timestamp": "2026-04-23T00:10:00.000Z",
+      "summary": "Validation and review complete"
+    },
+    {
+      "step": "step_12",
+      "status": "completed",
+      "timestamp": "2026-04-23T00:10:00.000Z",
+      "summary": "Workflow complete"
+    }
+  ],
+  "current_step": "completed",
+  "findings": {
+    "project_classification": "monolith, 1 part, Spring Boot/Java",
+    "technology_stack": "Spring Boot 3.4.2 on Java 17 with PostgreSQL 14.6 and Redis 7.2"
+  },
+  "project_types": [
+    {
+      "part_id": "backend",
+      "project_type_id": "backend",
+      "display_name": "Spring Boot Backend"
+    }
+  ],
+  "outputs_generated": [
+    "project-scan-report.json",
+    "source-tree-analysis.md",
+    "api-contracts.md",
+    "data-models.md",
+    "architecture.md",
+    "development-guide.md",
+    "deployment-guide.md",
+    "project-overview.md",
+    "component-inventory.md",
+    "index.md"
+  ],
+  "resume_instructions": "Workflow completed successfully"
+}

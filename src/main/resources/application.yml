@@ -51,6 +51,10 @@ config:
     local-url: http://localhost:8080
     dev-url: http://dev-inventory.mrtripop-int.com
     stg-url: http://inventory.mrtripop-int.com
+    action-queue:
+      expiry-warning-days: ${EXPIRY_WARNING_DAYS:30}
+      scan-cron: ${ACTION_QUEUE_SCAN_CRON:0 0 6 * * *}
+      enabled: ${ACTION_QUEUE_ENABLED:true}
   spotify:
     url: https://spotify23.p.rapidapi.com
 

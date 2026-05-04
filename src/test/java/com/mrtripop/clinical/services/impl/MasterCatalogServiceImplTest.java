@@ -9,6 +9,7 @@ import com.mrtripop.clinical.fixture.BrandFixture;
 import com.mrtripop.clinical.fixture.MoleculeFixture;
 import com.mrtripop.clinical.models.db.Brand;
 import com.mrtripop.clinical.models.db.Molecule;
+import com.mrtripop.clinical.models.db.RegulatorySchedule;
 import com.mrtripop.clinical.models.dto.BrandDto;
 import com.mrtripop.clinical.models.dto.MoleculeDto;
 import com.mrtripop.clinical.repository.BrandRepository;
@@ -134,13 +135,13 @@ class MasterCatalogServiceImplTest {
       Molecule existing = Molecule.builder().id(id).genericName("Diazepam")
           .therapeuticClass("Sedative").build();
       Molecule updated = Molecule.builder().id(id).genericName("Diazepam")
-          .therapeuticClass("Anxiolytic").regulatorySchedule("Rx").build();
+          .therapeuticClass("Anxiolytic").regulatorySchedule(RegulatorySchedule.RX).build();
 
       when(moleculeRepository.findById(id)).thenReturn(Optional.of(existing));
       when(moleculeRepository.save(any(Molecule.class))).thenReturn(updated);
       when(clinicalMapper.toMoleculeDto(updated)).thenReturn(
           MoleculeDto.builder().id(id).genericName("Diazepam")
-              .therapeuticClass("Anxiolytic").regulatorySchedule("Rx").build());
+              .therapeuticClass("Anxiolytic").regulatorySchedule("RX").build());
 
       // Act
       MoleculeDto result = masterCatalogService.updateMoleculeMetadata(id, input);

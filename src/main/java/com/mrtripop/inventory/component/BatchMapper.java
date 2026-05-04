@@ -18,5 +18,10 @@ public interface BatchMapper {
   @Mapping(source = "batch.id", target = "batchId")
   StoreStockDto toStoreStockDto(StoreStock storeStock);
 
+  @Mapping(source = "storeStock.batch.id", target = "batchId")
+  @Mapping(source = "storeStock.batch.batchNumber", target = "batchNumber")
+  @Mapping(source = "storeStock.batch.expiryDate", target = "expiryDate")
+  @Mapping(source = "storeStock.batch.brand.baseUnit", target = "baseUnit")
+  @Mapping(target = "remainingQuantity", expression = "java(storeStock.getQuantity() - deductedQuantity)")
   DeductedBatchDto toDeductedBatchDto(StoreStock storeStock, Long deductedQuantity);
 }

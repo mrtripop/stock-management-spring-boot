@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.*;
 
 @Slf4j
 @RestController
-@RequestMapping("/api/inventory/products/histories")
+@RequestMapping("/api/v1/products/histories")
 public class ProductHistoryController {
 
   private ProductHistoryService productHistoryService;

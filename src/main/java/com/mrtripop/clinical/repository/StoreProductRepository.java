@@ -1,6 +1,7 @@
 package com.mrtripop.clinical.repository;
 
 import com.mrtripop.clinical.models.db.StoreProduct;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.domain.Page;
@@ -25,4 +26,10 @@ public interface StoreProductRepository extends JpaRepository<StoreProduct, UUID
   Optional<StoreProduct> findByIdAndStoreId(UUID id, UUID storeId);
 
   boolean existsByStoreIdAndBrandId(UUID storeId, UUID brandId);
+
+  Optional<StoreProduct> findByStoreIdAndBrandId(UUID storeId, UUID brandId);
+
+  @Query("SELECT sp FROM StoreProduct sp JOIN FETCH sp.brand JOIN FETCH sp.store "
+      + "WHERE sp.reorderThreshold IS NOT NULL AND sp.isActive = true")
+  List<StoreProduct> findWithReorderThreshold();
 }

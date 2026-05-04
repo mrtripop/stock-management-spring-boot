@@ -51,11 +51,11 @@ public final class BatchFixture {
         .build();
   }
 
-  public static Batch batchWithExpiry(LocalDate expiryDate, UUID brandId, Brand brand) {
+  public static Batch batchWithExpiry(LocalDate expiryDate, Brand brand) {
     return Batch.builder()
         .id(1L)
         .brand(brand)
-        .batchNumber("BATCH-" + brandId.toString().substring(0, 4))
+        .batchNumber("BATCH-" + brand.getId().toString().substring(0, 4))
         .expiryDate(expiryDate)
         .quantity(100L)
         .status(BatchStatus.AVAILABLE)

@@ -5,31 +5,46 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 import com.mrtripop.clinical.models.db.Brand;
+import com.mrtripop.clinical.models.db.Molecule;
+import com.mrtripop.clinical.models.db.RegulatorySchedule;
 import com.mrtripop.clinical.models.db.Store;
 import com.mrtripop.clinical.models.db.StoreType;
 import com.mrtripop.clinical.repository.BrandRepository;
+import com.mrtripop.clinical.repository.StoreProductRepository;
 import com.mrtripop.clinical.repository.StoreRepository;
 import com.mrtripop.clinical.services.AuditService;
 import com.mrtripop.exception.ApplicationException;
+import com.mrtripop.inventory.constant.ErrorCode;
 import com.mrtripop.inventory.component.BatchMapper;
 import com.mrtripop.inventory.fixture.BatchFixture;
+import com.mrtripop.inventory.fixture.DigitalSignatureFixture;
 import com.mrtripop.inventory.fixture.StoreStockFixture;
 import com.mrtripop.inventory.models.db.Batch;
 import com.mrtripop.inventory.models.db.StoreStock;
+import com.mrtripop.inventory.models.db.VerificationStatus;
 import com.mrtripop.inventory.models.dto.BatchDto;
 import com.mrtripop.inventory.models.dto.DeductedBatchDto;
+import com.mrtripop.inventory.models.dto.DigitalSignatureRequest;
+import com.mrtripop.inventory.models.dto.SignatureVerificationDto;
 import com.mrtripop.inventory.models.dto.StockDeductionRequest;
 import com.mrtripop.inventory.models.dto.StockDeductionResponseDto;
 import com.mrtripop.inventory.models.dto.StockEntryRequest;
 import com.mrtripop.inventory.models.dto.StockEntryResponseDto;
 import com.mrtripop.inventory.models.dto.StoreStockDto;
+import com.mrtripop.inventory.models.dto.SyncSealResult;
+import com.mrtripop.clinical.models.db.StoreProduct;
 import com.mrtripop.inventory.repository.BatchRepository;
 import com.mrtripop.inventory.repository.StoreStockRepository;
+import com.mrtripop.inventory.services.DigitalSignatureService;
+import com.mrtripop.inventory.services.SyncSealService;
+import com.mrtripop.inventory.services.UnitConversionService;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -42,6 +57,7 @@ import org.mockito.quality.Strictness;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
@@ -52,9 +68,19 @@ class BatchServiceImplTest {
   @Mock private StoreStockRepository storeStockRepository;
   @Mock private BrandRepository brandRepository;
   @Mock private StoreRepository storeRepository;
+  @Mock private StoreProductRepository storeProductRepository;
   @Mock private AuditService auditService;
   @Mock private BatchMapper batchMapper;
+  @Mock private UnitConversionService unitConversionService;
+  @Mock private SyncSealService syncSealService;
+  @Mock private DigitalSignatureService digitalSignatureService;
   @InjectMocks private BatchServiceImpl batchService;
+
+  @BeforeEach
+  void setUp() {
+    when(storeProductRepository.findByStoreIdAndBrandId(any(), any()))
+        .thenReturn(Optional.empty());
+  }
 
   @Nested
   @DisplayName("createBatchFromBarcode")
@@ -192,7 +218,7 @@ class BatchServiceImplTest {
       Brand brand = Brand.builder().id(brandId).brandName("Tylenol").build();
       Store store = Store.builder().id(storeId).build();
 
-      Batch batch = BatchFixture.batchWithExpiry(LocalDate.now().plusMonths(6), brandId, brand);
+      Batch batch = BatchFixture.batchWithExpiry(LocalDate.now().plusMonths(6), brand);
       StoreStock stock =
           StoreStockFixture.storeStockWithQuantity(batch, store, 100L);
 
@@ -239,9 +265,9 @@ class BatchServiceImplTest {
       Store store = Store.builder().id(storeId).build();
 
       Batch batch1 =
-          BatchFixture.batchWithExpiry(LocalDate.now().plusMonths(3), brandId, brand);
+          BatchFixture.batchWithExpiry(LocalDate.now().plusMonths(3), brand);
       Batch batch2 =
-          BatchFixture.batchWithExpiry(LocalDate.now().plusMonths(12), brandId, brand);
+          BatchFixture.batchWithExpiry(LocalDate.now().plusMonths(12), brand);
       StoreStock stock1 = StoreStockFixture.storeStockWithQuantity(batch1, store, 30L);
       StoreStock stock2 = StoreStockFixture.storeStockWithQuantity(batch2, store, 70L);
 
@@ -288,9 +314,11 @@ class BatchServiceImplTest {
       Brand brand = Brand.builder().id(brandId).brandName("Aspirin").build();
       Store store = Store.builder().id(storeId).build();
 
-      Batch batch1 = BatchFixture.batchWithExpiry(LocalDate.now().plusMonths(1), brandId, brand);
-      Batch batch2 = BatchFixture.batchWithExpiry(LocalDate.now().plusMonths(3), brandId, brand);
-      Batch batch3 = BatchFixture.batchWithExpiry(LocalDate.now().plusMonths(6), brandId, brand);
+      Batch batch1 = BatchFixture.batchWithExpiry(LocalDate.now().plusMonths(1), brand);
+      Batch batch2 =
+          BatchFixture.batchWithExpiry(LocalDate.now().plusMonths(3), brand);
+      Batch batch3 =
+          BatchFixture.batchWithExpiry(LocalDate.now().plusMonths(6), brand);
       StoreStock stock1 = StoreStockFixture.storeStockWithQuantity(batch1, store, 20L);
       StoreStock stock2 = StoreStockFixture.storeStockWithQuantity(batch2, store, 30L);
       StoreStock stock3 = StoreStockFixture.storeStockWithQuantity(batch3, store, 80L);
@@ -326,7 +354,7 @@ class BatchServiceImplTest {
       Brand brand = Brand.builder().id(brandId).brandName("Tylenol").build();
       Store store = Store.builder().id(storeId).build();
 
-      Batch batch = BatchFixture.batchWithExpiry(LocalDate.now().plusMonths(6), brandId, brand);
+      Batch batch = BatchFixture.batchWithExpiry(LocalDate.now().plusMonths(6), brand);
       StoreStock stock = StoreStockFixture.storeStockWithQuantity(batch, store, 50L);
 
       when(brandRepository.findByBarcode(request.getBarcode())).thenReturn(Optional.of(brand));
@@ -346,6 +374,7 @@ class BatchServiceImplTest {
 
       ApplicationException ex =
           assertThrows(ApplicationException.class, () -> batchService.deductStock(request));
+      assertEquals(ErrorCode.INSUFFICIENT_QUANTITY, ex.getErrorCode());
       verify(auditService).recordAudit(anyString(), anyString(), anyString(), anyString(), anyString());
     }
 
@@ -364,7 +393,9 @@ class BatchServiceImplTest {
               storeId, brand.getId()))
           .thenReturn(List.of());
 
-      assertThrows(ApplicationException.class, () -> batchService.deductStock(request));
+      ApplicationException ex =
+          assertThrows(ApplicationException.class, () -> batchService.deductStock(request));
+      assertEquals(ErrorCode.NO_AVAILABLE_BATCHES, ex.getErrorCode());
 
       verify(storeStockRepository, never()).deductQuantity(anyLong(), anyLong());
       verify(auditService, never()).recordAudit(anyString(), anyString(), any(), any(), any());
@@ -377,7 +408,9 @@ class BatchServiceImplTest {
 
       when(brandRepository.findByBarcode(request.getBarcode())).thenReturn(Optional.empty());
 
-      assertThrows(ApplicationException.class, () -> batchService.deductStock(request));
+      ApplicationException ex =
+          assertThrows(ApplicationException.class, () -> batchService.deductStock(request));
+      assertEquals(ErrorCode.BARCODE_NOT_RECOGNIZED, ex.getErrorCode());
 
       verify(storeStockRepository, never())
           .findAvailableStockByStoreIdAndBrandIdOrderByExpiryDate(any(), any());
@@ -394,7 +427,9 @@ class BatchServiceImplTest {
       when(brandRepository.findByBarcode(request.getBarcode())).thenReturn(Optional.of(brand));
       when(storeRepository.findById(storeId)).thenReturn(Optional.empty());
 
-      assertThrows(ApplicationException.class, () -> batchService.deductStock(request));
+      ApplicationException ex =
+          assertThrows(ApplicationException.class, () -> batchService.deductStock(request));
+      assertEquals(ErrorCode.STORE_NOT_FOUND, ex.getErrorCode());
 
       verify(storeStockRepository, never())
           .findAvailableStockByStoreIdAndBrandIdOrderByExpiryDate(any(), any());
@@ -410,8 +445,8 @@ class BatchServiceImplTest {
       Brand brand = Brand.builder().id(brandId).brandName("Tylenol").build();
       Store store = Store.builder().id(storeId).build();
 
-      Batch batch1 = BatchFixture.batchWithExpiry(LocalDate.now().plusMonths(2), brandId, brand);
-      Batch batch2 = BatchFixture.batchWithExpiry(LocalDate.now().plusMonths(8), brandId, brand);
+      Batch batch1 = BatchFixture.batchWithExpiry(LocalDate.now().plusMonths(2), brand);
+      Batch batch2 = BatchFixture.batchWithExpiry(LocalDate.now().plusMonths(8), brand);
       StoreStock stock1 = StoreStockFixture.storeStockWithQuantity(batch1, store, 20L);
       StoreStock stock2 = StoreStockFixture.storeStockWithQuantity(batch2, store, 80L);
 
@@ -430,6 +465,600 @@ class BatchServiceImplTest {
 
       verify(auditService, times(2))
           .recordAudit(eq("INVENTORY_OUT"), eq("StoreStock"), anyString(), anyString(), anyString());
+    }
+
+    @Test
+    @DisplayName("should throw EXPIRED_BATCH_DEDUCTION when defense-in-depth detects expired batch")
+    void shouldThrowExpiredBatchDeductionWhenDefenseInDepthDetectsExpired() {
+      UUID brandId = UUID.randomUUID();
+      UUID storeId = UUID.randomUUID();
+      StockDeductionRequest request =
+          BatchFixture.validStockDeductionRequest().storeId(storeId).build();
+      Brand brand = Brand.builder().id(brandId).brandName("Tylenol").build();
+      Store store = Store.builder().id(storeId).build();
+
+      Batch expiredBatch =
+          BatchFixture.batchWithExpiry(LocalDate.now().minusDays(1), brand);
+      StoreStock stock =
+          StoreStockFixture.storeStockWithQuantity(expiredBatch, store, 100L);
+
+      when(brandRepository.findByBarcode(request.getBarcode())).thenReturn(Optional.of(brand));
+      when(storeRepository.findById(storeId)).thenReturn(Optional.of(store));
+      when(storeStockRepository.findAvailableStockByStoreIdAndBrandIdOrderByExpiryDate(
+              storeId, brandId))
+          .thenReturn(List.of(stock));
+
+      ApplicationException ex =
+          assertThrows(ApplicationException.class, () -> batchService.deductStock(request));
+      assertEquals(ErrorCode.EXPIRED_BATCH_DEDUCTION, ex.getErrorCode());
+
+      verify(storeStockRepository, never()).deductQuantity(anyLong(), anyLong());
+    }
+
+    @Test
+    @DisplayName("should roll over to next batch when deductQuantity returns 0 for race condition")
+    void shouldRollOverToNextBatchWhenDeductQuantityReturnsZero() throws Throwable {
+      UUID brandId = UUID.randomUUID();
+      UUID storeId = UUID.randomUUID();
+      StockDeductionRequest request =
+          BatchFixture.validStockDeductionRequest().storeId(storeId).build();
+      Brand brand = Brand.builder().id(brandId).brandName("Tylenol").build();
+      Store store = Store.builder().id(storeId).build();
+
+      Batch batch1 =
+          BatchFixture.batchWithExpiry(LocalDate.now().plusMonths(3), brand);
+      Batch batch2 =
+          BatchFixture.batchWithExpiry(LocalDate.now().plusMonths(6), brand);
+      StoreStock stock1 = StoreStockFixture.storeStockWithQuantity(batch1, store, 30L);
+      StoreStock stock2 = StoreStockFixture.storeStockWithQuantity(batch2, store, 70L);
+
+      when(brandRepository.findByBarcode(request.getBarcode())).thenReturn(Optional.of(brand));
+      when(storeRepository.findById(storeId)).thenReturn(Optional.of(store));
+      when(storeStockRepository.findAvailableStockByStoreIdAndBrandIdOrderByExpiryDate(
+              storeId, brandId))
+          .thenReturn(List.of(stock1, stock2));
+      when(storeStockRepository.deductQuantity(eq(stock1.getId()), eq(30L))).thenReturn(0);
+      when(storeStockRepository.deductQuantity(eq(stock2.getId()), eq(50L))).thenReturn(1);
+      when(batchMapper.toDeductedBatchDto(eq(stock2), eq(50L)))
+          .thenReturn(
+              DeductedBatchDto.builder()
+                  .batchId(batch2.getId())
+                  .batchNumber(batch2.getBatchNumber())
+                  .deductedQuantity(50L)
+                  .remainingQuantity(20L)
+                  .build());
+
+      StockDeductionResponseDto result = batchService.deductStock(request);
+
+      assertEquals(50L, result.getDeductedQuantity());
+      assertEquals(1, result.getItems().size());
+      verify(auditService, times(1))
+          .recordAudit(eq("INVENTORY_OUT"), eq("StoreStock"), anyString(), anyString(), anyString());
+    }
+
+    @Nested
+    @DisplayName("with unit conversion")
+    class DeductStockWithUnits {
+
+      @Test
+      @DisplayName("should deduct base units directly when unit is null")
+      void shouldDeductBaseUnitsDirectlyWhenUnitIsNull() throws Throwable {
+        UUID brandId = UUID.randomUUID();
+        UUID storeId = UUID.randomUUID();
+        StockDeductionRequest request =
+            BatchFixture.validStockDeductionRequest().storeId(storeId).build();
+        Brand brand =
+            Brand.builder().id(brandId).brandName("Tylenol").baseUnit("TABLET").build();
+        Store store = Store.builder().id(storeId).build();
+        Batch batch = BatchFixture.batchWithExpiry(LocalDate.now().plusMonths(6), brand);
+        StoreStock stock =
+            StoreStockFixture.storeStockWithQuantity(batch, store, 100L);
+
+        when(brandRepository.findByBarcode(request.getBarcode())).thenReturn(Optional.of(brand));
+        when(storeRepository.findById(storeId)).thenReturn(Optional.of(store));
+        when(storeStockRepository.findAvailableStockByStoreIdAndBrandIdOrderByExpiryDate(
+                storeId, brandId))
+            .thenReturn(List.of(stock));
+        when(storeStockRepository.deductQuantity(eq(stock.getId()), eq(50L))).thenReturn(1);
+        when(batchMapper.toDeductedBatchDto(eq(stock), eq(50L)))
+            .thenReturn(
+                DeductedBatchDto.builder()
+                    .batchId(batch.getId())
+                    .batchNumber(batch.getBatchNumber())
+                    .deductedQuantity(50L)
+                    .remainingQuantity(50L)
+                    .baseUnit("TABLET")
+                    .build());
+
+        StockDeductionResponseDto result = batchService.deductStock(request);
+
+        assertEquals(50L, result.getDeductedQuantity());
+        assertEquals("TABLET", result.getBaseUnit());
+        assertNull(result.getRequestedUnit());
+        verify(unitConversionService, never()).convertToBaseUnits(any(), anyString(), anyLong());
+      }
+
+      @Test
+      @DisplayName("should deduct base units directly when unit matches baseUnit")
+      void shouldDeductBaseUnitsWhenUnitMatchesBaseUnit() throws Throwable {
+        UUID brandId = UUID.randomUUID();
+        UUID storeId = UUID.randomUUID();
+        StockDeductionRequest request =
+            BatchFixture.validStockDeductionRequest().storeId(storeId).unit("TABLET").build();
+        Brand brand =
+            Brand.builder().id(brandId).brandName("Tylenol").baseUnit("TABLET").build();
+        Store store = Store.builder().id(storeId).build();
+        Batch batch = BatchFixture.batchWithExpiry(LocalDate.now().plusMonths(6), brand);
+        StoreStock stock =
+            StoreStockFixture.storeStockWithQuantity(batch, store, 100L);
+
+        when(brandRepository.findByBarcode(request.getBarcode())).thenReturn(Optional.of(brand));
+        when(storeRepository.findById(storeId)).thenReturn(Optional.of(store));
+        when(storeStockRepository.findAvailableStockByStoreIdAndBrandIdOrderByExpiryDate(
+                storeId, brandId))
+            .thenReturn(List.of(stock));
+        when(storeStockRepository.deductQuantity(eq(stock.getId()), eq(50L))).thenReturn(1);
+        when(batchMapper.toDeductedBatchDto(eq(stock), eq(50L)))
+            .thenReturn(
+                DeductedBatchDto.builder()
+                    .batchId(batch.getId())
+                    .deductedQuantity(50L)
+                    .remainingQuantity(50L)
+                    .baseUnit("TABLET")
+                    .build());
+
+        StockDeductionResponseDto result = batchService.deductStock(request);
+
+        assertEquals(50L, result.getDeductedQuantity());
+        assertEquals("TABLET", result.getRequestedUnit());
+        verify(unitConversionService, never()).convertToBaseUnits(any(), anyString(), anyLong());
+      }
+
+      @Test
+      @DisplayName("should convert and deduct when unit differs from baseUnit")
+      void shouldConvertAndDeductWhenUnitDiffers() throws Throwable {
+        UUID brandId = UUID.randomUUID();
+        UUID storeId = UUID.randomUUID();
+        StockDeductionRequest request =
+            BatchFixture.validStockDeductionRequest().storeId(storeId).unit("BOX").quantity(2L)
+                .build();
+        Brand brand =
+            Brand.builder().id(brandId).brandName("Tylenol").baseUnit("TABLET").build();
+        Store store = Store.builder().id(storeId).build();
+        Batch batch = BatchFixture.batchWithExpiry(LocalDate.now().plusMonths(6), brand);
+        StoreStock stock =
+            StoreStockFixture.storeStockWithQuantity(batch, store, 100L);
+
+        when(brandRepository.findByBarcode(request.getBarcode())).thenReturn(Optional.of(brand));
+        when(storeRepository.findById(storeId)).thenReturn(Optional.of(store));
+        when(unitConversionService.convertToBaseUnits(brandId, "BOX", 2L)).thenReturn(60L);
+        when(storeStockRepository.findAvailableStockByStoreIdAndBrandIdOrderByExpiryDate(
+                storeId, brandId))
+            .thenReturn(List.of(stock));
+        when(storeStockRepository.deductQuantity(eq(stock.getId()), eq(60L))).thenReturn(1);
+        when(batchMapper.toDeductedBatchDto(eq(stock), eq(60L)))
+            .thenReturn(
+                DeductedBatchDto.builder()
+                    .batchId(batch.getId())
+                    .deductedQuantity(60L)
+                    .remainingQuantity(40L)
+                    .baseUnit("TABLET")
+                    .build());
+
+        StockDeductionResponseDto result = batchService.deductStock(request);
+
+        assertEquals(60L, result.getDeductedQuantity());
+        assertEquals("TABLET", result.getBaseUnit());
+        assertEquals("BOX", result.getRequestedUnit());
+        assertEquals(2L, result.getRequestedQuantity());
+        verify(unitConversionService).convertToBaseUnits(brandId, "BOX", 2L);
+      }
+
+      @Test
+      @DisplayName("should throw UNIT_CONVERSION_NOT_FOUND when unit is not recognized")
+      void shouldThrowUnitConversionNotFoundWhenUnitNotRecognized() {
+        UUID brandId = UUID.randomUUID();
+        UUID storeId = UUID.randomUUID();
+        StockDeductionRequest request =
+            BatchFixture.validStockDeductionRequest().storeId(storeId).unit("UNKNOWN").build();
+        Brand brand =
+            Brand.builder().id(brandId).brandName("Tylenol").baseUnit("TABLET").build();
+        Store store = Store.builder().id(storeId).build();
+
+        when(brandRepository.findByBarcode(request.getBarcode())).thenReturn(Optional.of(brand));
+        when(storeRepository.findById(storeId)).thenReturn(Optional.of(store));
+        try {
+          when(unitConversionService.convertToBaseUnits(brandId, "UNKNOWN", 50L))
+              .thenThrow(
+                  new ApplicationException(ErrorCode.UNIT_CONVERSION_NOT_FOUND, HttpStatus.BAD_REQUEST));
+        } catch (ApplicationException e) {
+          throw new RuntimeException(e);
+        }
+
+        ApplicationException ex =
+            assertThrows(ApplicationException.class, () -> batchService.deductStock(request));
+        assertEquals(ErrorCode.UNIT_CONVERSION_NOT_FOUND, ex.getErrorCode());
+      }
+
+      @Test
+      @DisplayName("should include pricing when StoreProduct exists")
+      void shouldIncludePricingWhenStoreProductExists() throws Throwable {
+        UUID brandId = UUID.randomUUID();
+        UUID storeId = UUID.randomUUID();
+        StockDeductionRequest request =
+            BatchFixture.validStockDeductionRequest().storeId(storeId).build();
+        Brand brand =
+            Brand.builder().id(brandId).brandName("Tylenol").baseUnit("TABLET").build();
+        Store store = Store.builder().id(storeId).build();
+        Batch batch = BatchFixture.batchWithExpiry(LocalDate.now().plusMonths(6), brand);
+        StoreStock stock =
+            StoreStockFixture.storeStockWithQuantity(batch, store, 100L);
+        StoreProduct storeProduct = StoreProduct.builder().price(new BigDecimal("10.00")).build();
+
+        when(brandRepository.findByBarcode(request.getBarcode())).thenReturn(Optional.of(brand));
+        when(storeRepository.findById(storeId)).thenReturn(Optional.of(store));
+        when(storeStockRepository.findAvailableStockByStoreIdAndBrandIdOrderByExpiryDate(
+                storeId, brandId))
+            .thenReturn(List.of(stock));
+        when(storeProductRepository.findByStoreIdAndBrandId(storeId, brandId))
+            .thenReturn(Optional.of(storeProduct));
+        when(storeStockRepository.deductQuantity(eq(stock.getId()), eq(50L))).thenReturn(1);
+        when(batchMapper.toDeductedBatchDto(eq(stock), eq(50L)))
+            .thenReturn(
+                DeductedBatchDto.builder()
+                    .batchId(batch.getId())
+                    .deductedQuantity(50L)
+                    .remainingQuantity(50L)
+                    .baseUnit("TABLET")
+                    .build());
+
+        StockDeductionResponseDto result = batchService.deductStock(request);
+
+        assertEquals(0, new BigDecimal("10.00").compareTo(result.getUnitPrice()));
+        assertEquals(0, new BigDecimal("500.00").compareTo(result.getTotalAmount()));
+      }
+
+      @Test
+      @DisplayName("should have null pricing when StoreProduct does not exist")
+      void shouldHaveNullPricingWhenStoreProductNotFound() throws Throwable {
+        UUID brandId = UUID.randomUUID();
+        UUID storeId = UUID.randomUUID();
+        StockDeductionRequest request =
+            BatchFixture.validStockDeductionRequest().storeId(storeId).build();
+        Brand brand =
+            Brand.builder().id(brandId).brandName("Tylenol").baseUnit("TABLET").build();
+        Store store = Store.builder().id(storeId).build();
+        Batch batch = BatchFixture.batchWithExpiry(LocalDate.now().plusMonths(6), brand);
+        StoreStock stock =
+            StoreStockFixture.storeStockWithQuantity(batch, store, 100L);
+
+        when(brandRepository.findByBarcode(request.getBarcode())).thenReturn(Optional.of(brand));
+        when(storeRepository.findById(storeId)).thenReturn(Optional.of(store));
+        when(storeStockRepository.findAvailableStockByStoreIdAndBrandIdOrderByExpiryDate(
+                storeId, brandId))
+            .thenReturn(List.of(stock));
+        when(storeStockRepository.deductQuantity(eq(stock.getId()), eq(50L))).thenReturn(1);
+        when(batchMapper.toDeductedBatchDto(eq(stock), eq(50L)))
+            .thenReturn(
+                DeductedBatchDto.builder()
+                    .batchId(batch.getId())
+                    .deductedQuantity(50L)
+                    .remainingQuantity(50L)
+                    .baseUnit("TABLET")
+                    .build());
+
+        StockDeductionResponseDto result = batchService.deductStock(request);
+
+        assertNull(result.getUnitPrice());
+        assertNull(result.getTotalAmount());
+      }
+
+      @Test
+      @DisplayName("should support multi-batch rollover with unit conversion")
+      void shouldSupportMultiBatchRolloverWithConversion() throws Throwable {
+        UUID brandId = UUID.randomUUID();
+        UUID storeId = UUID.randomUUID();
+        StockDeductionRequest request =
+            BatchFixture.validStockDeductionRequest().storeId(storeId).unit("BOX").quantity(1L)
+                .build();
+        Brand brand =
+            Brand.builder().id(brandId).brandName("Tylenol").baseUnit("TABLET").build();
+        Store store = Store.builder().id(storeId).build();
+        Batch batch1 = BatchFixture.batchWithExpiry(LocalDate.now().plusMonths(3), brand);
+        Batch batch2 = BatchFixture.batchWithExpiry(LocalDate.now().plusMonths(6), brand);
+        StoreStock stock1 = StoreStockFixture.storeStockWithQuantity(batch1, store, 20L);
+        StoreStock stock2 = StoreStockFixture.storeStockWithQuantity(batch2, store, 30L);
+
+        when(brandRepository.findByBarcode(request.getBarcode())).thenReturn(Optional.of(brand));
+        when(storeRepository.findById(storeId)).thenReturn(Optional.of(store));
+        when(unitConversionService.convertToBaseUnits(brandId, "BOX", 1L)).thenReturn(30L);
+        when(storeStockRepository.findAvailableStockByStoreIdAndBrandIdOrderByExpiryDate(
+                storeId, brandId))
+            .thenReturn(List.of(stock1, stock2));
+        when(storeStockRepository.deductQuantity(eq(stock1.getId()), eq(20L))).thenReturn(1);
+        when(storeStockRepository.deductQuantity(eq(stock2.getId()), eq(10L))).thenReturn(1);
+        when(batchMapper.toDeductedBatchDto(eq(stock1), eq(20L)))
+            .thenReturn(
+                DeductedBatchDto.builder()
+                    .batchId(batch1.getId())
+                    .deductedQuantity(20L)
+                    .remainingQuantity(0L)
+                    .baseUnit("TABLET")
+                    .build());
+        when(batchMapper.toDeductedBatchDto(eq(stock2), eq(10L)))
+            .thenReturn(
+                DeductedBatchDto.builder()
+                    .batchId(batch2.getId())
+                    .deductedQuantity(10L)
+                    .remainingQuantity(20L)
+                    .baseUnit("TABLET")
+                    .build());
+
+        StockDeductionResponseDto result = batchService.deductStock(request);
+
+        assertEquals(30L, result.getDeductedQuantity());
+        assertEquals(2, result.getItems().size());
+        verify(unitConversionService).convertToBaseUnits(brandId, "BOX", 1L);
+      }
+    }
+  }
+
+  @Nested
+  @DisplayName("deductStock with digital signature")
+  class DeductStockWithSignature {
+
+    private Brand controlledBrand;
+    private Brand otcBrand;
+    private Brand rxBrand;
+    private Store store;
+    private StoreStock stock;
+    private SyncSealResult syncSealResult;
+    private UUID storeId;
+
+    @BeforeEach
+    void setUp() {
+      storeId = UUID.randomUUID();
+      store = Store.builder().id(storeId).build();
+
+      Molecule controlledMolecule =
+          Molecule.builder()
+              .id(UUID.randomUUID())
+              .genericName("Morphine")
+              .regulatorySchedule(RegulatorySchedule.CONTROLLED)
+              .build();
+      Molecule otcMolecule =
+          Molecule.builder()
+              .id(UUID.randomUUID())
+              .genericName("Paracetamol")
+              .regulatorySchedule(RegulatorySchedule.OTC)
+              .build();
+      Molecule rxMolecule =
+          Molecule.builder()
+              .id(UUID.randomUUID())
+              .genericName("Amoxicillin")
+              .regulatorySchedule(RegulatorySchedule.RX)
+              .build();
+
+      controlledBrand =
+          Brand.builder()
+              .id(UUID.randomUUID())
+              .brandName("Morphine-Inj")
+              .molecule(controlledMolecule)
+              .build();
+      otcBrand =
+          Brand.builder()
+              .id(UUID.randomUUID())
+              .brandName("Tylenol")
+              .molecule(otcMolecule)
+              .build();
+      rxBrand =
+          Brand.builder()
+              .id(UUID.randomUUID())
+              .brandName("Amoxil")
+              .molecule(rxMolecule)
+              .build();
+
+      Batch batch =
+          Batch.builder()
+              .id(1L)
+              .brand(controlledBrand)
+              .expiryDate(LocalDate.now().plusMonths(6))
+              .build();
+      stock = StoreStockFixture.storeStockWithQuantity(batch, store, 100L);
+
+      syncSealResult =
+          new SyncSealResult(VerificationStatus.VERIFIED, System.currentTimeMillis(), "abc123");
+    }
+
+    @Test
+    @DisplayName("should succeed with signature for controlled substance")
+    void shouldSucceedWithSignatureForControlled() throws Throwable {
+      StockDeductionRequest request =
+          BatchFixture.validStockDeductionRequest()
+              .storeId(storeId)
+              .barcode("1234567890123")
+              .signature(DigitalSignatureFixture.validSignatureRequest())
+              .build();
+
+      when(brandRepository.findByBarcode(request.getBarcode()))
+          .thenReturn(Optional.of(controlledBrand));
+      when(storeRepository.findById(storeId)).thenReturn(Optional.of(store));
+      when(syncSealService.verifyPharmacist(
+              DigitalSignatureFixture.VALID_LICENSE, DigitalSignatureFixture.VALID_PAYLOAD))
+          .thenReturn(syncSealResult);
+      when(storeStockRepository.findAvailableStockByStoreIdAndBrandIdOrderByExpiryDate(
+              storeId, controlledBrand.getId()))
+          .thenReturn(List.of(stock));
+      when(storeStockRepository.deductQuantity(eq(stock.getId()), eq(50L))).thenReturn(1);
+      when(batchMapper.toDeductedBatchDto(eq(stock), eq(50L)))
+          .thenReturn(
+              DeductedBatchDto.builder()
+                  .batchId(stock.getId())
+                  .batchNumber("BATCH")
+                  .deductedQuantity(50L)
+                  .remainingQuantity(50L)
+                  .build());
+
+      StockDeductionResponseDto result = batchService.deductStock(request);
+
+      assertNotNull(result.getSignatureVerification());
+      assertEquals(
+          DigitalSignatureFixture.VALID_LICENSE,
+          result.getSignatureVerification().getLicenseNumber());
+      assertEquals("VERIFIED", result.getSignatureVerification().getVerificationStatus());
+      verify(digitalSignatureService).saveSignature(eq(stock.getId()), anyString(), any());
+      verify(auditService)
+          .recordAudit(
+              eq("CONTROLLED_SUBSTANCE_SIGNED"),
+              eq("StockDeduction"),
+              anyString(),
+              isNull(),
+              anyString());
+    }
+
+    @Test
+    @DisplayName("should throw CONTROLLED_SUBSTANCE_REQUIRES_SIGNATURE when no signature provided")
+    void shouldThrowWhenNoSignatureForControlled() {
+      StockDeductionRequest request =
+          BatchFixture.validStockDeductionRequest()
+              .storeId(storeId)
+              .barcode("1234567890123")
+              .build();
+
+      when(brandRepository.findByBarcode(request.getBarcode()))
+          .thenReturn(Optional.of(controlledBrand));
+      when(storeRepository.findById(storeId)).thenReturn(Optional.of(store));
+
+      ApplicationException ex =
+          assertThrows(ApplicationException.class, () -> batchService.deductStock(request));
+      assertEquals(ErrorCode.CONTROLLED_SUBSTANCE_REQUIRES_SIGNATURE, ex.getErrorCode());
+    }
+
+    @Test
+    @DisplayName("should throw INVALID_DIGITAL_SIGNATURE when license is blank for controlled")
+    void shouldThrowWhenLicenseBlankForControlled() {
+      DigitalSignatureRequest badRequest =
+          DigitalSignatureRequest.builder().licenseNumber("").signaturePayload("payload").build();
+      StockDeductionRequest request =
+          BatchFixture.validStockDeductionRequest()
+              .storeId(storeId)
+              .barcode("1234567890123")
+              .signature(badRequest)
+              .build();
+
+      when(brandRepository.findByBarcode(request.getBarcode()))
+          .thenReturn(Optional.of(controlledBrand));
+      when(storeRepository.findById(storeId)).thenReturn(Optional.of(store));
+
+      ApplicationException ex =
+          assertThrows(ApplicationException.class, () -> batchService.deductStock(request));
+      assertEquals(ErrorCode.INVALID_DIGITAL_SIGNATURE, ex.getErrorCode());
+    }
+
+    @Test
+    @DisplayName("should succeed without signature for OTC substance")
+    void shouldSucceedWithoutSignatureForOtc() throws Throwable {
+      StockDeductionRequest request =
+          BatchFixture.validStockDeductionRequest()
+              .storeId(storeId)
+              .barcode("1234567890123")
+              .build();
+
+      Batch otcBatch =
+          Batch.builder()
+              .id(2L)
+              .brand(otcBrand)
+              .expiryDate(LocalDate.now().plusMonths(6))
+              .build();
+      StoreStock otcStock = StoreStockFixture.storeStockWithQuantity(otcBatch, store, 100L);
+
+      when(brandRepository.findByBarcode(request.getBarcode()))
+          .thenReturn(Optional.of(otcBrand));
+      when(storeRepository.findById(storeId)).thenReturn(Optional.of(store));
+      when(storeStockRepository.findAvailableStockByStoreIdAndBrandIdOrderByExpiryDate(
+              storeId, otcBrand.getId()))
+          .thenReturn(List.of(otcStock));
+      when(storeStockRepository.deductQuantity(eq(otcStock.getId()), eq(50L))).thenReturn(1);
+      when(batchMapper.toDeductedBatchDto(eq(otcStock), eq(50L)))
+          .thenReturn(
+              DeductedBatchDto.builder()
+                  .batchId(2L)
+                  .deductedQuantity(50L)
+                  .remainingQuantity(50L)
+                  .build());
+
+      StockDeductionResponseDto result = batchService.deductStock(request);
+
+      assertNull(result.getSignatureVerification());
+      verify(syncSealService, never()).verifyPharmacist(anyString(), anyString());
+      verify(digitalSignatureService, never()).saveSignature(anyLong(), anyString(), any());
+    }
+
+    @Test
+    @DisplayName("should succeed without signature for RX substance")
+    void shouldSucceedWithoutSignatureForRx() throws Throwable {
+      StockDeductionRequest request =
+          BatchFixture.validStockDeductionRequest()
+              .storeId(storeId)
+              .barcode("1234567890123")
+              .build();
+
+      Batch rxBatch =
+          Batch.builder()
+              .id(3L)
+              .brand(rxBrand)
+              .expiryDate(LocalDate.now().plusMonths(6))
+              .build();
+      StoreStock rxStock = StoreStockFixture.storeStockWithQuantity(rxBatch, store, 100L);
+
+      when(brandRepository.findByBarcode(request.getBarcode()))
+          .thenReturn(Optional.of(rxBrand));
+      when(storeRepository.findById(storeId)).thenReturn(Optional.of(store));
+      when(storeStockRepository.findAvailableStockByStoreIdAndBrandIdOrderByExpiryDate(
+              storeId, rxBrand.getId()))
+          .thenReturn(List.of(rxStock));
+      when(storeStockRepository.deductQuantity(eq(rxStock.getId()), eq(50L))).thenReturn(1);
+      when(batchMapper.toDeductedBatchDto(eq(rxStock), eq(50L)))
+          .thenReturn(
+              DeductedBatchDto.builder()
+                  .batchId(3L)
+                  .deductedQuantity(50L)
+                  .remainingQuantity(50L)
+                  .build());
+
+      StockDeductionResponseDto result = batchService.deductStock(request);
+
+      assertNull(result.getSignatureVerification());
+      verify(syncSealService, never()).verifyPharmacist(anyString(), anyString());
+    }
+
+    @Test
+    @DisplayName("should throw SIGNATURE_VERIFICATION_FAILED when SyncSeal returns FAILED")
+    void shouldThrowWhenSyncSealFails() {
+      StockDeductionRequest request =
+          BatchFixture.validStockDeductionRequest()
+              .storeId(storeId)
+              .barcode("1234567890123")
+              .signature(DigitalSignatureFixture.validSignatureRequest())
+              .build();
+
+      SyncSealResult failedResult =
+          new SyncSealResult(VerificationStatus.FAILED, System.currentTimeMillis(), "fail");
+
+      when(brandRepository.findByBarcode(request.getBarcode()))
+          .thenReturn(Optional.of(controlledBrand));
+      when(storeRepository.findById(storeId)).thenReturn(Optional.of(store));
+      try {
+        when(syncSealService.verifyPharmacist(
+                DigitalSignatureFixture.VALID_LICENSE, DigitalSignatureFixture.VALID_PAYLOAD))
+            .thenReturn(failedResult);
+      } catch (ApplicationException e) {
+        throw new RuntimeException(e);
+      }
+
+      ApplicationException ex =
+          assertThrows(ApplicationException.class, () -> batchService.deductStock(request));
+      assertEquals(ErrorCode.SIGNATURE_VERIFICATION_FAILED, ex.getErrorCode());
     }
   }
 

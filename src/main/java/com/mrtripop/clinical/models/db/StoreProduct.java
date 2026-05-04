@@ -58,4 +58,7 @@ public class StoreProduct extends AuditEntity {
 
   @Column(name = "is_active", nullable = false)
   private Boolean isActive = true;
+
+  @Column(name = "reorder_threshold")
+  private Long reorderThreshold;
 }

@@ -1,6 +1,7 @@
 package com.mrtripop.clinical.services.impl;
 
 import com.mrtripop.clinical.models.db.Brand;
+import com.mrtripop.clinical.models.db.RegulatorySchedule;
 import com.mrtripop.clinical.models.db.Store;
 import com.mrtripop.clinical.models.db.StoreProduct;
 import com.mrtripop.clinical.models.dto.StoreProductDto;
@@ -176,7 +177,8 @@ public class StoreProductServiceImpl implements StoreProductService {
       dto.setMoleculeId(brand.getMolecule().getId());
       dto.setMoleculeGenericName(brand.getMolecule().getGenericName());
       dto.setTherapeuticClass(brand.getMolecule().getTherapeuticClass());
-      dto.setRegulatorySchedule(brand.getMolecule().getRegulatorySchedule());
+      RegulatorySchedule schedule = brand.getMolecule().getRegulatorySchedule();
+      dto.setRegulatorySchedule(schedule != null ? schedule.name() : null);
     }
 
     return dto;

@@ -28,6 +28,10 @@ JPA_PROPERTIES_HIBERNATE_FORMAT_SQL: true
 JPA_PROPERTIES_SHOW_SQL: true
 LOGGING_LEVEL_COM_MRTRIPOP: DEBUG
 
+app:
+  action-queue:
+    enabled: false
+
 logging:
   level:
     com:

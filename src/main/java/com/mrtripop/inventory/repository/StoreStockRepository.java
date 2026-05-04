@@ -2,6 +2,7 @@ package com.mrtripop.inventory.repository;
 
 import com.mrtripop.inventory.models.db.StoreStock;
 import jakarta.persistence.LockModeType;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -36,4 +37,24 @@ public interface StoreStockRepository extends JpaRepository<StoreStock, Long> {
   @Query("UPDATE StoreStock ss SET ss.quantity = ss.quantity - :amount "
       + "WHERE ss.id = :id AND ss.quantity >= :amount")
   int deductQuantity(@Param("id") Long id, @Param("amount") Long amount);
+
+  @Query("SELECT ss FROM StoreStock ss JOIN FETCH ss.batch b JOIN FETCH b.brand br "
+      + "WHERE ss.store.id = :storeId "
+      + "AND b.status = 'AVAILABLE' "
+      + "AND b.expiryDate > CURRENT_DATE "
+      + "AND b.expiryDate <= :thresholdDate "
+      + "AND ss.quantity > 0")
+  List<StoreStock> findExpiringSoonByStore(
+      @Param("storeId") UUID storeId,
+      @Param("thresholdDate") LocalDate thresholdDate);
+
+  @Query("SELECT COALESCE(SUM(ss.quantity), 0) FROM StoreStock ss JOIN ss.batch b "
+      + "WHERE ss.store.id = :storeId AND b.brand.id = :brandId "
+      + "AND b.status = 'AVAILABLE' AND b.expiryDate > CURRENT_DATE AND ss.quantity > 0")
+  Long sumAvailableQuantityByStoreAndBrand(
+      @Param("storeId") UUID storeId,
+      @Param("brandId") UUID brandId);
+
+  @Query("SELECT DISTINCT ss.store.id FROM StoreStock ss")
+  List<UUID> findDistinctStoreIds();
 }

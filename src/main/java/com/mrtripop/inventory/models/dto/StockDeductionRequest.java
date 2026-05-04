@@ -23,4 +23,8 @@ public class StockDeductionRequest {
   @NotNull(message = "Quantity is required")
   @Min(value = 1, message = "Quantity must be at least 1")
   private Long quantity;
+
+  private String unit;
+
+  private DigitalSignatureRequest signature;
 }

@@ -15,7 +15,15 @@ public enum ErrorCode implements BaseStatusCode {
   STOCK_NOT_FOUND("INV4006", "Store stock record not found"),
   STORE_NOT_FOUND("INV4007", "Store not found"),
   NO_AVAILABLE_BATCHES("INV4008", "No available batches for this product in this store"),
-  EXPIRED_BATCH_DEDUCTION("INV4009", "Cannot deduct from expired batch");
+  EXPIRED_BATCH_DEDUCTION("INV4009", "Cannot deduct from expired batch"),
+  UNIT_CONVERSION_NOT_FOUND("INV4010", "No unit conversion found for this product and unit"),
+  INVALID_UNIT_CONVERSION("INV4011", "Unit conversion ratio must be at least 2"),
+  TASK_NOT_FOUND("INV4012", "Task not found"),
+  TASK_ALREADY_RESOLVED("INV4013", "Task is already resolved"),
+  INVALID_TASK_STATUS("INV4014", "Invalid task status for this operation"),
+  CONTROLLED_SUBSTANCE_REQUIRES_SIGNATURE("INV4015", "Controlled substance requires pharmacist digital signature"),
+  INVALID_DIGITAL_SIGNATURE("INV4016", "Invalid digital signature: license number or signature payload is malformed"),
+  SIGNATURE_VERIFICATION_FAILED("INV4017", "Digital signature verification failed");
 
   private final String code;
   private final String message;

@@ -3,6 +3,7 @@ package com.mrtripop.clinical.services.impl;
 import com.mrtripop.clinical.component.ClinicalMapper;
 import com.mrtripop.clinical.models.db.Brand;
 import com.mrtripop.clinical.models.db.Molecule;
+import com.mrtripop.clinical.models.db.RegulatorySchedule;
 import com.mrtripop.clinical.models.dto.BrandDto;
 import com.mrtripop.clinical.models.dto.MoleculeDto;
 import com.mrtripop.clinical.repository.BrandRepository;
@@ -94,7 +95,8 @@ public class MasterCatalogServiceImpl implements MasterCatalogService {
       molecule.setTherapeuticClass(moleculeDto.getTherapeuticClass());
     }
     if (moleculeDto.getRegulatorySchedule() != null) {
-      molecule.setRegulatorySchedule(moleculeDto.getRegulatorySchedule());
+      molecule.setRegulatorySchedule(
+          RegulatorySchedule.valueOf(moleculeDto.getRegulatorySchedule()));
     }
 
     Molecule saved = moleculeRepository.save(molecule);

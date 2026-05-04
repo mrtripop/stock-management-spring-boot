@@ -5,6 +5,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 
 import com.mrtripop.clinical.models.db.Brand;
 import com.mrtripop.clinical.models.db.Molecule;
+import com.mrtripop.clinical.models.db.RegulatorySchedule;
 import com.mrtripop.clinical.models.db.Store;
 import com.mrtripop.clinical.models.db.StoreProduct;
 import com.mrtripop.clinical.models.db.StoreType;
@@ -374,7 +375,7 @@ class StoreProductRepositoryIT {
         Molecule.builder()
             .genericName("Paracetamol")
             .therapeuticClass("Analgesic")
-            .regulatorySchedule("OTC")
+            .regulatorySchedule(RegulatorySchedule.OTC)
             .build());
 
     brand = brandRepository.save(

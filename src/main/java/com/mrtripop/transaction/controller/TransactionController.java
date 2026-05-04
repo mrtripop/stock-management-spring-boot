@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 
 @Slf4j
 @RestController
-@RequestMapping("/api/inventory/transactions")
+@RequestMapping("/api/v1/transactions")
 public class TransactionController {
 
   private final TransactionService transactionService;
