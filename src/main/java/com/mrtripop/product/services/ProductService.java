@@ -17,5 +17,7 @@ public interface ProductService {
 
   void deleteProduct(Long id) throws ApplicationException;
 
-  List<ProductDTO> updateProductByCsv(MultipartFile csvFile) throws ApplicationException;
+  List<ProductDTO> uploadProductByCsv(MultipartFile csvFile) throws ApplicationException;
+
+  byte[] exportProducts(String fileType) throws ApplicationException;
 }

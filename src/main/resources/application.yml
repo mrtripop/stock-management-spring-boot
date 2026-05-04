@@ -2,10 +2,6 @@ server:
   port: 8080
 
 spring:
-  security:
-    user:
-      name: user
-      password: password
   jackson:
     property-naming-strategy: SNAKE_CASE
   datasource:
@@ -51,7 +47,21 @@ config:
     local-url: http://localhost:8080
     dev-url: http://dev-inventory.mrtripop-int.com
     stg-url: http://inventory.mrtripop-int.com
+    action-queue:
+      expiry-warning-days: ${EXPIRY_WARNING_DAYS:30}
+      scan-cron: ${ACTION_QUEUE_SCAN_CRON:0 0 6 * * *}
+      enabled: ${ACTION_QUEUE_ENABLED:true}
   spotify:
     url: https://spotify23.p.rapidapi.com
+
+auth:
+  jwt:
+    secret: ${AUTH_JWT_SECRET}
+    access-token-expiration: ${AUTH_JWT_ACCESS_TOKEN_EXPIRATION:86400000}
+    temp-token-expiration: ${AUTH_JWT_TEMP_TOKEN_EXPIRATION:300000}
+  totp:
+    issuer: ${AUTH_TOTP_ISSUER:StockManagement}
+    digits: 6
+    period: 30
 
 

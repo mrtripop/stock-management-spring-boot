@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.*;
 
 @Slf4j
 @RestController
-@RequestMapping("/api/inventory/warehouses")
+@RequestMapping("/api/v1/warehouses")
 public class WarehouseController {
 
   private final WarehouseServiceImpl warehouseService;

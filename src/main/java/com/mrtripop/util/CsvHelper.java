@@ -16,6 +16,11 @@ import org.apache.commons.csv.CSVRecord;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.ByteArrayOutputStream;
+import java.io.PrintWriter;
+import java.util.Arrays;
+import org.apache.commons.csv.CSVPrinter;
+
 @UtilityClass
 public class CsvHelper {
   public static final String TYPE = "text/csv";
@@ -35,6 +40,36 @@ public class CsvHelper {
     } catch (IOException e) {
       throw new ApplicationException(
           ErrorCode.PRO5001_READ_PRODUCTS_FROM_CSV_FAILED, HttpStatus.BAD_REQUEST);
+    }
+  }
+
+  public static byte[] productsToCsv(List<ProductDTO> products) {
+    CSVFormat format = CSVFormat.DEFAULT.withHeader("id", "code", "barcode", "name", "description", "category", "reorder_quantity", "packed_weight", "packed_height", "packed_width", "packed_depth", "is_active");
+
+    try (ByteArrayOutputStream out = new ByteArrayOutputStream();
+        CSVPrinter csvPrinter = new CSVPrinter(new PrintWriter(out), format)) {
+      for (ProductDTO product : products) {
+        List<String> data = Arrays.asList(
+            String.valueOf(product.getId()),
+            product.getCode(),
+            product.getBarcode(),
+            product.getName(),
+            product.getDescription(),
+            product.getCategory(),
+            String.valueOf(product.getReorderQuantity()),
+            String.valueOf(product.getPackedWeight()),
+            String.valueOf(product.getPackedHeight()),
+            String.valueOf(product.getPackedWidth()),
+            String.valueOf(product.getPackedDepth()),
+            String.valueOf(product.getIsActive())
+        );
+        csvPrinter.printRecord(data);
+      }
+
+      csvPrinter.flush();
+      return out.toByteArray();
+    } catch (IOException e) {
+      throw new RuntimeException("fail to import data to CSV file: " + e.getMessage());
     }
   }
 

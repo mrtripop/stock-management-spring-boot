@@ -158,6 +158,7 @@ http://localhost:8080/swagger-ui/index.html
 - [Map query param into POJOs](https://stackoverflow.com/questions/16942193/spring-mvc-complex-object-as-get-requestparam)
     - **Note**: Above, setter method must input string as argument, then string value convert into expect data
       type.
+- Prometheus Metric & Grafana Dashboard
 
 **Spring Email**
 
@@ -183,7 +184,7 @@ http://localhost:8080/swagger-ui/index.html
 
 - [Dead-Letter Message]
 
-**Reactive Programming & Spring WebFlux**
+### Reactive Programming & Spring WebFlux
 
 - [Spring WebFlux Documentation](https://docs.spring.io/spring-framework/docs/current/reference/html/web-reactive.html)
 - [Reactor Core Documentation](https://projectreactor.io/docs/core/release/reference/)
@@ -192,7 +193,31 @@ http://localhost:8080/swagger-ui/index.html
 - [WebFlux vs Spring MVC](https://www.baeldung.com/spring-webflux-vs-spring-mvc)
 - [Mono and Flux Guide](https://www.baeldung.com/reactor-core)
 - [WebFlux Testing](https://www.baeldung.com/spring-webflux-testing)
+- [Reactive Streams Specification](https://www.reactive-streams.org/)
+- [WebFlux vs Spring MVC](https://www.baeldung.com/spring-webflux-vs-spring-mvc)
+- [Mono and Flux Guide](https://www.baeldung.com/reactor-core)
+- [WebFlux Testing](https://www.baeldung.com/spring-webflux-testing)
 - [Reactive Database Access](https://www.baeldung.com/spring-data-r2dbc)
+
+## Best Practices & Performance Optimization
+
+### Java & Spring Boot Development
+
+**1. Declarative Collection Processing**
+Prefer using Java Stream API (`Collectors.toMap`, `toList`, etc.) over manual loops for better readability and maintainability.
+- **Before:** Manual `HashMap` initialization and `forEach` loop.
+- **After:** `list.stream().collect(Collectors.toMap(Key::getId, Function.identity()))`.
+
+**2. Coding to Interfaces**
+Always use interface types (e.g., `Map`, `List`) for variables and method parameters instead of concrete implementations (e.g., `HashMap`, `ArrayList`). This follows the principle of "coding to an interface," making the code more flexible and easier to test.
+
+**3. Efficient Null Checks**
+For local variables where performance is critical or for simple checks, prefer `variable != null` over `Optional.ofNullable(variable).isPresent()`. This avoids unnecessary object allocation and improves code clarity.
+
+**4. Batch Processing & Lookups**
+When processing large datasets (e.g., CSV imports):
+- **Use Hash-based Lookups:** Store database records in a `Map` ($O(1)$ lookup) instead of nested loops or repeated database queries ($O(N)$). This reduces complexity from $O(N^2)$ to $O(N)$.
+- **Memory Efficiency:** A `HashMap` storing 1,000 object references has negligible memory overhead (approx. 32-64 KB), while providing significant performance gains during batch updates.
 
 ## Reactive Programming Practice Guide
 
@@ -271,6 +296,44 @@ mvn spring-boot:run -Dspring.profiles.active=reactive
 
 ## API Testing
 
+
+```
+
+Two Ways to Run Agent Teams
+                                                                                                                                                                                                 
+  1. Sequential (Standard — what you've been doing)
+                                                                                                                                                                                                 
+  Run agents one at a time, each in a fresh chat, in the order the phases dictate:
+
+  Chat 1: /bmad-brainstorming → /bmad-create-prd
+  Chat 2: /bmad-create-architecture
+  Chat 3: /bmad-create-epics-and-stories
+  Chat 4: /bmad-sprint-planning                                                                                                                                                                  
+  Chat 5: /bmad-create-story → /bmad-dev-story → /bmad-code-review
+                                                                                                                                                                                                 
+  Each agent reads the artifacts the previous one produced. This is the recommended default — it's how the framework is designed.
+
+  2. Party Mode (Multi-Agent Discussion)
+
+  Invoke /bmad-party-mode to bring multiple agents into one conversation:
+
+  /bmad-party-mode Should we use monolith or microservices for this pharmacy system?
+
+  BMad Master (orchestrator) selects the most relevant agents (Architect, Dev, PM) and they debate in character — agreeing, disagreeing, building on each other's ideas. You steer the           
+  discussion.
+                                                                                                                                                                                                 
+  Best for: Big decisions, brainstorming, retrospectives, or when you want diverse perspectives fast.
+
+  Key Rules
+
+  - Always start fresh chats between different workflows/skills
+  - Invoke agents by name to load their persona: /bmad-agent-pm, /bmad-agent-architect, /bmad-agent-dev
+  - Use /bmad-help anytime to know what to run next — it tracks what's done
+  - Party Mode is the only multi-agent-in-one-room feature; the rest is sequential handoff                                                                                                       
+   
+  For your current project, you're already following the sequential flow correctly. If you ever hit a decision point where you want the whole team to weigh in, that's when Party Mode shines.   
+                  
+```
 
 
 

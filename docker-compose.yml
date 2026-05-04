@@ -33,13 +33,13 @@ services:
       REDIS_ARGS: "--requirepass redis redis-server --save 60 1 --loglevel warning"
     restart: unless-stopped
 
-  redisinsight:
-    container_name: redisinsight
-    image: redislabs/redisinsight:latest
-    ports:
-      - '5540:5540'
-    volumes:
-      - redisinsight:/data
+#  redisinsight:
+#    container_name: redisinsight
+#    image: redislabs/redisinsight:latest
+#    ports:
+#      - '5540:5540'
+#    volumes:
+#      - redisinsight:/data
 
   collector:
     container_name: collector
@@ -50,6 +50,52 @@ services:
     ports:
       - "4317:4317"
 
+#  elasticsearch:
+#    container_name: elasticsearch
+#    image: docker.elastic.co/elasticsearch/elasticsearch:8.12.0
+#    environment:
+#      - discovery.type=single-node
+#      - xpack.security.enabled=false # Disabled for local dev simplicity
+#      - "ES_JAVA_OPTS=-Xms512m -Xmx512m" # Restrict memory for local usage
+#    ports:
+#      - "9200:9200"
+#    volumes:
+#      - elasticsearch:/usr/share/elasticsearch/data
+#
+#  logstash:
+#    container_name: logstash
+#    image: docker.elastic.co/logstash/logstash:8.12.0
+#    volumes:
+#      - ./elk/logstash.conf:/usr/share/logstash/pipeline/logstash.conf:ro
+#    ports:
+#      - "5044:5044"
+#    depends_on:
+#      - elasticsearch
+#
+#  kibana:
+#    container_name: kibana
+#    image: docker.elastic.co/kibana/kibana:8.12.0
+#    ports:
+#      - "5601:5601"
+#    environment:
+#      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+#    depends_on:
+#      - elasticsearch
+#  filebeat:
+#    container_name: filebeat
+#    image: docker.elastic.co/beats/filebeat:8.12.0
+#    user: root # Required to read docker logs from the host
+#    volumes:
+#      # Mount the configuration file
+#      - ./elk/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
+#      # Mount the docker socket and container logs so Filebeat can read them
+#      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+#      - /var/run/docker.sock:/var/run/docker.sock:ro
+#    command: filebeat -e -strict.perms=false
+#    depends_on:
+#      - logstash
+
 volumes:
+#  elasticsearch:
   postgres-db:
-  redisinsight:
+#  redisinsight:

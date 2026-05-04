@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 
 @Slf4j
 @RestController
-@RequestMapping("/api/inventory")
+@RequestMapping("/api/v1/orders")
 public class OrderController {
 
   private final OrderService orderService;
@@ -21,7 +21,7 @@ public class OrderController {
     this.orderService = orderService;
   }
 
-  @GetMapping("/users/{userId}/orders")
+  @GetMapping("/users/{userId}")
   public ResponseEntity<List<Order>> retrieveOrders(
       @PathVariable(name = "userId") Long userId, BaseQueryParams queryParams) {
     try {
@@ -33,7 +33,7 @@ public class OrderController {
     }
   }
 
-  @GetMapping("/users/{userId}/orders/{orderId}")
+  @GetMapping("/users/{userId}/{orderId}")
   public ResponseEntity<Order> retrieveUserOrderById(
       @PathVariable(name = "userId", required = true) Long userId,
       @PathVariable(name = "orderId", required = true) Long orderId) {
@@ -47,7 +47,7 @@ public class OrderController {
     }
   }
 
-  @PostMapping("/users/{userId}/orders")
+  @PostMapping("/users/{userId}")
   public ResponseEntity<Order> createNewOrder(
       @PathVariable(name = "userId") Long userId,
       @RequestParam(name = "addressId", defaultValue = "1") Long addressId,
@@ -62,7 +62,7 @@ public class OrderController {
     }
   }
 
-  @PutMapping("/users/{userId}/orders/{orderId}")
+  @PutMapping("/users/{userId}/{orderId}")
   public ResponseEntity<Order> updateOrder(
       @PathVariable(name = "userId") Long userId,
       @PathVariable(name = "orderId") Long orderId,
@@ -78,7 +78,7 @@ public class OrderController {
   }
 
   @Transactional
-  @DeleteMapping("/users/{userId}/orders")
+  @DeleteMapping("/users/{userId}")
   public ResponseEntity<Boolean> deleteUserOrder(@PathVariable(name = "userId") Long userId) {
     try {
       boolean order = orderService.deleteUserOrder(userId);
@@ -91,7 +91,7 @@ public class OrderController {
   }
 
   @Transactional
-  @DeleteMapping("/users/{userId}/orders/{orderId}")
+  @DeleteMapping("/users/{userId}/{orderId}")
   public ResponseEntity<?> deleteUserOrderById(
       @PathVariable(name = "userId") Long userId, @PathVariable(name = "orderId") Long orderId) {
     try {

@@ -1,7 +1,6 @@
 package com.mrtripop.model;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import java.time.Instant;
 import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -15,15 +14,21 @@ import org.springframework.http.ResponseEntity;
 @AllArgsConstructor
 @NoArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class ResponseBody {
+public class ResponseBody<T> {
   private String code;
   private String message;
-  private Object data;
+  private T data;
   private Object error;
-  private LocalDateTime timestamp = LocalDateTime.from(Instant.now());
+  private LocalDateTime timestamp = LocalDateTime.now();
+
+  public ResponseBody(String code, String message, T data) {
+    this.code = code;
+    this.message = message;
+    this.data = data;
+    this.timestamp = LocalDateTime.now();
+  }
 
   public ResponseEntity<Object> toResponseEntity(HttpStatus httpStatus) {
-    return new ResponseEntity<>(
-        new ResponseBody(code, message, data, error, timestamp), httpStatus);
+    return new ResponseEntity<>(this, httpStatus);
   }
 }

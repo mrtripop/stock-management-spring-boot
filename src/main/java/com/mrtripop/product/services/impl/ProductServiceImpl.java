@@ -1,5 +1,7 @@
 package com.mrtripop.product.services.impl;
 
+import com.mrtripop.component.fileparser.FileParser;
+import com.mrtripop.component.fileparser.FileParserFactory;
 import com.mrtripop.exception.ApplicationException;
 import com.mrtripop.model.BaseQueryParams;
 import com.mrtripop.product.component.ProductMapper;
@@ -15,11 +17,11 @@ import com.mrtripop.product.util.ProductUtil;
 import com.mrtripop.util.CsvHelper;
 import com.mrtripop.util.Helper;
 import jakarta.transaction.Transactional;
-import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
-
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -43,6 +45,7 @@ public class ProductServiceImpl implements ProductService {
   private final ProductRepository productRepository;
   private final ProductHistoryRepository productHistoryRepository;
   private final ProductManager productManager;
+  private final FileParserFactory fileParserFactory;
   private static final ProductMapper productMapper = ProductMapper.INSTANCE;
 
   @Override
@@ -114,7 +117,7 @@ public class ProductServiceImpl implements ProductService {
   }
 
   @Override
-  public List<ProductDTO> updateProductByCsv(MultipartFile csvFile) throws ApplicationException {
+  public List<ProductDTO> uploadProductByCsv(MultipartFile csvFile) throws ApplicationException {
     if (!CsvHelper.hasCsvFormat(csvFile)) {
       throw new ApplicationException(
           ErrorCode.PRO4001_USER_NEED_TO_UPLOAD_PRODUCT_CSV_FILE, HttpStatus.BAD_REQUEST);
@@ -126,8 +129,8 @@ public class ProductServiceImpl implements ProductService {
               // find products by list of ID
               List<Long> productIds = productDTOs.stream().map(ProductDTO::getId).toList();
               List<Product> products = productRepository.findAllById(productIds);
-              HashMap<Long, Product> productsMap = new HashMap<>();
-              products.forEach(product -> productsMap.put(product.getId(), product));
+              Map<Long, Product> productsMap =
+                  products.stream().collect(Collectors.toMap(Product::getId, Function.identity()));
               // update products
               List<Product> updateProducts =
                   productDTOs.stream().map(addOrUpdateProduct(productsMap)).toList();
@@ -140,6 +143,20 @@ public class ProductServiceImpl implements ProductService {
         .toList();
   }
 
+  @Override
+  public byte[] exportProducts(String fileType) throws ApplicationException {
+    log.info("Exporting products with file type: {}", fileType);
+    List<Product> products = productRepository.findAll();
+    List<ProductDTO> productDTOs = products.stream().map(productMapper::toProductDTO).toList();
+
+    FileParser fileParser = fileParserFactory.get(fileType);
+    if (fileParser == null) {
+      throw new ApplicationException(ErrorCode.PRO1001_CANNOT_GET_ALL_PRODUCTS, HttpStatus.BAD_REQUEST);
+    }
+
+    return fileParser.export(productDTOs);
+  }
+
   private Function<Product, ProductHistory> addProductHistory() {
     return product -> {
       ProductHistory history = productMapper.toProductHistory(product);
@@ -148,10 +165,10 @@ public class ProductServiceImpl implements ProductService {
     };
   }
 
-  private Function<ProductDTO, Product> addOrUpdateProduct(HashMap<Long, Product> productsMap) {
+  private Function<ProductDTO, Product> addOrUpdateProduct(Map<Long, Product> productsMap) {
     return productDTO -> {
       Product existingProduct = productsMap.get(productDTO.getId());
-      if (Optional.ofNullable(existingProduct).isPresent()) {
+      if (existingProduct != null) {
         Product updateProduct = productMapper.toProduct(productDTO);
         updateProduct.setId(existingProduct.getId());
         return updateProduct;

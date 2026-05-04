@@ -12,18 +12,22 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 @Slf4j
 @RestController
-@RequestMapping("/api/inventory/products")
+@RequestMapping("/api/v1/products")
+@RequiredArgsConstructor
 public class ProductController {
 
-  private ProductService productService;
+  private final ProductService productService;
 
   @GetMapping
   public ResponseEntity<Object> getProducts(@Valid BaseQueryParams queryParams)
@@ -132,17 +136,17 @@ public class ProductController {
     }
   }
 
-  /// Update product via CSV file
+  /// Upload products via CSV file
 
-  @PostMapping("/bulk")
-  public ResponseEntity<Object> updateProductByCsv(@RequestParam("file") MultipartFile csvFile)
+  @PostMapping("/upload")
+  public ResponseEntity<Object> uploadProductsByCsv(@RequestParam("file") MultipartFile csvFile)
       throws ApplicationException {
     try {
-      BaseStatusCode successCode = SuccessCode.PRO2007_UPDATE_PRODUCTS_BY_CSV_SUCCESS;
+      BaseStatusCode successCode = SuccessCode.PRO2007_UPLOAD_PRODUCTS_BY_CSV_SUCCESS;
       return ResponseBody.builder()
           .code(successCode.getCode())
           .message(successCode.getMessage())
-          .data(productService.updateProductByCsv(csvFile))
+          .data(productService.uploadProductByCsv(csvFile))
           .build()
           .toResponseEntity(HttpStatus.OK);
     } catch (Exception e) {
@@ -150,5 +154,35 @@ public class ProductController {
       throw new ApplicationException(
           ErrorCode.PRO5002_CANNOT_UPDATE_PRODUCTS_FROM_CSV_FILE, HttpStatus.INTERNAL_SERVER_ERROR);
     }
+  }
+
+  /// Export products to file (CSV, JSON, XML)
+
+  @GetMapping("/export")
+  public ResponseEntity<byte[]> exportProducts(
+      @RequestParam(name = "fileType", defaultValue = "csv") String fileType)
+      throws ApplicationException {
+    try {
+      byte[] data = productService.exportProducts(fileType);
+      String filename = "products." + fileType.toLowerCase();
+      String contentType = getContentType(fileType);
+
+      return ResponseEntity.ok()
+          .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
+          .contentType(MediaType.parseMediaType(contentType))
+          .body(data);
+    } catch (Exception e) {
+      log.error("Could not export products: {}", e.getMessage());
+      throw new ApplicationException(
+          ErrorCode.PRO1001_CANNOT_GET_ALL_PRODUCTS, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  private String getContentType(String fileType) {
+    return switch (fileType.toLowerCase()) {
+      case "json" -> MediaType.APPLICATION_JSON_VALUE;
+      case "xml" -> MediaType.APPLICATION_XML_VALUE;
+      default -> "text/csv";
+    };
   }
 }
