@@ -1,8 +1,11 @@
 package com.mrtripop.inventory.services.impl;
 
 import com.mrtripop.clinical.models.db.Brand;
+import com.mrtripop.clinical.models.db.RegulatorySchedule;
 import com.mrtripop.clinical.models.db.Store;
+import com.mrtripop.clinical.models.db.StoreProduct;
 import com.mrtripop.clinical.repository.BrandRepository;
+import com.mrtripop.clinical.repository.StoreProductRepository;
 import com.mrtripop.clinical.repository.StoreRepository;
 import com.mrtripop.clinical.services.AuditService;
 import com.mrtripop.exception.ApplicationException;
@@ -11,16 +14,24 @@ import com.mrtripop.inventory.constant.ErrorCode;
 import com.mrtripop.inventory.models.db.Batch;
 import com.mrtripop.inventory.models.db.BatchStatus;
 import com.mrtripop.inventory.models.db.StoreStock;
+import com.mrtripop.inventory.models.db.VerificationStatus;
 import com.mrtripop.inventory.models.dto.BatchDto;
 import com.mrtripop.inventory.models.dto.DeductedBatchDto;
+import com.mrtripop.inventory.models.dto.SignatureVerificationDto;
 import com.mrtripop.inventory.models.dto.StockDeductionRequest;
 import com.mrtripop.inventory.models.dto.StockDeductionResponseDto;
 import com.mrtripop.inventory.models.dto.StockEntryRequest;
 import com.mrtripop.inventory.models.dto.StockEntryResponseDto;
 import com.mrtripop.inventory.models.dto.StoreStockDto;
+import com.mrtripop.inventory.models.dto.SyncSealResult;
 import com.mrtripop.inventory.repository.BatchRepository;
 import com.mrtripop.inventory.repository.StoreStockRepository;
 import com.mrtripop.inventory.services.BatchService;
+import com.mrtripop.inventory.services.DigitalSignatureService;
+import com.mrtripop.inventory.services.SyncSealService;
+import com.mrtripop.inventory.services.UnitConversionService;
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -38,12 +49,18 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class BatchServiceImpl implements BatchService {
 
+  private static final String AUDIT_SIGNATURE_FORMAT = "license=%s, status=%s";
+
   private final BatchRepository batchRepository;
   private final StoreStockRepository storeStockRepository;
   private final BrandRepository brandRepository;
   private final StoreRepository storeRepository;
+  private final StoreProductRepository storeProductRepository;
   private final AuditService auditService;
   private final BatchMapper batchMapper;
+  private final UnitConversionService unitConversionService;
+  private final SyncSealService syncSealService;
+  private final DigitalSignatureService digitalSignatureService;
 
   @Override
   @Transactional(rollbackFor = ApplicationException.class)
@@ -115,6 +132,41 @@ public class BatchServiceImpl implements BatchService {
         .orElseThrow(
             () -> new ApplicationException(ErrorCode.STORE_NOT_FOUND, HttpStatus.NOT_FOUND));
 
+    boolean isControlled = isControlledSubstance(brand);
+    SyncSealResult syncSealResult = null;
+
+    if (isControlled) {
+      if (request.getSignature() == null) {
+        throw new ApplicationException(
+            ErrorCode.CONTROLLED_SUBSTANCE_REQUIRES_SIGNATURE, HttpStatus.FORBIDDEN);
+      }
+      String licenseNumber = request.getSignature().getLicenseNumber();
+      String signaturePayload = request.getSignature().getSignaturePayload();
+      if (licenseNumber == null
+          || licenseNumber.isBlank()
+          || signaturePayload == null
+          || signaturePayload.isBlank()) {
+        throw new ApplicationException(ErrorCode.INVALID_DIGITAL_SIGNATURE, HttpStatus.BAD_REQUEST);
+      }
+      syncSealResult = syncSealService.verifyPharmacist(licenseNumber, signaturePayload);
+      if (syncSealResult.verificationStatus() != VerificationStatus.VERIFIED) {
+        throw new ApplicationException(
+            ErrorCode.SIGNATURE_VERIFICATION_FAILED, HttpStatus.FORBIDDEN);
+      }
+    }
+
+    String baseUnit = brand.getBaseUnit();
+    String requestedUnit = request.getUnit();
+    long baseQuantity;
+
+    if (requestedUnit == null || requestedUnit.equalsIgnoreCase(baseUnit)) {
+      baseQuantity = request.getQuantity();
+    } else {
+      baseQuantity =
+          unitConversionService.convertToBaseUnits(
+              brand.getId(), requestedUnit, request.getQuantity());
+    }
+
     List<StoreStock> availableStock =
         storeStockRepository.findAvailableStockByStoreIdAndBrandIdOrderByExpiryDate(
             request.getStoreId(), brand.getId());
@@ -123,8 +175,15 @@ public class BatchServiceImpl implements BatchService {
       throw new ApplicationException(ErrorCode.NO_AVAILABLE_BATCHES, HttpStatus.CONFLICT);
     }
 
+    for (StoreStock stock : availableStock) {
+      if (!stock.getBatch().getExpiryDate().isAfter(LocalDate.now())) {
+        throw new ApplicationException(ErrorCode.EXPIRED_BATCH_DEDUCTION, HttpStatus.CONFLICT);
+      }
+    }
+
     List<DeductedBatchDto> deductionItems = new ArrayList<>();
-    long remaining = request.getQuantity();
+    List<StoreStock> deductedStocks = new ArrayList<>();
+    long remaining = baseQuantity;
 
     for (StoreStock stock : availableStock) {
       if (remaining <= 0) {
@@ -154,8 +213,8 @@ public class BatchServiceImpl implements BatchService {
           String.valueOf(oldQuantity),
           String.valueOf(newQuantity));
 
-      deductionItems.add(
-          batchMapper.toDeductedBatchDto(stock, toDeduct));
+      deductionItems.add(batchMapper.toDeductedBatchDto(stock, toDeduct));
+      deductedStocks.add(stock);
       remaining -= toDeduct;
     }
 
@@ -163,14 +222,57 @@ public class BatchServiceImpl implements BatchService {
       throw new ApplicationException(ErrorCode.INSUFFICIENT_QUANTITY, HttpStatus.CONFLICT);
     }
 
+    SignatureVerificationDto signatureVerification = null;
+    if (isControlled && syncSealResult != null) {
+      for (StoreStock stock : deductedStocks) {
+        digitalSignatureService.saveSignature(
+            stock.getId(), request.getSignature().getLicenseNumber(), syncSealResult);
+      }
+      auditService.recordAudit(
+          "CONTROLLED_SUBSTANCE_SIGNED",
+          "StockDeduction",
+          brand.getId().toString(),
+          null,
+          String.format(AUDIT_SIGNATURE_FORMAT,
+              request.getSignature().getLicenseNumber(),
+              syncSealResult.verificationStatus()));
+      signatureVerification =
+          SignatureVerificationDto.builder()
+              .licenseNumber(request.getSignature().getLicenseNumber())
+              .verifiedAt(syncSealResult.verifiedAt())
+              .verificationStatus(syncSealResult.verificationStatus().name())
+              .build();
+    }
+
+    BigDecimal unitPrice = null;
+    BigDecimal totalAmount = null;
+    java.util.Optional<StoreProduct> storeProductOpt =
+        storeProductRepository.findByStoreIdAndBrandId(request.getStoreId(), brand.getId());
+    if (storeProductOpt.isPresent()) {
+      StoreProduct sp = storeProductOpt.get();
+      unitPrice = sp.getPrice();
+      totalAmount = sp.getPrice().multiply(BigDecimal.valueOf(baseQuantity));
+    }
+
     return StockDeductionResponseDto.builder()
         .barcode(request.getBarcode())
         .brandId(brand.getId())
         .brandName(brand.getBrandName())
+        .requestedUnit(requestedUnit)
         .requestedQuantity(request.getQuantity())
-        .deductedQuantity(request.getQuantity() - remaining)
+        .baseUnit(baseUnit)
+        .deductedQuantity(baseQuantity - remaining)
+        .unitPrice(unitPrice)
+        .totalAmount(totalAmount)
         .items(deductionItems)
+        .signatureVerification(signatureVerification)
         .build();
+  }
+
+  private boolean isControlledSubstance(Brand brand) {
+    return brand.getMolecule() != null
+        && brand.getMolecule().getRegulatorySchedule() != null
+        && brand.getMolecule().getRegulatorySchedule().isControlled();
   }
 
   @Override
