@@ -18,6 +18,22 @@ Google Java Format | Conventional Commits (commitlint)
 - `docker compose down` — Stop all containers
 - `make setup-commitlint` — First-time commit hook setup
 
+## Searching Code
+
+Prefer dedicated tools and simple bash commands. Do not use `find -exec` — it triggers permission prompts.
+
+| Goal | Use |
+|------|-----|
+| Read a known file | `Read` tool |
+| Find files by name/glob | `find . -name "*.java"` or `find . -path "*/controllers/*"` |
+| Search file contents | `grep -rn "pattern" src/` or `grep -rl "pattern" src/` |
+| Find a symbol/definition | `LSP` tool (`goToDefinition`, `workspaceSymbol`) |
+| Find all references | `LSP` tool (`findReferences`) |
+| Broad codebase exploration | `Agent` with `subagent_type=Explore` |
+
+**Never** use `find -exec` — run `find` to list files, then use `Read` tool to read them.
+**Never** use `cat`, `head`, `tail` — use `Read` tool instead.
+
 ## Package Structure
 
 Base: `com.mrtripop`
