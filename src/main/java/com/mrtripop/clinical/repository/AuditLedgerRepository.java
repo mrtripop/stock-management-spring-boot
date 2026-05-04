@@ -1,16 +1,18 @@
 package com.mrtripop.clinical.repository;
 
 import com.mrtripop.clinical.models.db.AuditLedger;
-import java.util.UUID;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 @Repository
 public interface AuditLedgerRepository extends JpaRepository<AuditLedger, UUID> {
 
   List<AuditLedger> findByEntityIdOrderByTimestampDesc(String entityId);
+
+  List<AuditLedger> findByTimestampBetween(LocalDateTime start, LocalDateTime end);
 
   @Override
   default void delete(AuditLedger entity) {
