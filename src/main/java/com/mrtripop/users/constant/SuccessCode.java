@@ -13,7 +13,8 @@ public enum SuccessCode implements BaseStatusCode {
   AUTH_MFA_SETUP("USR2004", "MFA setup completed"),
   AUTH_CURRENT_USER("USR2005", "Current user retrieved successfully"),
   AUTH_USER_CREATED("USR2006", "User created successfully"),
-  AUTH_MFA_REQUIRED("USR2007", "MFA verification required");
+  AUTH_MFA_REQUIRED("USR2007", "MFA verification required"),
+  AUTH_TOTP_VERIFIED("USR2008", "TOTP verification successful");
 
   private final String code;
   private final String message;
