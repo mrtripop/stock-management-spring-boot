@@ -1,34 +1,5 @@
-import { useState, useEffect, useCallback } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import api from './api'
-
-// Temporary backward-compatible exports — will be removed when pages migrate to React Query
-export function useApi(fetchFn, deps = []) {
-  const [data, setData] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
-
-  const fetch = useCallback(async () => {
-    setLoading(true)
-    setError(null)
-    try {
-      const result = await fetchFn()
-      setData(result)
-    } catch (e) {
-      setError(e.message)
-    } finally {
-      setLoading(false)
-    }
-  }, deps)
-
-  useEffect(() => { fetch() }, [fetch])
-
-  return { data, loading, error, refetch: fetch }
-}
-
-export function paginatedUrl(base, page = 1, size = 10) {
-  return `${base}?page=${page}&size=${size}&orderBy=DESC`
-}
 
 /**
  * Paginated list query. Returns { data, loading, error, items, totalPages, totalElements }.
