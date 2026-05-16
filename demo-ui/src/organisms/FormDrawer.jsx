@@ -45,7 +45,7 @@ export function FormDrawer({ open, onClose, title, children, onSubmit, submitLab
                 leaveFrom="translate-x-0"
                 leaveTo="translate-x-full"
               >
-                <DialogPanel className="pointer-events-auto w-screen max-w-md">
+                <DialogPanel className="pointer-events-auto w-screen max-w-md h-screen">
                   <div className="flex h-full flex-col bg-white shadow-[var(--shadow-lg)]">
                     {/* Header */}
                     <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--color-border-light)]">
