@@ -11,6 +11,7 @@ import { FormField } from '../molecules/FormField'
 import { DataTable } from '../organisms/DataTable'
 import { FormDrawer } from '../organisms/FormDrawer'
 import { AlertDialog } from '../organisms/AlertDialog'
+import { TableRowActions } from '../molecules/TableRowActions'
 import { useQueryList, useCreateMutation, useDeleteMutation } from '../lib/hooks'
 
 export default function Clinical() {
@@ -88,7 +89,7 @@ function StoresTab() {
             <td className="px-4 py-2.5 text-sm text-[var(--color-text-primary)]">{s.name || '-'}</td>
             <td className="px-4 py-2.5"><Badge variant="success">{s.type}</Badge></td>
             <td className="px-4 py-2.5 text-right">
-              <button onClick={() => setDeleteTarget(s)} className="text-[var(--color-danger)] text-xs font-medium hover:underline cursor-pointer">Delete</button>
+              <TableRowActions onDelete={() => setDeleteTarget(s)} />
             </td>
           </tr>
         )}

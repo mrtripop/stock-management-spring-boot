@@ -11,6 +11,7 @@ import { FormField } from '../molecules/FormField'
 import { DataTable } from '../organisms/DataTable'
 import { FormDrawer } from '../organisms/FormDrawer'
 import { AlertDialog } from '../organisms/AlertDialog'
+import { TableRowActions } from '../molecules/TableRowActions'
 import { useQueryList, useCreateMutation, useUpdateMutation, useDeleteMutation } from '../lib/hooks'
 
 const EMPTY_PRODUCT = {
@@ -122,8 +123,10 @@ export default function Products() {
               <Badge variant={p.isActive ? 'success' : 'neutral'}>{p.isActive ? 'Active' : 'Inactive'}</Badge>
             </td>
             <td className="px-4 py-2.5 text-right">
-              <button onClick={() => openEdit(p)} className="text-[var(--color-primary)] text-xs font-medium hover:underline mr-3 cursor-pointer">Edit</button>
-              <button onClick={() => setDeleteTarget(p)} className="text-[var(--color-danger)] text-xs font-medium hover:underline cursor-pointer">Delete</button>
+              <TableRowActions
+                onEdit={() => openEdit(p)}
+                onDelete={() => setDeleteTarget(p)}
+              />
             </td>
           </tr>
         )}
