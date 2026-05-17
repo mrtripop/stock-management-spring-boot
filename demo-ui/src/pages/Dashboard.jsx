@@ -8,27 +8,69 @@ import { useQueryList } from '../lib/hooks'
 export default function Dashboard() {
   const navigate = useNavigate()
 
-  const { items: productData, totalElements: productCount } = useQueryList(
+  const { items: productData, totalElements: productCount, isLoading: productsLoading } = useQueryList(
     ['products'], '/products', { page: 1, size: 1 }
   )
 
-  const { items: batchData, totalElements: batchCount } = useQueryList(
+  const { items: batchData, totalElements: batchCount, isLoading: batchesLoading } = useQueryList(
     ['batches'], '/inventory/batches', { page: 1, size: 1 }
   )
 
-  const { items: expiringBatches } = useQueryList(
-    ['batches-expiring'], '/inventory/batches', { page: 1, size: 5 }
+  const { items: expiringBatches, isLoading: expiringLoading } = useQueryList(
+    ['batches-expiring'], '/inventory/batches', { page: 1, size: 100 }
   )
 
   const { items: recentTransactions } = useQueryList(
     ['transactions-recent'], '/transactions', { page: 1, size: 5 }
   )
 
+  const getDaysUntil = (dateStr) => {
+    if (!dateStr) return null
+    return Math.ceil((new Date(dateStr) - new Date()) / (1000 * 60 * 60 * 24))
+  }
+
+  const expiringCount = expiringBatches.filter((b) => {
+    const days = getDaysUntil(b.expiryDate)
+    return days !== null && days <= 30 && days > 0
+  }).length
+
+  const urgentCount = expiringBatches.filter((b) => {
+    const days = getDaysUntil(b.expiryDate)
+    return days !== null && days <= 7 && days > 0
+  }).length
+
   const stats = [
-    { title: 'Products', value: productCount ?? '-', change: '', trend: null, accentColor: 'var(--color-primary)' },
-    { title: 'Expiring Soon', value: '-', change: '', trend: null, accentColor: 'var(--color-warning)' },
-    { title: 'Batches', value: batchCount ?? '-', change: 'Active batches', trend: null, accentColor: 'var(--color-purple)' },
-    { title: 'Low Stock', value: '-', change: 'Below reorder', trend: null, accentColor: 'var(--color-danger)' },
+    {
+      title: 'Products',
+      value: productCount ?? 0,
+      change: '',
+      trend: null,
+      accentColor: 'var(--color-primary)',
+      loading: productsLoading,
+    },
+    {
+      title: 'Expiring Soon',
+      value: expiringCount,
+      change: urgentCount > 0 ? `${urgentCount} urgent` : 'Within 30 days',
+      trend: urgentCount > 0 ? 'down' : null,
+      accentColor: 'var(--color-warning)',
+      loading: expiringLoading,
+    },
+    {
+      title: 'Batches',
+      value: batchCount ?? 0,
+      change: 'Active batches',
+      trend: null,
+      accentColor: 'var(--color-purple)',
+      loading: batchesLoading,
+    },
+    {
+      title: 'Low Stock',
+      value: '-',
+      change: 'Below reorder',
+      trend: null,
+      accentColor: 'var(--color-danger)',
+    },
   ]
 
   const activities = recentTransactions.map((t) => ({
