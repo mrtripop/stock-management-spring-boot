@@ -35,6 +35,7 @@ export default function Products() {
   const [showForm, setShowForm] = useState(false)
   const [editingProduct, setEditingProduct] = useState(null)
   const [deleteTarget, setDeleteTarget] = useState(null)
+  const [showDimensions, setShowDimensions] = useState(false)
   const [form, setForm] = useState(EMPTY_PRODUCT)
 
   const { items: products, totalPages, totalElements, loading } = useQueryList(
@@ -159,18 +160,35 @@ export default function Products() {
         <FormField label="Reorder Quantity" required>
           <Input type="number" min="0" value={form.reorderQuantity} onChange={(e) => setForm({ ...form, reorderQuantity: +e.target.value })} />
         </FormField>
-        <FormField label="Packed Weight (kg)">
-          <Input type="number" min="0" step="0.01" value={form.packedWeight} onChange={(e) => setForm({ ...form, packedWeight: +e.target.value })} />
-        </FormField>
-        <FormField label="Packed Height (cm)">
-          <Input type="number" min="0" step="0.01" value={form.packedHeight} onChange={(e) => setForm({ ...form, packedHeight: +e.target.value })} />
-        </FormField>
-        <FormField label="Packed Width (cm)">
-          <Input type="number" min="0" step="0.01" value={form.packedWidth} onChange={(e) => setForm({ ...form, packedWidth: +e.target.value })} />
-        </FormField>
-        <FormField label="Packed Depth (cm)">
-          <Input type="number" min="0" step="0.01" value={form.packedDepth} onChange={(e) => setForm({ ...form, packedDepth: +e.target.value })} />
-        </FormField>
+
+        {/* Package Dimensions — collapsible group */}
+        <div className="border border-[var(--color-border-light)] rounded-[var(--radius-md)] bg-slate-50">
+          <button
+            type="button"
+            onClick={() => setShowDimensions(!showDimensions)}
+            className="w-full flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors cursor-pointer"
+          >
+            <Icon name={showDimensions ? 'chevron-down' : 'chevron-right'} className="w-3 h-3" />
+            Package Dimensions
+          </button>
+          {showDimensions && (
+            <div className="px-3 pb-3 grid grid-cols-2 gap-3">
+              <FormField label="Weight (kg)">
+                <Input type="number" min="0" step="0.01" value={form.packedWeight} onChange={(e) => setForm({ ...form, packedWeight: +e.target.value })} />
+              </FormField>
+              <FormField label="Height (cm)">
+                <Input type="number" min="0" step="0.01" value={form.packedHeight} onChange={(e) => setForm({ ...form, packedHeight: +e.target.value })} />
+              </FormField>
+              <FormField label="Width (cm)">
+                <Input type="number" min="0" step="0.01" value={form.packedWidth} onChange={(e) => setForm({ ...form, packedWidth: +e.target.value })} />
+              </FormField>
+              <FormField label="Depth (cm)">
+                <Input type="number" min="0" step="0.01" value={form.packedDepth} onChange={(e) => setForm({ ...form, packedDepth: +e.target.value })} />
+              </FormField>
+            </div>
+          )}
+        </div>
+
         <FormField label="Active">
           <Select value={String(form.isActive)} onChange={(e) => setForm({ ...form, isActive: e.target.value === 'true' })}>
             <option value="true">Yes</option>

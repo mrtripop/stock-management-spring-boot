@@ -23,6 +23,7 @@ const iconMap = {
   'x-mark': Icons.XMarkIcon,
   'chevron-left': Icons.ChevronLeftIcon,
   'chevron-right': Icons.ChevronRightIcon,
+  'chevron-down': Icons.ChevronDownIcon,
   'arrow-down-tray': Icons.ArrowDownTrayIcon,
   'arrow-up-tray': Icons.ArrowUpTrayIcon,
   'magnifying-glass': Icons.MagnifyingGlassIcon,
