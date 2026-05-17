@@ -74,6 +74,7 @@ public class ProductServiceImpl implements ProductService {
     try {
       Product product = productMapper.toProduct(productDTO);
       ProductHistory productHistory = productMapper.toProductHistory(productDTO);
+      productHistory.setId(null);
       productHistoryRepository.save(productHistory);
       Product productSaved = productRepository.save(product);
       return productMapper.toProductDTO(productSaved);
@@ -107,6 +108,7 @@ public class ProductServiceImpl implements ProductService {
       ProductDTO existingProduct = getProductById(id);
       productRepository.deleteById(id);
       ProductHistory producthistory = productMapper.toProductHistory(existingProduct);
+      producthistory.setId(null);
       producthistory.setIsActive(false);
       productHistoryRepository.save(producthistory);
     } catch (Exception e) {

@@ -12,6 +12,8 @@ import com.mrtripop.users.models.dto.LoginResponse;
 import com.mrtripop.users.models.dto.MfaSetupResponse;
 import com.mrtripop.users.models.dto.MfaVerifyRequest;
 import com.mrtripop.users.models.dto.StoreSelectionRequest;
+import com.mrtripop.users.models.dto.VerifyTotpRequest;
+import com.mrtripop.users.models.dto.VerifyTotpResponse;
 import com.mrtripop.users.services.AuthService;
 import jakarta.validation.Valid;
 import java.security.Principal;
@@ -47,6 +49,21 @@ public class AuthController {
   public ResponseEntity<Object> verifyMfa(@Valid @RequestBody MfaVerifyRequest request) throws ApplicationException {
     AuthResponse result = authService.verifyMfa(request);
     BaseStatusCode success = SuccessCode.AUTH_MFA_VERIFIED;
+    return ResponseBody.builder()
+        .code(success.getCode())
+        .message(success.getMessage())
+        .data(result)
+        .build()
+        .toResponseEntity(HttpStatus.OK);
+  }
+
+  @PostMapping("/verify-totp")
+  public ResponseEntity<Object> verifyTotp(
+      @RequestHeader("Authorization") String authorization,
+      @Valid @RequestBody VerifyTotpRequest request) throws ApplicationException {
+    String tempToken = authorization.replace("Bearer ", "");
+    VerifyTotpResponse result = authService.verifyTotp(tempToken);
+    BaseStatusCode success = SuccessCode.AUTH_TOTP_VERIFIED;
     return ResponseBody.builder()
         .code(success.getCode())
         .message(success.getMessage())
