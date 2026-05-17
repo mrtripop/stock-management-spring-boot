@@ -1255,6 +1255,63 @@ class BatchServiceImplTest {
   }
 
   @Nested
+  @DisplayName("RestoreStock")
+  class RestoreStock {
+
+    @Test
+    @DisplayName("should restore stock to specific batch")
+    void shouldRestoreStockToSpecificBatch() throws ApplicationException {
+      // Arrange
+      StoreStock storeStock = BatchDeductionFixture.validStoreStock();
+      when(storeStockRepository.findByStoreIdAndBatchId(
+              BatchDeductionFixture.STORE_ID, BatchDeductionFixture.BATCH_ID))
+          .thenReturn(Optional.of(storeStock));
+      when(storeStockRepository.restoreQuantity(
+              storeStock.getId(), BatchDeductionFixture.DEDUCT_QUANTITY))
+          .thenReturn(1);
+      when(auditService.recordAudit(anyString(), anyString(), anyString(), anyString(), anyString()))
+          .thenReturn(null);
+
+      // Act
+      batchService.restoreStock(
+          BatchDeductionFixture.STORE_ID,
+          BatchDeductionFixture.BATCH_ID,
+          BatchDeductionFixture.DEDUCT_QUANTITY);
+
+      // Assert
+      verify(storeStockRepository)
+          .restoreQuantity(storeStock.getId(), BatchDeductionFixture.DEDUCT_QUANTITY);
+      verify(auditService)
+          .recordAudit(
+              eq("INVENTORY_IN"),
+              eq("StoreStock"),
+              eq(storeStock.getId().toString()),
+              anyString(),
+              anyString());
+    }
+
+    @Test
+    @DisplayName("should throw INV4023 when store stock not found for restoration")
+    void shouldThrowWhenStockNotFound() {
+      // Arrange
+      when(storeStockRepository.findByStoreIdAndBatchId(
+              BatchDeductionFixture.STORE_ID, BatchDeductionFixture.BATCH_ID))
+          .thenReturn(Optional.empty());
+
+      // Act & Assert
+      ApplicationException ex =
+          assertThrows(
+              ApplicationException.class,
+              () ->
+                  batchService.restoreStock(
+                      BatchDeductionFixture.STORE_ID,
+                      BatchDeductionFixture.BATCH_ID,
+                      BatchDeductionFixture.DEDUCT_QUANTITY));
+      assertEquals(ErrorCode.STOCK_NOT_FOUND_FOR_BATCH, ex.getErrorCode());
+    }
+  }
+
+  @Nested
   @DisplayName("getStoreStock")
   class GetStoreStock {
 
