@@ -1,49 +1,327 @@
+/* ==========================================================================
+   Design Tokens — Primitive + Semantic + Dark Mode
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. Primitive Color Scales
+   -------------------------------------------------------------------------- */
 :root {
-  /* Colors */
-  --color-primary: #0d9488;
-  --color-primary-hover: #0f766e;
-  --color-sidebar-bg: #134e4a;
-  --color-sidebar-active: rgba(13, 148, 136, 0.2);
-  --color-danger: #ef4444;
-  --color-danger-hover: #dc2626;
-  --color-warning: #f59e0b;
-  --color-success: #10b981;
-  --color-info: #3b82f6;
-  --color-purple: #8b5cf6;
+  /* Teal — Primary */
+  --teal-50: #f0fdfa;
+  --teal-100: #ccfbf1;
+  --teal-200: #99f6e4;
+  --teal-300: #5eead4;
+  --teal-400: #2dd4bf;
+  --teal-500: #14b8a6;
+  --teal-600: #0d9488;
+  --teal-700: #0f766e;
+  --teal-800: #115e59;
+  --teal-900: #134e4a;
+  --teal-950: #042f2e;
+
+  /* Slate — Neutral */
+  --slate-50: #f8fafc;
+  --slate-100: #f1f5f9;
+  --slate-200: #e2e8f0;
+  --slate-300: #cbd5e1;
+  --slate-400: #94a3b8;
+  --slate-500: #64748b;
+  --slate-600: #475569;
+  --slate-700: #334155;
+  --slate-800: #1e293b;
+  --slate-900: #0f172a;
+  --slate-950: #020617;
+
+  /* Emerald — Success */
+  --emerald-50: #ecfdf5;
+  --emerald-100: #d1fae5;
+  --emerald-200: #a7f3d0;
+  --emerald-300: #6ee7b7;
+  --emerald-400: #34d399;
+  --emerald-500: #10b981;
+  --emerald-600: #059669;
+  --emerald-700: #047857;
+  --emerald-800: #065f46;
+  --emerald-900: #064e3b;
+  --emerald-950: #022c22;
+
+  /* Red — Danger */
+  --red-50: #fef2f2;
+  --red-100: #fee2e2;
+  --red-200: #fecaca;
+  --red-300: #fca5a5;
+  --red-400: #f87171;
+  --red-500: #ef4444;
+  --red-600: #dc2626;
+  --red-700: #b91c1c;
+  --red-800: #991b1b;
+  --red-900: #7f1d1d;
+  --red-950: #450a0a;
+
+  /* Amber — Warning */
+  --amber-50: #fffbeb;
+  --amber-100: #fef3c7;
+  --amber-200: #fde68a;
+  --amber-300: #fcd34d;
+  --amber-400: #fbbf24;
+  --amber-500: #f59e0b;
+  --amber-600: #d97706;
+  --amber-700: #b45309;
+  --amber-800: #92400e;
+  --amber-900: #78350f;
+  --amber-950: #451a03;
+
+  /* Blue — Info */
+  --blue-50: #eff6ff;
+  --blue-100: #dbeafe;
+  --blue-200: #bfdbfe;
+  --blue-300: #93c5fd;
+  --blue-400: #60a5fa;
+  --blue-500: #3b82f6;
+  --blue-600: #2563eb;
+  --blue-700: #1d4ed8;
+  --blue-800: #1e40af;
+  --blue-900: #1e3a8a;
+  --blue-950: #172554;
+
+  /* Purple — ADMIN role badge */
+  --purple-50: #faf5ff;
+  --purple-100: #f3e8ff;
+  --purple-200: #e9d5ff;
+  --purple-300: #d8b4fe;
+  --purple-400: #c084fc;
+  --purple-500: #a855f7;
+  --purple-600: #9333ea;
+  --purple-700: #7e22ce;
+  --purple-800: #6b21a8;
+  --purple-900: #581c87;
+  --purple-950: #3b0764;
+
+  /* Orange — REORDER_NEEDED task type */
+  --orange-50: #fff7ed;
+  --orange-100: #ffedd5;
+  --orange-200: #fed7aa;
+  --orange-300: #fdba74;
+  --orange-400: #fb923c;
+  --orange-500: #f97316;
+  --orange-600: #ea580c;
+  --orange-700: #c2410c;
+  --orange-800: #9a3412;
+  --orange-900: #7c2d12;
+  --orange-950: #431407;
+
+  /* --------------------------------------------------------------------------
+     2. Semantic Tokens — Light Mode (default)
+     -------------------------------------------------------------------------- */
+
+  /* Primary */
+  --color-primary: var(--teal-600);
+  --color-primary-hover: var(--teal-700);
+  --color-primary-active: var(--teal-800);
+  --color-primary-subtle: var(--teal-100);
+  --color-primary-text: var(--teal-950);
+
+  /* Feedback — Success */
+  --color-success: var(--emerald-600);
+  --color-success-subtle: var(--emerald-100);
+  --color-success-text: var(--emerald-900);
+
+  /* Feedback — Danger */
+  --color-danger: var(--red-600);
+  --color-danger-subtle: var(--red-100);
+  --color-danger-text: var(--red-900);
+
+  /* Feedback — Warning */
+  --color-warning: var(--amber-500);
+  --color-warning-subtle: var(--amber-100);
+  --color-warning-text: var(--amber-900);
+
+  /* Feedback — Info */
+  --color-info: var(--blue-600);
+  --color-info-subtle: var(--blue-100);
+  --color-info-text: var(--blue-900);
+
+  /* Pharmacy domain — Role badges */
+  --color-badge-admin: var(--purple-600);
+  --color-badge-admin-subtle: var(--purple-100);
+  --color-badge-pharmacist: var(--teal-600);
+  --color-badge-pharmacist-subtle: var(--teal-100);
+  --color-badge-employee: var(--slate-600);
+  --color-badge-employee-subtle: var(--slate-100);
+  --color-badge-manager: var(--blue-600);
+  --color-badge-manager-subtle: var(--blue-100);
+
+  /* Pharmacy domain — Task types */
+  --color-task-reorder: var(--orange-600);
+  --color-task-reorder-subtle: var(--orange-100);
+
+  /* Surfaces */
+  --color-background: var(--slate-50);
   --color-surface: #ffffff;
-  --color-background: #f0fdfa;
-  --color-text-primary: #0f172a;
-  --color-text-secondary: #64748b;
-  --color-text-muted: #94a3b8;
-  --color-border: #d1fae5;
-  --color-border-light: #e2e8f0;
+  --color-surface-raised: #ffffff;
+  --color-overlay: rgba(0, 0, 0, 0.5);
 
-  /* Typography */
+  /* Text */
+  --color-text-primary: var(--slate-900);
+  --color-text-secondary: var(--slate-600);
+  --color-text-muted: var(--slate-400);
+  --color-text-inverse: #ffffff;
+
+  /* Borders */
+  --color-border: var(--slate-200);
+  --color-border-light: var(--slate-100);
+  --color-border-focus: var(--teal-500);
+
+  /* Sidebar */
+  --color-sidebar-bg: var(--slate-900);
+  --color-sidebar-active: rgba(13, 148, 136, 0.2);
+  --color-sidebar-text: var(--slate-300);
+  --color-sidebar-text-active: #ffffff;
+
+  /* --------------------------------------------------------------------------
+     3. Typography Scale
+     -------------------------------------------------------------------------- */
   --font-family: Inter, system-ui, -apple-system, sans-serif;
-  --font-size-xs: 0.75rem;
-  --font-size-sm: 0.875rem;
-  --font-size-base: 1rem;
-  --font-size-lg: 1.125rem;
-  --font-size-xl: 1.25rem;
-  --font-size-2xl: 1.5rem;
 
-  /* Spacing */
+  --text-2xs: 0.625rem;
+  --text-2xs--line-height: 1rem;
+  --text-2xs--weight: 400;
+
+  --text-xs: 0.75rem;
+  --text-xs--line-height: 1rem;
+  --text-xs--weight: 400;
+
+  --text-sm: 0.875rem;
+  --text-sm--line-height: 1.25rem;
+  --text-sm--weight: 400;
+
+  --text-base: 1rem;
+  --text-base--line-height: 1.5rem;
+  --text-base--weight: 400;
+
+  --text-lg: 1.125rem;
+  --text-lg--line-height: 1.75rem;
+  --text-lg--weight: 500;
+
+  --text-xl: 1.25rem;
+  --text-xl--line-height: 1.75rem;
+  --text-xl--weight: 600;
+
+  --text-2xl: 1.5rem;
+  --text-2xl--line-height: 2rem;
+  --text-2xl--weight: 600;
+
+  --text-3xl: 1.875rem;
+  --text-3xl--line-height: 2.25rem;
+  --text-3xl--weight: 700;
+
+  --font-normal: 400;
+  --font-medium: 500;
+  --font-semibold: 600;
+  --font-bold: 700;
+
+  /* --------------------------------------------------------------------------
+     4. Spacing Scale
+     -------------------------------------------------------------------------- */
+  --space-0: 0;
+  --space-0-5: 0.125rem;
   --space-1: 0.25rem;
+  --space-1-5: 0.375rem;
   --space-2: 0.5rem;
   --space-3: 0.75rem;
   --space-4: 1rem;
   --space-5: 1.25rem;
   --space-6: 1.5rem;
   --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
 
-  /* Borders & Radius */
-  --radius-sm: 6px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
+  /* --------------------------------------------------------------------------
+     5. Shadows
+     -------------------------------------------------------------------------- */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07), 0 2px 4px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1), 0 4px 6px rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.1), 0 8px 10px rgba(0, 0, 0, 0.04);
+
+  /* --------------------------------------------------------------------------
+     6. Radii
+     -------------------------------------------------------------------------- */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+  --radius-2xl: 16px;
   --radius-full: 9999px;
+}
 
-  /* Shadows */
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07);
-  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+/* --------------------------------------------------------------------------
+   7. Semantic Tokens — Dark Mode Overrides
+   -------------------------------------------------------------------------- */
+[data-theme="dark"] {
+  /* Primary */
+  --color-primary: var(--teal-500);
+  --color-primary-hover: var(--teal-400);
+  --color-primary-active: var(--teal-300);
+  --color-primary-subtle: var(--teal-900);
+  --color-primary-text: var(--teal-100);
+
+  /* Feedback — Success */
+  --color-success: var(--emerald-500);
+  --color-success-subtle: var(--emerald-900);
+  --color-success-text: var(--emerald-100);
+
+  /* Feedback — Danger */
+  --color-danger: var(--red-500);
+  --color-danger-subtle: var(--red-900);
+  --color-danger-text: var(--red-100);
+
+  /* Feedback — Warning */
+  --color-warning: var(--amber-400);
+  --color-warning-subtle: var(--amber-900);
+  --color-warning-text: var(--amber-100);
+
+  /* Feedback — Info */
+  --color-info: var(--blue-500);
+  --color-info-subtle: var(--blue-900);
+  --color-info-text: var(--blue-100);
+
+  /* Pharmacy domain — Role badges */
+  --color-badge-admin: var(--purple-400);
+  --color-badge-admin-subtle: var(--purple-900);
+  --color-badge-pharmacist: var(--teal-400);
+  --color-badge-pharmacist-subtle: var(--teal-900);
+  --color-badge-employee: var(--slate-400);
+  --color-badge-employee-subtle: var(--slate-800);
+  --color-badge-manager: var(--blue-400);
+  --color-badge-manager-subtle: var(--blue-900);
+
+  /* Pharmacy domain — Task types */
+  --color-task-reorder: var(--orange-400);
+  --color-task-reorder-subtle: var(--orange-900);
+
+  /* Surfaces */
+  --color-background: var(--slate-950);
+  --color-surface: var(--slate-900);
+  --color-surface-raised: var(--slate-800);
+  --color-overlay: rgba(0, 0, 0, 0.7);
+
+  /* Text */
+  --color-text-primary: var(--slate-50);
+  --color-text-secondary: var(--slate-400);
+  --color-text-muted: var(--slate-500);
+  --color-text-inverse: var(--slate-900);
+
+  /* Borders */
+  --color-border: var(--slate-700);
+  --color-border-light: var(--slate-800);
+  --color-border-focus: var(--teal-400);
+
+  /* Sidebar */
+  --color-sidebar-bg: var(--slate-950);
+  --color-sidebar-active: rgba(20, 184, 166, 0.15);
+  --color-sidebar-text: var(--slate-400);
+  --color-sidebar-text-active: #ffffff;
 }
