@@ -1,52 +1,29 @@
 # Project Overview
 
-## Stock Management System
+This document provides a high-level overview of the Stock Management Spring Boot project.
 
-A Spring Boot backend application for managing pharmaceutical inventory across multiple business domains including products, clinical catalogs, locations, orders, transactions, and users.
+## Project Description
+This is a Spring Boot project for a stock management system. It's designed to be a learning project for Spring Boot best practices, architecture design, and various related technologies.
 
-## Quick Reference
+## Technology Stack
+*   **Framework:** Spring Boot 3.4.2
+*   **Language:** Java 17
+*   **Build Tool:** Maven
+*   **Database:** PostgreSQL
+*   **Caching:** Redis
+*   **API Documentation:** Swagger (OpenAPI)
+*   **Observability:** OpenTelemetry
+*   **Development Tools:** Lombok, MapStruct
 
-| Property | Value |
-|----------|-------|
-| **Type** | Monolith backend |
-| **Language** | Java 17 |
-| **Framework** | Spring Boot 3.4.2 |
-| **Build** | Maven |
-| **Database** | PostgreSQL 14.6 |
-| **Cache** | Redis 7.2 |
-| **Test DB** | H2 (PostgreSQL mode) |
-| **Architecture** | Layered with domain-driven packages |
-| **API Docs** | Swagger UI (springdoc-openapi) |
-| **Observability** | ELK Stack + OpenTelemetry |
-| **Containerization** | Docker (multi-stage build) |
+## Core Modules
+The application is structured into the following core modules, each representing a distinct domain or set of features:
 
-## Repository Structure
+*   **`inventory`**: Manages stock levels, warehouses, and inventory movements.
+*   **`location`**: Handles geographical locations, storage bins, and physical addresses.
+*   **`order`**: Processes customer orders, order fulfillment, and status tracking.
+*   **`product`**: Defines product details, categories, and pricing.
+*   **`transaction`**: Manages financial and stock-related transactions.
+*   **`users`**: Handles user authentication, authorization, and user profiles.
 
-**Type:** Monolith (single cohesive codebase)
-
-## Source Statistics
-
-- **Java source files**: 107
-- **Business domains**: 7 (product, clinical, location, order, transaction, users, shared)
-- **REST controllers**: 10
-- **JPA repositories**: 13
-- **Service classes**: 19
-- **Test classes**: 7
-
-## Documentation
-
-- [Architecture](./architecture.md) - System architecture, patterns, and design decisions
-- [Source Tree Analysis](./source-tree-analysis.md) - Annotated directory structure
-- [API Contracts](./api-contracts.md) - REST API endpoint catalog
-- [Data Models](./data-models.md) - Entity schemas and database design
-- [Development Guide](./development-guide.md) - Setup, testing, and coding conventions
-- [Deployment Guide](./deployment-guide.md) - Docker, infrastructure, and environment config
-
-## Existing Documentation
-
-- [CLAUDE.md](../CLAUDE.md) - AI agent context (authoritative)
-- [README.md](../README.md) - Project readme
-- [CHANGELOG.md](../CHANGELOG.md) - Project changelog
-- [ELK Stack Guide](./elk-stack-guide.md) - ELK stack setup instructions
-- [Product Feature Spec](../features/product-feature.md) - Product domain feature specification
-- [BMad Architecture](../_bmad-output/planning-artifacts/Architecture.md) - Previous BMad architecture artifact
+## Building and Running
+(Refer to the main `README.md` and `GEMINI.md` for detailed instructions.)
