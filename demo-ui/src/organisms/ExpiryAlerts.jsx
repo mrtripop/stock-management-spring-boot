@@ -1,57 +1,73 @@
-import { useNavigate } from 'react-router-dom'
 import { Icon } from '../atoms/Icon'
+import { Badge } from '../atoms/Badge'
+import { Button } from '../atoms/Button'
+import { Spinner } from '../atoms/Spinner'
 
-export function ExpiryAlerts({ items = [], className = '' }) {
-  const navigate = useNavigate()
+function getUrgency(task) {
+  if (task.taskType === 'RECALL_ALERT') return 'critical'
+  if (task.taskType === 'REORDER_NEEDED') return 'warning'
+  if (task.daysUntilExpiry != null && task.daysUntilExpiry < 7) return 'critical'
+  if (task.daysUntilExpiry != null && task.daysUntilExpiry < 30) return 'warning'
+  return 'default'
+}
 
-  const getDaysUntil = (dateStr) => {
-    if (!dateStr) return null
-    const diff = new Date(dateStr) - new Date()
-    return Math.ceil(diff / (1000 * 60 * 60 * 24))
+const URGENCY_STYLES = {
+  critical: { border: 'border-l-[var(--color-danger)]', bg: 'bg-[var(--color-danger-subtle)]', badge: 'danger' },
+  warning: { border: 'border-l-[var(--color-warning)]', bg: 'bg-[var(--color-warning-subtle)]', badge: 'warning' },
+  default: { border: 'border-l-[var(--color-info)]', bg: 'bg-[var(--color-info-subtle)]', badge: 'info' },
+}
+
+export function ExpiryAlerts({ tasks = [], onAcknowledge, onResolve, loading = false }) {
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-8">
+        <Spinner size="md" />
+      </div>
+    )
   }
 
+  if (tasks.length === 0) {
+    return <p className="text-sm text-[var(--color-text-muted)] text-center py-8">No active alerts</p>
+  }
+
+  const sorted = [...tasks].sort((a, b) => {
+    const order = { critical: 0, warning: 1, default: 2 }
+    return (order[getUrgency(a)] ?? 2) - (order[getUrgency(b)] ?? 2)
+  })
+
   return (
-    <div className={`bg-white rounded-[var(--radius-lg)] p-4 shadow-[var(--shadow-sm)] ${className}`}>
-      <div className="flex justify-between items-center mb-3">
-        <h3 className="text-xs font-semibold text-[var(--color-text-primary)] flex items-center gap-1.5">
-          <Icon name="exclamation" className="w-3.5 h-3.5 text-[var(--color-warning)]" />
-          Expiry Alerts
-        </h3>
-        <button onClick={() => navigate('/inventory')} className="text-[11px] text-[var(--color-primary)] hover:underline cursor-pointer">
-          View all
-        </button>
-      </div>
-      <div className="flex flex-col gap-1.5">
-        {items.length === 0 ? (
-          <p className="text-xs text-[var(--color-text-muted)] py-4 text-center">No expiring batches</p>
-        ) : items.map((item) => {
-          const days = getDaysUntil(item.expiryDate)
-          const urgent = days !== null && days <= 7
-          return (
-            <div
-              key={item.id || item.batchNumber}
-              className={`flex justify-between items-center px-3 py-2 rounded-[var(--radius-sm)] border-l-3 ${
-                urgent ? 'bg-red-50 border-l-[var(--color-danger)]' : 'bg-amber-50 border-l-[var(--color-warning)]'
-              }`}
-            >
-              <div>
-                <div className="text-xs font-semibold text-[var(--color-text-primary)]">{item.productName || item.barcode}</div>
-                <div className="text-[11px] text-[var(--color-text-muted)]">
-                  Batch: {item.batchNumber || '-'} · {item.quantity} units
-                </div>
+    <div className="space-y-2">
+      {sorted.map((task) => {
+        const urgency = getUrgency(task)
+        const style = URGENCY_STYLES[urgency]
+        return (
+          <div key={task.id} className={`flex items-center gap-3 p-3 rounded-[var(--radius-md)] border-l-4 ${style.border} ${style.bg}`}>
+            <Icon name={task.taskType === 'RECALL_ALERT' ? 'exclamation' : 'clock'} className="w-5 h-5 shrink-0" />
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2">
+                <p className="text-sm font-medium text-[var(--color-text-primary)] truncate">{task.brandName}</p>
+                <Badge variant={style.badge}>{task.taskType?.replace('_', ' ')}</Badge>
               </div>
-              <div className="text-right">
-                <div className={`text-[11px] font-semibold ${urgent ? 'text-[var(--color-danger)]' : 'text-[var(--color-warning)]'}`}>
-                  {days !== null ? `${days} days` : '-'}
-                </div>
-                <div className="text-[11px] text-[var(--color-text-muted)]">
-                  {item.expiryDate ? new Date(item.expiryDate).toLocaleDateString() : '-'}
-                </div>
-              </div>
+              <p className="text-xs text-[var(--color-text-secondary)] mt-0.5">
+                Batch {task.batchNumber}
+                {task.daysUntilExpiry != null && ` — ${task.daysUntilExpiry} days until expiry`}
+                {task.currentQuantity != null && ` — Qty: ${task.currentQuantity}`}
+              </p>
             </div>
-          )
-        })}
-      </div>
+            <div className="flex items-center gap-1.5 shrink-0">
+              {task.status === 'PENDING' && onAcknowledge && (
+                <Button size="sm" variant="secondary" onClick={() => onAcknowledge(task.id)}>Ack</Button>
+              )}
+              {task.status === 'ACKNOWLEDGED' && onResolve && (
+                <Button size="sm" variant="primary" onClick={() => onResolve(task.id)}>Resolve</Button>
+              )}
+              {task.status === 'RESOLVED' && (
+                <Badge variant="success">Resolved</Badge>
+              )}
+            </div>
+          </div>
+        )
+      })}
     </div>
   )
 }
