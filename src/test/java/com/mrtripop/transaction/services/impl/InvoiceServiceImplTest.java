@@ -25,13 +25,16 @@ import com.mrtripop.transaction.models.db.Invoice;
 import com.mrtripop.transaction.models.db.InvoiceItem;
 import com.mrtripop.transaction.models.db.InvoiceStatus;
 import com.mrtripop.transaction.models.dto.CreateInvoiceRequest;
+import com.mrtripop.transaction.models.dto.DailySalesSummaryDto;
 import com.mrtripop.transaction.models.dto.InvoiceDto;
 import com.mrtripop.transaction.models.dto.InvoiceItemDto;
 import com.mrtripop.transaction.repository.InvoiceItemRepository;
 import com.mrtripop.transaction.repository.InvoiceRepository;
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -658,6 +661,66 @@ class InvoiceServiceImplTest {
           InvoiceFixture.STORE_ID, InvoiceFixture.BATCH_ID, InvoiceFixture.VALID_QUANTITY);
       verify(invoiceRepository, atLeast(1)).save(argThat(inv ->
           inv.getStatus() == InvoiceStatus.COMPLETED));
+    }
+  }
+
+  @Nested
+  @DisplayName("DailySummary")
+  class DailySummary {
+
+    @Test
+    @DisplayName("should return daily sales summary for a store")
+    void shouldReturnDailySummary() throws ApplicationException {
+      // Arrange
+      UUID storeId = InvoiceFixture.STORE_ID;
+      LocalDate date = LocalDate.now();
+      Invoice completedInvoice = InvoiceFixture.completedInvoice();
+      Invoice voidedInvoice = InvoiceFixture.voidedInvoice();
+      List<Long> completedIds = List.of(1L);
+
+      when(invoiceRepository.findByStoreIdAndStatusAndCreatedAtRange(
+          eq(storeId), eq(InvoiceStatus.COMPLETED), anyLong(), anyLong()))
+          .thenReturn(List.of(completedInvoice));
+      when(invoiceRepository.findByStoreIdAndStatusAndCreatedAtRange(
+          eq(storeId), eq(InvoiceStatus.VOIDED), anyLong(), anyLong()))
+          .thenReturn(List.of(voidedInvoice));
+      when(invoiceItemRepository.sumQuantityByInvoiceIds(completedIds))
+          .thenReturn(InvoiceFixture.VALID_QUANTITY);
+
+      // Act
+      DailySalesSummaryDto result = invoiceService.getDailySummary(storeId, date);
+
+      // Assert
+      assertNotNull(result);
+      assertEquals(date, result.getDate());
+      assertEquals(1, result.getTotalInvoices());
+      assertEquals(InvoiceFixture.VALID_QUANTITY.longValue(), result.getTotalItemsDispensed());
+      assertEquals(1, result.getVoidedCount());
+    }
+
+    @Test
+    @DisplayName("should return zero counts when no invoices exist")
+    void shouldReturnZeroCountsWhenNoInvoices() throws ApplicationException {
+      // Arrange
+      UUID storeId = InvoiceFixture.STORE_ID;
+      LocalDate date = LocalDate.now();
+
+      when(invoiceRepository.findByStoreIdAndStatusAndCreatedAtRange(
+          eq(storeId), eq(InvoiceStatus.COMPLETED), anyLong(), anyLong()))
+          .thenReturn(List.of());
+      when(invoiceRepository.findByStoreIdAndStatusAndCreatedAtRange(
+          eq(storeId), eq(InvoiceStatus.VOIDED), anyLong(), anyLong()))
+          .thenReturn(List.of());
+
+      // Act
+      DailySalesSummaryDto result = invoiceService.getDailySummary(storeId, date);
+
+      // Assert
+      assertNotNull(result);
+      assertEquals(0, result.getTotalInvoices());
+      assertEquals(0, result.getTotalItemsDispensed());
+      assertEquals(0, result.getVoidedCount());
+      assertEquals(BigDecimal.ZERO, result.getTotalRevenue());
     }
   }
 }

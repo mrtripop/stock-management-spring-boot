@@ -19,6 +19,7 @@ import com.mrtripop.transaction.models.db.Invoice;
 import com.mrtripop.transaction.models.db.InvoiceItem;
 import com.mrtripop.transaction.models.db.InvoiceStatus;
 import com.mrtripop.transaction.models.dto.CreateInvoiceRequest;
+import com.mrtripop.transaction.models.dto.DailySalesSummaryDto;
 import com.mrtripop.transaction.models.dto.InvoiceDto;
 import com.mrtripop.transaction.models.dto.InvoiceItemRequest;
 import com.mrtripop.transaction.repository.InvoiceItemRepository;
@@ -26,6 +27,8 @@ import com.mrtripop.transaction.repository.InvoiceRepository;
 import com.mrtripop.transaction.services.InvoiceService;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -222,6 +225,50 @@ public class InvoiceServiceImpl implements InvoiceService {
   public InvoiceDto dispense(CreateInvoiceRequest request) throws ApplicationException {
     InvoiceDto created = create(request);
     return complete(created.getId());
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public DailySalesSummaryDto getDailySummary(UUID storeId, LocalDate date)
+      throws ApplicationException {
+    LocalDate targetDate = date != null ? date : LocalDate.now();
+    long startOfDay =
+        targetDate.atStartOfDay(ZoneId.of("UTC")).toInstant().toEpochMilli();
+    long endOfDay =
+        targetDate.plusDays(1).atStartOfDay(ZoneId.of("UTC")).toInstant().toEpochMilli();
+
+    List<Invoice> completedInvoices = invoiceRepository.findByStoreIdAndStatusAndCreatedAtRange(
+        storeId, InvoiceStatus.COMPLETED, startOfDay, endOfDay);
+    List<Invoice> voidedInvoices = invoiceRepository.findByStoreIdAndStatusAndCreatedAtRange(
+        storeId, InvoiceStatus.VOIDED, startOfDay, endOfDay);
+
+    BigDecimal totalRevenue = completedInvoices.stream()
+        .map(Invoice::getTotalAmount)
+        .reduce(BigDecimal.ZERO, BigDecimal::add);
+    BigDecimal totalPatientPaid = completedInvoices.stream()
+        .map(Invoice::getPatientOwed)
+        .reduce(BigDecimal.ZERO, BigDecimal::add);
+    BigDecimal totalInsuranceClaims = completedInvoices.stream()
+        .map(Invoice::getInsuranceClaimAmount)
+        .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+    long totalItemsDispensed = 0;
+    if (!completedInvoices.isEmpty()) {
+      List<Long> completedIds = completedInvoices.stream()
+          .map(Invoice::getId)
+          .toList();
+      totalItemsDispensed = invoiceItemRepository.sumQuantityByInvoiceIds(completedIds);
+    }
+
+    return DailySalesSummaryDto.builder()
+        .date(targetDate)
+        .totalInvoices(completedInvoices.size())
+        .totalRevenue(totalRevenue)
+        .totalPatientPaid(totalPatientPaid)
+        .totalInsuranceClaims(totalInsuranceClaims)
+        .totalItemsDispensed(totalItemsDispensed)
+        .voidedCount(voidedInvoices.size())
+        .build();
   }
 
   private void recordAudit(String actionType, String entityName, String entityId, String oldValue,

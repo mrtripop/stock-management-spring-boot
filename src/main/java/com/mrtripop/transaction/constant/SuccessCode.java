@@ -15,7 +15,8 @@ public enum SuccessCode implements BaseStatusCode {
   TXN2006_GENERATE_RECEIPT_IS_SUCCESS("TXN2006", "Generate receipt is success"),
   TXN2007_GENERATE_RECONCILIATION_REPORT_IS_SUCCESS(
       "TXN2007", "Generate reconciliation report is success"),
-  TXN2008_DISPENSE_IS_SUCCESS("TXN2008", "Dispense is success");
+  TXN2008_DISPENSE_IS_SUCCESS("TXN2008", "Dispense is success"),
+  TXN2009_GET_DAILY_SUMMARY_IS_SUCCESS("TXN2009", "Get daily summary is success");
 
   private final String code;
   private final String message;
