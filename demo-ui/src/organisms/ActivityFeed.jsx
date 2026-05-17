@@ -1,9 +1,11 @@
+import { Icon } from '../atoms/Icon'
+
 const TYPE_CONFIG = {
-  STOCK_IN: { icon: '📥', bg: 'bg-blue-50', label: 'Stock In' },
-  DEDUCT: { icon: '📤', bg: 'bg-pink-50', label: 'Deducted' },
-  CREATE: { icon: '✅', bg: 'bg-green-50', label: 'Created' },
-  LOW_STOCK: { icon: '⚠️', bg: 'bg-amber-50', label: 'Low Stock' },
-  default: { icon: '📋', bg: 'bg-slate-50', label: 'Activity' },
+  STOCK_IN: { icon: 'arrow-down-tray', bg: 'bg-blue-50', iconColor: 'text-blue-500', label: 'Stock In' },
+  DEDUCT: { icon: 'arrow-up-tray', bg: 'bg-pink-50', iconColor: 'text-pink-500', label: 'Deducted' },
+  CREATE: { icon: 'check', bg: 'bg-green-50', iconColor: 'text-green-500', label: 'Created' },
+  LOW_STOCK: { icon: 'exclamation', bg: 'bg-amber-50', iconColor: 'text-amber-500', label: 'Low Stock' },
+  default: { icon: 'credit-card', bg: 'bg-slate-50', iconColor: 'text-slate-400', label: 'Activity' },
 }
 
 export function ActivityFeed({ items = [], className = '' }) {
@@ -20,8 +22,8 @@ export function ActivityFeed({ items = [], className = '' }) {
           const config = TYPE_CONFIG[item.type] || TYPE_CONFIG.default
           return (
             <div key={i} className="flex gap-2.5 items-start">
-              <div className={`w-7 h-7 ${config.bg} rounded-[var(--radius-sm)] flex items-center justify-center text-[11px] shrink-0`}>
-                {config.icon}
+              <div className={`w-7 h-7 ${config.bg} rounded-[var(--radius-sm)] flex items-center justify-center shrink-0`}>
+                <Icon name={config.icon} className={`w-3.5 h-3.5 ${config.iconColor}`} />
               </div>
               <div className="flex-1 min-w-0">
                 <div className="text-xs font-medium text-[var(--color-text-primary)]">{item.title}</div>

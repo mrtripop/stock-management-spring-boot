@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom'
+import { Icon } from '../atoms/Icon'
 
 export function ExpiryAlerts({ items = [], className = '' }) {
   const navigate = useNavigate()
@@ -12,7 +13,10 @@ export function ExpiryAlerts({ items = [], className = '' }) {
   return (
     <div className={`bg-white rounded-[var(--radius-lg)] p-4 shadow-[var(--shadow-sm)] ${className}`}>
       <div className="flex justify-between items-center mb-3">
-        <h3 className="text-xs font-semibold text-[var(--color-text-primary)]">Expiry Alerts</h3>
+        <h3 className="text-xs font-semibold text-[var(--color-text-primary)] flex items-center gap-1.5">
+          <Icon name="exclamation" className="w-3.5 h-3.5 text-[var(--color-warning)]" />
+          Expiry Alerts
+        </h3>
         <button onClick={() => navigate('/inventory')} className="text-[11px] text-[var(--color-primary)] hover:underline cursor-pointer">
           View all
         </button>

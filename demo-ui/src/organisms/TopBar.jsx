@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Icon } from '../atoms/Icon'
 
 export function TopBar({ title, subtitle }) {
   const [searchFocused, setSearchFocused] = useState(false)
@@ -27,8 +28,8 @@ export function TopBar({ title, subtitle }) {
 
         {/* Notification bell */}
         <div className="relative">
-          <div className="w-8 h-8 rounded-[var(--radius-md)] border border-[var(--color-border)] flex items-center justify-center text-sm cursor-pointer hover:bg-[var(--color-background)] transition-colors">
-            🔔
+          <div className="w-8 h-8 rounded-[var(--radius-md)] border border-[var(--color-border)] flex items-center justify-center cursor-pointer hover:bg-[var(--color-background)] transition-colors">
+            <Icon name="bell" className="w-4 h-4 text-[var(--color-text-muted)]" />
           </div>
           <div className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-[var(--color-danger)] rounded-full border-2 border-white" />
         </div>
