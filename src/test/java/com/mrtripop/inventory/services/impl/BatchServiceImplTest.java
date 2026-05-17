@@ -16,6 +16,7 @@ import com.mrtripop.clinical.services.AuditService;
 import com.mrtripop.exception.ApplicationException;
 import com.mrtripop.inventory.constant.ErrorCode;
 import com.mrtripop.inventory.component.BatchMapper;
+import com.mrtripop.inventory.fixture.BatchDeductionFixture;
 import com.mrtripop.inventory.fixture.BatchFixture;
 import com.mrtripop.inventory.fixture.DigitalSignatureFixture;
 import com.mrtripop.inventory.fixture.StoreStockFixture;
@@ -1059,6 +1060,87 @@ class BatchServiceImplTest {
       ApplicationException ex =
           assertThrows(ApplicationException.class, () -> batchService.deductStock(request));
       assertEquals(ErrorCode.SIGNATURE_VERIFICATION_FAILED, ex.getErrorCode());
+    }
+  }
+
+  @Nested
+  @DisplayName("deductStockByBatch")
+  class DeductStockByBatch {
+
+    @Test
+    @DisplayName("should deduct stock from specific batch")
+    void shouldDeductStockFromSpecificBatch() throws ApplicationException {
+      // Arrange
+      StoreStock storeStock = BatchDeductionFixture.validStoreStock();
+      when(storeStockRepository.findByStoreIdAndBatchId(
+              BatchDeductionFixture.STORE_ID, BatchDeductionFixture.BATCH_ID))
+          .thenReturn(Optional.of(storeStock));
+      when(storeStockRepository.deductQuantity(
+              storeStock.getId(), BatchDeductionFixture.DEDUCT_QUANTITY))
+          .thenReturn(1);
+      when(auditService.recordAudit(anyString(), anyString(), anyString(), anyString(), anyString()))
+          .thenReturn(null);
+
+      // Act
+      batchService.deductStockByBatch(
+          BatchDeductionFixture.STORE_ID,
+          BatchDeductionFixture.BATCH_ID,
+          BatchDeductionFixture.DEDUCT_QUANTITY);
+
+      // Assert
+      verify(storeStockRepository)
+          .deductQuantity(storeStock.getId(), BatchDeductionFixture.DEDUCT_QUANTITY);
+      verify(auditService)
+          .recordAudit(
+              eq("INVENTORY_OUT"),
+              eq("StoreStock"),
+              eq(storeStock.getId().toString()),
+              anyString(),
+              anyString());
+    }
+
+    @Test
+    @DisplayName("should throw STOCK_NOT_FOUND_FOR_BATCH when store stock not found for batch")
+    void shouldThrowWhenStockNotFound() {
+      // Arrange
+      when(storeStockRepository.findByStoreIdAndBatchId(
+              BatchDeductionFixture.STORE_ID, BatchDeductionFixture.BATCH_ID))
+          .thenReturn(Optional.empty());
+
+      // Act & Assert
+      ApplicationException ex =
+          assertThrows(
+              ApplicationException.class,
+              () ->
+                  batchService.deductStockByBatch(
+                      BatchDeductionFixture.STORE_ID,
+                      BatchDeductionFixture.BATCH_ID,
+                      BatchDeductionFixture.DEDUCT_QUANTITY));
+      assertEquals(ErrorCode.STOCK_NOT_FOUND_FOR_BATCH, ex.getErrorCode());
+    }
+
+    @Test
+    @DisplayName("should throw INSUFFICIENT_BATCH_QUANTITY when insufficient batch quantity")
+    void shouldThrowWhenInsufficientQuantity() throws ApplicationException {
+      // Arrange
+      StoreStock storeStock = BatchDeductionFixture.validStoreStock();
+      when(storeStockRepository.findByStoreIdAndBatchId(
+              BatchDeductionFixture.STORE_ID, BatchDeductionFixture.BATCH_ID))
+          .thenReturn(Optional.of(storeStock));
+      when(storeStockRepository.deductQuantity(
+              storeStock.getId(), BatchDeductionFixture.DEDUCT_QUANTITY))
+          .thenReturn(0);
+
+      // Act & Assert
+      ApplicationException ex =
+          assertThrows(
+              ApplicationException.class,
+              () ->
+                  batchService.deductStockByBatch(
+                      BatchDeductionFixture.STORE_ID,
+                      BatchDeductionFixture.BATCH_ID,
+                      BatchDeductionFixture.DEDUCT_QUANTITY));
+      assertEquals(ErrorCode.INSUFFICIENT_BATCH_QUANTITY, ex.getErrorCode());
     }
   }
 
