@@ -5,8 +5,26 @@ export default {
   component: TopBar,
 }
 
-export const Default = { args: { title: 'Dashboard' } }
+export const Default = {
+  args: {
+    breadcrumb: [{ label: 'Dashboard' }],
+    notificationCount: 3,
+    userAvatar: 'JD',
+  },
+}
 
-export const WithSubtitle = { args: { title: 'Products', subtitle: 'Manage your product catalog' } }
+export const WithBreadcrumb = {
+  args: {
+    breadcrumb: [{ label: 'Clinical', to: '/clinical' }, { label: 'Molecules' }],
+    notificationCount: 0,
+    userAvatar: 'PS',
+  },
+}
 
-export const LongTitle = { args: { title: 'Inventory Management System', subtitle: 'Batch management and stock operations' } }
+export const WithNotifications = {
+  args: {
+    breadcrumb: [{ label: 'Inventory' }],
+    notificationCount: 12,
+    userAvatar: 'AB',
+  },
+}
