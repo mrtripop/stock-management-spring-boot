@@ -13,7 +13,7 @@ export function ExpiryAlerts({ items = [], className = '' }) {
     <div className={`bg-white rounded-[var(--radius-lg)] p-4 shadow-[var(--shadow-sm)] ${className}`}>
       <div className="flex justify-between items-center mb-3">
         <h3 className="text-xs font-semibold text-[var(--color-text-primary)]">Expiry Alerts</h3>
-        <button onClick={() => navigate('/inventory')} className="text-[10px] text-[var(--color-primary)] hover:underline cursor-pointer">
+        <button onClick={() => navigate('/inventory')} className="text-[11px] text-[var(--color-primary)] hover:underline cursor-pointer">
           View all
         </button>
       </div>

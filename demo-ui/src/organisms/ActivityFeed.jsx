@@ -11,7 +11,7 @@ export function ActivityFeed({ items = [], className = '' }) {
     <div className={`bg-white rounded-[var(--radius-lg)] p-4 shadow-[var(--shadow-sm)] ${className}`}>
       <div className="flex justify-between items-center mb-3">
         <h3 className="text-xs font-semibold text-[var(--color-text-primary)]">Recent Activity</h3>
-        <button className="text-[10px] text-[var(--color-primary)] hover:underline cursor-pointer">View all</button>
+        <button className="text-[11px] text-[var(--color-primary)] hover:underline cursor-pointer">View all</button>
       </div>
       <div className="flex flex-col gap-2">
         {items.length === 0 ? (
