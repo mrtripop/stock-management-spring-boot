@@ -28,7 +28,9 @@ public enum ErrorCode implements BaseStatusCode {
   MOLECULE_NOT_FOUND("INV4019", "Molecule not found"),
   BATCH_NOT_RECALLABLE("INV4020", "Batch not found or cannot be recalled"),
   BATCH_ALREADY_RECALLED("INV4021", "Batch is already recalled"),
-  BATCH_ALREADY_QUARANTINED("INV4022", "Batch is already quarantined");
+  BATCH_ALREADY_QUARANTINED("INV4022", "Batch is already quarantined"),
+  STOCK_NOT_FOUND_FOR_BATCH("INV4012", "Store stock not found for the specified batch"),
+  INSUFFICIENT_BATCH_QUANTITY("INV4013", "Insufficient quantity in batch for deduction")
 
   private final String code;
   private final String message;

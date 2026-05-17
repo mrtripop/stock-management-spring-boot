@@ -26,4 +26,8 @@ public interface BatchService {
   StoreStockDto getStoreStock(UUID storeId, Long batchId) throws ApplicationException;
 
   Page<StoreStockDto> getStoreStocksByStoreId(UUID storeId, Pageable pageable);
+
+  void deductStockByBatch(UUID storeId, Long batchId, Long quantity) throws ApplicationException;
+
+  void restoreStock(UUID storeId, Long batchId, Long quantity) throws ApplicationException;
 }
