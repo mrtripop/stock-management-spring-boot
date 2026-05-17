@@ -8,6 +8,7 @@ const NAV_ITEMS = [
   { to: '/products', label: 'Products', icon: 'cube' },
   { to: '/inventory', label: 'Inventory', icon: 'archive' },
   { to: '/clinical', label: 'Clinical', icon: 'beaker' },
+  { to: '/dispensing', label: 'Dispensing', icon: 'receipt' },
   { to: '/orders', label: 'Orders', icon: 'cart' },
   { to: '/transactions', label: 'Transactions', icon: 'credit-card' },
   { to: '/locations', label: 'Locations', icon: 'map-pin' },

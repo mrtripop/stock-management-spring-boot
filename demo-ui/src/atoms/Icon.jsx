@@ -27,6 +27,7 @@ const iconMap = {
   'arrow-down-tray': Icons.ArrowDownTrayIcon,
   'arrow-up-tray': Icons.ArrowUpTrayIcon,
   'magnifying-glass': Icons.MagnifyingGlassIcon,
+  'receipt': Icons.DocumentTextIcon,
 }
 
 export function Icon({ name, className = '' }) {

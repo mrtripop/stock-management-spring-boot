@@ -9,6 +9,7 @@ import Dashboard from './pages/Dashboard'
 import Products from './pages/Products'
 import Inventory from './pages/Inventory'
 import Clinical from './pages/Clinical'
+import Dispensing from './pages/Dispensing'
 import Orders from './pages/Orders'
 import Transactions from './pages/Transactions'
 import Locations from './pages/Locations'
@@ -53,6 +54,7 @@ export default function App() {
             <Route path="products" element={<Products />} />
             <Route path="inventory" element={<Inventory />} />
             <Route path="clinical" element={<Clinical />} />
+            <Route path="dispensing" element={<Dispensing />} />
             <Route path="orders" element={<Orders />} />
             <Route path="transactions" element={<Transactions />} />
             <Route path="locations" element={<Locations />} />
