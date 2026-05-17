@@ -6,9 +6,9 @@ import { Input } from '../atoms/Input'
 import { FormField } from '../molecules/FormField'
 import { Spinner } from '../atoms/Spinner'
 
-export default function Login({ onLogin }) {
+export default function Login({ onLogin, initialTab = 'login' }) {
   const navigate = useNavigate()
-  const [tab, setTab] = useState('login')
+  const [tab, setTab] = useState(initialTab)
   const [username, setUsername] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')

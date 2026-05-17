@@ -5,8 +5,8 @@ export default {
   title: 'Organisms/Sidebar',
   component: Sidebar,
   decorators: [
-    (Story) => (
-      <MemoryRouter initialEntries={['/']}>
+    (Story, { parameters }) => (
+      <MemoryRouter initialEntries={[parameters.initialRoute || '/']}>
         <div className="flex h-[600px] bg-[var(--color-background)]">
           <Story />
         </div>
@@ -18,13 +18,5 @@ export default {
 export const Default = {}
 
 export const OnProducts = {
-  decorators: [
-    (Story) => (
-      <MemoryRouter initialEntries={['/products']}>
-        <div className="flex h-[600px] bg-[var(--color-background)]">
-          <Story />
-        </div>
-      </MemoryRouter>
-    ),
-  ],
+  parameters: { initialRoute: '/products' },
 }
