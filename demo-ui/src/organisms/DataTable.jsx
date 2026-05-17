@@ -23,7 +23,7 @@ export function DataTable({
             {columns.map((col) => (
               <th
                 key={col.key}
-                className="px-4 py-2.5 text-left text-[10px] font-semibold text-[var(--color-text-muted)] uppercase tracking-wide"
+                className="px-4 py-2.5 text-left text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wide"
                 style={{ width: col.width }}
               >
                 {col.label}

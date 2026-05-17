@@ -10,7 +10,7 @@ export function ActivityFeed({ items = [], className = '' }) {
   return (
     <div className={`bg-white rounded-[var(--radius-lg)] p-4 shadow-[var(--shadow-sm)] ${className}`}>
       <div className="flex justify-between items-center mb-3">
-        <h3 className="text-xs font-semibold text-[var(--color-text-primary)]">📋 Recent Activity</h3>
+        <h3 className="text-xs font-semibold text-[var(--color-text-primary)]">Recent Activity</h3>
         <button className="text-[10px] text-[var(--color-primary)] hover:underline cursor-pointer">View all</button>
       </div>
       <div className="flex flex-col gap-2">
@@ -24,10 +24,10 @@ export function ActivityFeed({ items = [], className = '' }) {
                 {config.icon}
               </div>
               <div className="flex-1 min-w-0">
-                <div className="text-[10px] font-medium text-[var(--color-text-primary)]">{item.title}</div>
-                <div className="text-[8px] text-[var(--color-text-muted)] truncate">{item.description}</div>
+                <div className="text-xs font-medium text-[var(--color-text-primary)]">{item.title}</div>
+                <div className="text-[11px] text-[var(--color-text-muted)] truncate">{item.description}</div>
               </div>
-              <div className="text-[8px] text-[var(--color-text-muted)] whitespace-nowrap shrink-0">{item.time}</div>
+              <div className="text-[11px] text-[var(--color-text-muted)] whitespace-nowrap shrink-0">{item.time}</div>
             </div>
           )
         })}

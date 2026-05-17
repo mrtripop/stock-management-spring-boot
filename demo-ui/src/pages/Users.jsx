@@ -29,7 +29,7 @@ export default function Users() {
             <td className="px-4 py-2.5 text-sm text-[var(--color-text-secondary)]">{u.id}</td>
             <td className="px-4 py-2.5">
               <div className="flex items-center gap-2">
-                <div className="w-6 h-6 bg-[var(--color-primary)] rounded-full flex items-center justify-center text-white text-[10px] font-semibold">
+                <div className="w-6 h-6 bg-[var(--color-primary)] rounded-full flex items-center justify-center text-white text-[11px] font-semibold">
                   {(u.username || '?').substring(0, 2).toUpperCase()}
                 </div>
                 <span className="text-sm font-medium text-[var(--color-text-primary)]">{u.username}</span>

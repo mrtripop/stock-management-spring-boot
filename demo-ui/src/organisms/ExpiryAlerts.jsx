@@ -12,7 +12,7 @@ export function ExpiryAlerts({ items = [], className = '' }) {
   return (
     <div className={`bg-white rounded-[var(--radius-lg)] p-4 shadow-[var(--shadow-sm)] ${className}`}>
       <div className="flex justify-between items-center mb-3">
-        <h3 className="text-xs font-semibold text-[var(--color-text-primary)]">⚠️ Expiry Alerts</h3>
+        <h3 className="text-xs font-semibold text-[var(--color-text-primary)]">Expiry Alerts</h3>
         <button onClick={() => navigate('/inventory')} className="text-[10px] text-[var(--color-primary)] hover:underline cursor-pointer">
           View all
         </button>
@@ -31,16 +31,16 @@ export function ExpiryAlerts({ items = [], className = '' }) {
               }`}
             >
               <div>
-                <div className="text-[10px] font-semibold text-[var(--color-text-primary)]">{item.productName || item.barcode}</div>
-                <div className="text-[8px] text-[var(--color-text-muted)]">
+                <div className="text-xs font-semibold text-[var(--color-text-primary)]">{item.productName || item.barcode}</div>
+                <div className="text-[11px] text-[var(--color-text-muted)]">
                   Batch: {item.batchNumber || '-'} · {item.quantity} units
                 </div>
               </div>
               <div className="text-right">
-                <div className={`text-[9px] font-semibold ${urgent ? 'text-[var(--color-danger)]' : 'text-[var(--color-warning)]'}`}>
+                <div className={`text-[11px] font-semibold ${urgent ? 'text-[var(--color-danger)]' : 'text-[var(--color-warning)]'}`}>
                   {days !== null ? `${days} days` : '-'}
                 </div>
-                <div className="text-[7px] text-[var(--color-text-muted)]">
+                <div className="text-[11px] text-[var(--color-text-muted)]">
                   {item.expiryDate ? new Date(item.expiryDate).toLocaleDateString() : '-'}
                 </div>
               </div>
