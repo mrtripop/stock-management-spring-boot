@@ -209,6 +209,13 @@ public class InvoiceServiceImpl implements InvoiceService {
     return dto;
   }
 
+  @Override
+  @Transactional(rollbackFor = ApplicationException.class)
+  public InvoiceDto dispense(CreateInvoiceRequest request) throws ApplicationException {
+    InvoiceDto created = create(request);
+    return complete(created.getId());
+  }
+
   private void recordAudit(String actionType, String entityName, String entityId, String oldValue,
       String newValue) {
     auditService.recordAudit(actionType, entityName, entityId, oldValue, newValue);

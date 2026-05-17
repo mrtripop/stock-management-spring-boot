@@ -103,4 +103,17 @@ public class InvoiceController {
         .build()
         .toResponseEntity(HttpStatus.OK);
   }
+
+  @PostMapping("/dispense")
+  public ResponseEntity<Object> dispense(@Valid @RequestBody CreateInvoiceRequest request)
+      throws ApplicationException {
+    InvoiceDto result = invoiceService.dispense(request);
+    BaseStatusCode success = SuccessCode.TXN2008_DISPENSE_IS_SUCCESS;
+    return ResponseBody.builder()
+        .code(success.getCode())
+        .message(success.getMessage())
+        .data(result)
+        .build()
+        .toResponseEntity(HttpStatus.CREATED);
+  }
 }

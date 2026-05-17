@@ -3,6 +3,7 @@ package com.mrtripop.transaction.services.impl;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.doThrow;
 
 import com.mrtripop.clinical.models.db.Store;
@@ -22,6 +23,7 @@ import com.mrtripop.transaction.constant.ErrorCode;
 import com.mrtripop.transaction.fixture.InvoiceFixture;
 import com.mrtripop.transaction.models.db.Invoice;
 import com.mrtripop.transaction.models.db.InvoiceItem;
+import com.mrtripop.transaction.models.db.InvoiceStatus;
 import com.mrtripop.transaction.models.dto.CreateInvoiceRequest;
 import com.mrtripop.transaction.models.dto.InvoiceDto;
 import com.mrtripop.transaction.models.dto.InvoiceItemDto;
@@ -549,6 +551,82 @@ class InvoiceServiceImplTest {
       // Assert
       assertEquals(1, result.getTotalElements());
       assertEquals(InvoiceFixture.STORE_NAME, result.getContent().get(0).getStoreName());
+    }
+  }
+
+  @Nested
+  @DisplayName("Dispense")
+  class Dispense {
+
+    @Test
+    @DisplayName("should create invoice and deduct stock in single call")
+    void shouldCreateAndCompleteInSingleCall() throws ApplicationException {
+      // Arrange
+      CreateInvoiceRequest request = InvoiceFixture.validCreateRequest();
+      Store store = InvoiceFixture.validStore();
+      Batch batch = InvoiceFixture.validBatch();
+      StoreProduct storeProduct = InvoiceFixture.validStoreProduct();
+      StoreStock storeStock = InvoiceFixture.validStoreStock();
+      InvoiceDto createdDto = InvoiceDto.builder()
+          .id(1L)
+          .storeId(InvoiceFixture.STORE_ID)
+          .storeName(InvoiceFixture.STORE_NAME)
+          .build();
+      InvoiceDto completedDto = InvoiceDto.builder()
+          .id(1L)
+          .storeId(InvoiceFixture.STORE_ID)
+          .storeName(InvoiceFixture.STORE_NAME)
+          .status(InvoiceStatus.COMPLETED)
+          .build();
+      InvoiceItemDto itemDto = InvoiceItemDto.builder()
+          .id(1L)
+          .brandName(InvoiceFixture.BRAND_NAME)
+          .build();
+
+      when(storeRepository.findById(InvoiceFixture.STORE_ID)).thenReturn(Optional.of(store));
+      when(brandRepository.findById(InvoiceFixture.BRAND_ID))
+          .thenReturn(Optional.of(InvoiceFixture.validBrand()));
+      when(batchRepository.findById(InvoiceFixture.BATCH_ID)).thenReturn(Optional.of(batch));
+      when(storeStockRepository.findByStoreIdAndBatchId(InvoiceFixture.STORE_ID, InvoiceFixture.BATCH_ID))
+          .thenReturn(Optional.of(storeStock));
+      when(storeProductRepository.findByStoreIdAndBrandId(InvoiceFixture.STORE_ID, InvoiceFixture.BRAND_ID))
+          .thenReturn(Optional.of(storeProduct));
+      when(invoiceRepository.save(any(Invoice.class))).thenAnswer(iom -> {
+        Invoice entity = iom.getArgument(0);
+        if (entity.getId() == null) {
+          entity.setId(1L);
+        }
+        return entity;
+      });
+      when(invoiceItemRepository.saveAll(anyList())).thenAnswer(inv -> inv.getArgument(0));
+      when(invoiceRepository.findById(1L)).thenAnswer(inv -> {
+        Invoice saved = InvoiceFixture.pendingInvoice();
+        saved.setId(1L);
+        saved.setStore(store);
+        return Optional.of(saved);
+      });
+      when(auditService.recordAudit(anyString(), anyString(), anyString(), any(), anyString()))
+          .thenReturn(null);
+      when(invoiceMapper.toDto(any(Invoice.class))).thenReturn(createdDto).thenReturn(completedDto);
+      when(invoiceMapper.toItemDtoList(anyList())).thenReturn(List.of(itemDto));
+      when(invoiceItemRepository.findByInvoiceId(1L)).thenAnswer(inv -> {
+        InvoiceItem item = InvoiceItem.builder()
+            .id(1L)
+            .batch(batch)
+            .quantity(InvoiceFixture.VALID_QUANTITY)
+            .build();
+        return List.of(item);
+      });
+
+      // Act
+      InvoiceDto result = invoiceService.dispense(request);
+
+      // Assert
+      assertNotNull(result);
+      verify(batchService).deductStockByBatch(
+          InvoiceFixture.STORE_ID, InvoiceFixture.BATCH_ID, InvoiceFixture.VALID_QUANTITY);
+      verify(invoiceRepository, atLeast(1)).save(argThat(inv ->
+          inv.getStatus() == InvoiceStatus.COMPLETED));
     }
   }
 }

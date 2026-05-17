@@ -18,4 +18,6 @@ public interface InvoiceService {
   InvoiceDto complete(Long id) throws ApplicationException;
 
   InvoiceDto voidInvoice(Long id) throws ApplicationException;
+
+  InvoiceDto dispense(CreateInvoiceRequest request) throws ApplicationException;
 }
