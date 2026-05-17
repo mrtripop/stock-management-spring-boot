@@ -1,54 +1,44 @@
 import { useState } from 'react'
 import { AlertDialog } from './AlertDialog'
+import { Button } from '../atoms/Button'
 
 export default {
   title: 'Organisms/AlertDialog',
   component: AlertDialog,
 }
 
-export const Default = {
+export const Info = {
   render: () => {
-    const [open, setOpen] = useState(true)
+    const [open, setOpen] = useState(false)
     return (
-      <AlertDialog
-        open={open}
-        onClose={() => setOpen(false)}
-        onConfirm={() => setOpen(false)}
-        title="Delete Product"
-        message='Are you sure you want to delete "Paracetamol 500mg"? This action cannot be undone.'
-      />
+      <>
+        <Button onClick={() => setOpen(true)}>Show Info</Button>
+        <AlertDialog open={open} onClose={() => setOpen(false)} title="Information" message="This action will trigger a full inventory scan. This may take a few minutes." variant="info" actions={[{ label: 'Run Scan', onClick: () => setOpen(false) }]} />
+      </>
     )
   },
 }
 
-export const CustomLabel = {
+export const Warning = {
   render: () => {
-    const [open, setOpen] = useState(true)
+    const [open, setOpen] = useState(false)
     return (
-      <AlertDialog
-        open={open}
-        onClose={() => setOpen(false)}
-        onConfirm={() => setOpen(false)}
-        title="Archive Batch"
-        message="This will archive the batch and remove it from active inventory."
-        confirmLabel="Archive"
-      />
+      <>
+        <Button variant="secondary" onClick={() => setOpen(true)}>Show Warning</Button>
+        <AlertDialog open={open} onClose={() => setOpen(false)} title="Low Stock Warning" message="Product Amoxicillin 500mg is below reorder threshold. Current stock: 5, Reorder at: 20." variant="warning" actions={[{ label: 'Acknowledge', variant: 'primary', onClick: () => setOpen(false) }]} />
+      </>
     )
   },
 }
 
-export const Loading = {
+export const Danger = {
   render: () => {
-    const [open, setOpen] = useState(true)
+    const [open, setOpen] = useState(false)
     return (
-      <AlertDialog
-        open={open}
-        onClose={() => setOpen(false)}
-        onConfirm={() => {}}
-        title="Deleting..."
-        message="Please wait while the product is being deleted."
-        loading={true}
-      />
+      <>
+        <Button variant="danger" onClick={() => setOpen(true)}>Delete Product</Button>
+        <AlertDialog open={open} onClose={() => setOpen(false)} title="Delete Product" message="Are you sure you want to delete Amoxicillin 500mg? This action cannot be undone." variant="danger" actions={[{ label: 'Delete', variant: 'danger', onClick: () => setOpen(false) }]} />
+      </>
     )
   },
 }
