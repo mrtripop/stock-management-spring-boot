@@ -476,6 +476,37 @@ class InvoiceServiceImplTest {
           assertThrows(ApplicationException.class, () -> invoiceService.voidInvoice(1L));
       assertEquals(ErrorCode.INVOICE_ALREADY_VOIDED, ex.getErrorCode());
     }
+
+    @Test
+    @DisplayName("should restore stock when voiding a completed invoice")
+    void shouldRestoreStockWhenVoidingCompletedInvoice() throws ApplicationException {
+      // Arrange
+      Invoice invoice = InvoiceFixture.completedInvoice();
+      InvoiceItem item = InvoiceFixture.validInvoiceItem(invoice);
+      InvoiceDto dto = InvoiceDto.builder()
+          .id(1L)
+          .storeId(InvoiceFixture.STORE_ID)
+          .storeName(InvoiceFixture.STORE_NAME)
+          .build();
+
+      when(invoiceRepository.findById(1L)).thenReturn(Optional.of(invoice));
+      when(invoiceItemRepository.findByInvoiceId(1L)).thenReturn(List.of(item));
+      when(invoiceRepository.save(any(Invoice.class))).thenAnswer(inv -> inv.getArgument(0));
+      when(auditService.recordAudit(anyString(), anyString(), anyString(), anyString(), anyString()))
+          .thenReturn(null);
+      when(invoiceMapper.toDto(any(Invoice.class))).thenReturn(dto);
+      when(invoiceMapper.toItemDtoList(anyList())).thenReturn(List.of());
+
+      // Act
+      InvoiceDto result = invoiceService.voidInvoice(1L);
+
+      // Assert
+      assertNotNull(result);
+      verify(batchService).restoreStock(
+          InvoiceFixture.STORE_ID, InvoiceFixture.BATCH_ID, InvoiceFixture.VALID_QUANTITY);
+      verify(invoiceRepository).save(argThat(inv ->
+          inv.getStatus() == InvoiceStatus.VOIDED));
+    }
   }
 
   @Nested

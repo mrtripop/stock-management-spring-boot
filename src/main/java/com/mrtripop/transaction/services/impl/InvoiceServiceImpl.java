@@ -196,6 +196,14 @@ public class InvoiceServiceImpl implements InvoiceService {
       throw new ApplicationException(ErrorCode.INVOICE_ALREADY_VOIDED, HttpStatus.CONFLICT);
     }
 
+    if (invoice.getStatus() == InvoiceStatus.COMPLETED) {
+      List<InvoiceItem> items = invoiceItemRepository.findByInvoiceId(id);
+      for (InvoiceItem item : items) {
+        batchService.restoreStock(
+            invoice.getStore().getId(), item.getBatch().getId(), item.getQuantity());
+      }
+    }
+
     String oldValue = invoice.getStatus().name();
     invoice.setStatus(InvoiceStatus.VOIDED);
     Invoice savedInvoice = invoiceRepository.save(invoice);
