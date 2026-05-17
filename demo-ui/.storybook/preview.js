@@ -10,13 +10,19 @@ const preview = {
       },
     },
     backgrounds: {
-      default: 'teal-bg',
+      default: 'light',
       values: [
-        { name: 'teal-bg', value: '#f0fdfa' },
+        { name: 'light', value: '#f8fafc' },
         { name: 'white', value: '#ffffff' },
-        { name: 'dark', value: '#134e4a' },
+        { name: 'dark', value: '#020617' },
       ],
+    },
+    darkMode: {
+      current: 'light',
+      darkClass: 'data-theme="dark"',
+      stylePreview: true,
     },
   },
 }
+
 export default preview
