@@ -28,10 +28,20 @@ const iconMap = {
   'arrow-up-tray': Icons.ArrowUpTrayIcon,
   'magnifying-glass': Icons.MagnifyingGlassIcon,
   'receipt': Icons.DocumentTextIcon,
+  'info': Icons.InformationCircleIcon,
+  'sun': Icons.SunIcon,
+  'moon': Icons.MoonIcon,
+  'clock': Icons.ClockIcon,
 }
 
-export function Icon({ name, className = '' }) {
+const sizeMap = {
+  sm: 'w-4 h-4',
+  md: 'w-5 h-5',
+  lg: 'w-6 h-6',
+}
+
+export function Icon({ name, size = 'md', className = '' }) {
   const Component = iconMap[name]
   if (!Component) return null
-  return <Component className={`w-5 h-5 ${className}`} />
+  return <Component className={`${sizeMap[size]} ${className}`} />
 }
