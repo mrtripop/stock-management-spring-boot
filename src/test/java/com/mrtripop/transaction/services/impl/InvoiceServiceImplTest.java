@@ -3,6 +3,7 @@ package com.mrtripop.transaction.services.impl;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.doThrow;
 
 import com.mrtripop.clinical.models.db.Store;
 import com.mrtripop.clinical.models.db.StoreProduct;
@@ -15,6 +16,7 @@ import com.mrtripop.inventory.models.db.Batch;
 import com.mrtripop.inventory.models.db.StoreStock;
 import com.mrtripop.inventory.repository.BatchRepository;
 import com.mrtripop.inventory.repository.StoreStockRepository;
+import com.mrtripop.inventory.services.BatchService;
 import com.mrtripop.transaction.component.InvoiceMapper;
 import com.mrtripop.transaction.constant.ErrorCode;
 import com.mrtripop.transaction.fixture.InvoiceFixture;
@@ -40,6 +42,7 @@ import org.mockito.quality.Strictness;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
@@ -55,6 +58,7 @@ class InvoiceServiceImplTest {
   @Mock private StoreStockRepository storeStockRepository;
   @Mock private InvoiceMapper invoiceMapper;
   @Mock private AuditService auditService;
+  @Mock private BatchService batchService;
   @InjectMocks private InvoiceServiceImpl invoiceService;
 
   @Nested
@@ -357,6 +361,60 @@ class InvoiceServiceImplTest {
       ApplicationException ex =
           assertThrows(ApplicationException.class, () -> invoiceService.complete(1L));
       assertEquals(ErrorCode.INVOICE_ALREADY_VOIDED, ex.getErrorCode());
+    }
+
+    @Test
+    @DisplayName("should deduct stock for each item when completing invoice")
+    void shouldDeductStockWhenCompletingInvoice() throws ApplicationException {
+      // Arrange
+      Invoice invoice = InvoiceFixture.pendingInvoice();
+      InvoiceItem item = InvoiceFixture.validInvoiceItem(invoice);
+      InvoiceDto dto = InvoiceDto.builder()
+          .id(1L)
+          .storeId(InvoiceFixture.STORE_ID)
+          .storeName(InvoiceFixture.STORE_NAME)
+          .build();
+      InvoiceItemDto itemDto = InvoiceItemDto.builder()
+          .id(1L)
+          .brandName(InvoiceFixture.BRAND_NAME)
+          .build();
+
+      when(invoiceRepository.findById(1L)).thenReturn(Optional.of(invoice));
+      when(invoiceItemRepository.findByInvoiceId(1L)).thenReturn(List.of(item));
+      when(invoiceRepository.save(any(Invoice.class))).thenAnswer(inv -> inv.getArgument(0));
+      when(auditService.recordAudit(anyString(), anyString(), anyString(), anyString(), anyString()))
+          .thenReturn(null);
+      when(invoiceMapper.toDto(any(Invoice.class))).thenReturn(dto);
+      when(invoiceMapper.toItemDtoList(anyList())).thenReturn(List.of(itemDto));
+
+      // Act
+      InvoiceDto result = invoiceService.complete(1L);
+
+      // Assert
+      assertNotNull(result);
+      verify(batchService).deductStockByBatch(
+          InvoiceFixture.STORE_ID, InvoiceFixture.BATCH_ID, InvoiceFixture.VALID_QUANTITY);
+      verify(invoiceRepository).save(argThat(inv ->
+          inv.getStatus() == com.mrtripop.transaction.models.db.InvoiceStatus.COMPLETED));
+    }
+
+    @Test
+    @DisplayName("should rollback and not complete when stock deduction fails")
+    void shouldRollbackWhenDeductionFails() throws ApplicationException {
+      // Arrange
+      Invoice invoice = InvoiceFixture.pendingInvoice();
+      InvoiceItem item = InvoiceFixture.validInvoiceItem(invoice);
+
+      when(invoiceRepository.findById(1L)).thenReturn(Optional.of(invoice));
+      when(invoiceItemRepository.findByInvoiceId(1L)).thenReturn(List.of(item));
+      doThrow(new ApplicationException(
+          com.mrtripop.inventory.constant.ErrorCode.INSUFFICIENT_BATCH_QUANTITY, HttpStatus.CONFLICT))
+          .when(batchService).deductStockByBatch(any(), any(), any());
+
+      // Act & Assert
+      ApplicationException ex = assertThrows(ApplicationException.class,
+          () -> invoiceService.complete(1L));
+      assertEquals(com.mrtripop.inventory.constant.ErrorCode.INSUFFICIENT_BATCH_QUANTITY, ex.getErrorCode());
     }
   }
 

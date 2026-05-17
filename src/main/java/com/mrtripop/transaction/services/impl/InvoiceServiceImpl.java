@@ -12,6 +12,7 @@ import com.mrtripop.inventory.models.db.Batch;
 import com.mrtripop.inventory.models.db.StoreStock;
 import com.mrtripop.inventory.repository.BatchRepository;
 import com.mrtripop.inventory.repository.StoreStockRepository;
+import com.mrtripop.inventory.services.BatchService;
 import com.mrtripop.transaction.component.InvoiceMapper;
 import com.mrtripop.transaction.constant.ErrorCode;
 import com.mrtripop.transaction.models.db.Invoice;
@@ -51,6 +52,7 @@ public class InvoiceServiceImpl implements InvoiceService {
   private final StoreStockRepository storeStockRepository;
   private final InvoiceMapper invoiceMapper;
   private final AuditService auditService;
+  private final BatchService batchService;
 
   @Override
   @Transactional(readOnly = true)
@@ -166,6 +168,12 @@ public class InvoiceServiceImpl implements InvoiceService {
       throw new ApplicationException(ErrorCode.INVOICE_ALREADY_VOIDED, HttpStatus.CONFLICT);
     }
 
+    List<InvoiceItem> items = invoiceItemRepository.findByInvoiceId(id);
+    for (InvoiceItem item : items) {
+      batchService.deductStockByBatch(
+          invoice.getStore().getId(), item.getBatch().getId(), item.getQuantity());
+    }
+
     String oldValue = invoice.getStatus().name();
     invoice.setStatus(InvoiceStatus.COMPLETED);
     Invoice savedInvoice = invoiceRepository.save(invoice);
@@ -174,7 +182,6 @@ public class InvoiceServiceImpl implements InvoiceService {
         savedInvoice.getTotalAmount().toPlainString());
 
     InvoiceDto dto = invoiceMapper.toDto(savedInvoice);
-    List<InvoiceItem> items = invoiceItemRepository.findByInvoiceId(id);
     dto.setItems(invoiceMapper.toItemDtoList(items));
     return dto;
   }
