@@ -1,24 +1,18 @@
 import { ActivityFeed } from './ActivityFeed'
 
+const sampleItems = [
+  { id: 1, type: 'transaction', message: 'Invoice #42 completed — Amoxicillin 500mg x10', timestamp: '2 minutes ago' },
+  { id: 2, type: 'task', message: 'Expiry warning: Paracetamol 500mg expires in 5 days', timestamp: '15 minutes ago' },
+  { id: 3, type: 'stock', message: 'Stock-in: Ibuprofen 200mg — 200 units added', timestamp: '1 hour ago' },
+  { id: 4, type: 'alert', message: 'Batch BN-2026-003 recalled by manufacturer', timestamp: '2 hours ago' },
+  { id: 5, type: 'transaction', message: 'Invoice #41 voided by admin', timestamp: '3 hours ago' },
+]
+
 export default {
   title: 'Organisms/ActivityFeed',
   component: ActivityFeed,
 }
 
-const MOCK_ITEMS = [
-  { type: 'STOCK_IN', title: 'Stock In — Paracetamol', description: 'Batch BN-2026-0042 · 500 units', time: '2 min ago' },
-  { type: 'DEDUCT', title: 'Deducted — Amoxicillin', description: 'Store A · 20 units dispensed', time: '15 min ago' },
-  { type: 'CREATE', title: 'New Product Added', description: 'Metformin 850mg registered', time: '1 hr ago' },
-  { type: 'LOW_STOCK', title: 'Low Stock Alert', description: 'Omeprazole 20mg — 5 units remaining', time: '3 hr ago' },
-  { type: 'STOCK_IN', title: 'Stock In — Lisinopril', description: 'Batch BN-2026-0039 · 200 units', time: '5 hr ago' },
-]
-
-export const WithData = { args: { items: MOCK_ITEMS } }
-
+export const Default = { args: { items: sampleItems } }
+export const Loading = { args: { loading: true } }
 export const Empty = { args: { items: [] } }
-
-export const SingleItem = {
-  args: {
-    items: [{ type: 'STOCK_IN', title: 'Stock In — Ibuprofen', description: 'Batch BN-2026-0050 · 1000 units', time: 'Just now' }],
-  },
-}
