@@ -1,147 +1,94 @@
 import { useState } from 'react'
-import { toast } from 'sonner'
-import { Button } from '../atoms/Button'
-import { Badge } from '../atoms/Badge'
-import { Input } from '../atoms/Input'
-import { PageHeader } from '../molecules/PageHeader'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
 import { DataTable } from '../organisms/DataTable'
 import { FormDrawer } from '../organisms/FormDrawer'
+import { ExpiryAlerts } from '../organisms/ExpiryAlerts'
+import { PageHeader } from '../molecules/PageHeader'
 import { FormField } from '../molecules/FormField'
-import { useQueryList, usePostMutation } from '../lib/hooks'
+import { Input } from '../atoms/Input'
+import { Badge } from '../atoms/Badge'
+import { Button } from '../atoms/Button'
+import { useBatchList, useStockIn, useTaskList, useAcknowledgeTask, useResolveTask, useTriggerScan } from '../lib/hooks/useInventory'
+import { useStoreId } from '../lib/auth'
 
-const EMPTY_STOCK_IN = { barcode: '', batchNumber: '', expiryDate: '', quantity: 1, storeId: '' }
-const EMPTY_DEDUCT = { barcode: '', storeId: '', quantity: 1 }
-
-const COLUMNS = [
-  { key: 'product', label: 'Product' },
-  { key: 'batchNumber', label: 'Batch #' },
-  { key: 'expiry', label: 'Expiry' },
-  { key: 'quantity', label: 'Qty' },
-  { key: 'store', label: 'Store' },
+const TABS = ['Batches', 'Stock-In', 'Tasks', 'Conversions']
+const statusVariant = { AVAILABLE: 'success', RECALLED: 'danger', QUARANTINED: 'warning' }
+const batchColumns = [
+  { key: 'batchNumber', label: 'Batch #', sortable: true },
+  { key: 'expiryDate', label: 'Expiry', sortable: true },
+  { key: 'quantity', label: 'Qty', sortable: true },
+  { key: 'status', label: 'Status', render: (row) => <Badge variant={statusVariant[row.status] || 'neutral'}>{row.status}</Badge> },
 ]
 
+const stockInSchema = z.object({
+  barcode: z.string().min(1),
+  batchNumber: z.string().min(1),
+  expiryDate: z.string().min(1),
+  quantity: z.number().min(1),
+})
+
 export default function Inventory() {
+  const storeId = useStoreId()
+  const [tab, setTab] = useState(0)
   const [page, setPage] = useState(1)
-  const [showStockIn, setShowStockIn] = useState(false)
-  const [showDeduct, setShowDeduct] = useState(false)
-  const [stockInForm, setStockInForm] = useState(EMPTY_STOCK_IN)
-  const [deductForm, setDeductForm] = useState(EMPTY_DEDUCT)
+  const [drawerOpen, setDrawerOpen] = useState(false)
 
-  const { items: batches, totalPages, totalElements, loading } = useQueryList(
-    ['batches'], '/inventory/batches', { page, size: 10 }
-  )
+  const { items: batches, totalPages, loading: batchesLoading } = useBatchList({ page, size: 20 })
+  const { items: tasks } = useTaskList({ storeId, status: 'PENDING', size: 50 })
+  const stockIn = useStockIn()
+  const ackTask = useAcknowledgeTask()
+  const resolveTask = useResolveTask()
+  const triggerScan = useTriggerScan()
 
-  const stockInMutation = usePostMutation(['batches'], '/inventory/batches/stock-in')
-  const deductMutation = usePostMutation(['batches'], '/inventory/stock/deduct')
+  const form = useForm({ resolver: zodResolver(stockInSchema), defaultValues: { quantity: 1 } })
 
-  const getDaysUntil = (dateStr) => {
-    if (!dateStr) return null
-    return Math.ceil((new Date(dateStr) - new Date()) / (1000 * 60 * 60 * 24))
-  }
-
-  const handleStockIn = async (e) => {
-    e.preventDefault()
-    try {
-      await stockInMutation.mutateAsync(stockInForm)
-      toast.success('Stock added successfully')
-      setShowStockIn(false)
-      setStockInForm(EMPTY_STOCK_IN)
-    } catch (err) {
-      toast.error(err.message)
-    }
-  }
-
-  const handleDeduct = async (e) => {
-    e.preventDefault()
-    try {
-      await deductMutation.mutateAsync(deductForm)
-      toast.success('Stock deducted successfully')
-      setShowDeduct(false)
-      setDeductForm(EMPTY_DEDUCT)
-    } catch (err) {
-      toast.error(err.message)
-    }
+  const handleStockIn = async (data) => {
+    await stockIn.mutateAsync({ ...data, storeId })
+    setDrawerOpen(false)
+    form.reset()
   }
 
   return (
-    <div>
-      <PageHeader
-        title="Inventory"
-        subtitle="Batch management and stock operations"
-        actions={
-          <>
-            <Button onClick={() => setShowStockIn(true)}>Stock In</Button>
-            <Button variant="secondary" onClick={() => setShowDeduct(true)}>Deduct Stock</Button>
-          </>
-        }
-      />
+    <div className="space-y-4">
+      <PageHeader title="Inventory" subtitle="Batch management and stock operations" actions={tab === 2 ? <Button onClick={() => triggerScan.mutate()}>Run Scan</Button> : tab === 1 ? <Button onClick={() => setDrawerOpen(true)}>Stock In</Button> : null} />
 
-      <DataTable
-        columns={COLUMNS}
-        data={batches}
-        loading={loading}
-        currentPage={page}
-        totalPages={totalPages}
-        totalElements={totalElements}
-        pageSize={10}
-        onPageChange={setPage}
-        emptyMessage="No batches found"
-        renderRow={(b) => {
-          const days = getDaysUntil(b.expiryDate)
-          const urgent = days !== null && days <= 7
-          const warning = days !== null && days <= 30 && days > 7
-          return (
-            <tr key={b.id} className={`border-b border-[var(--color-border-light)] transition-colors ${
-              urgent ? 'bg-red-50' : warning ? 'bg-amber-50' : 'hover:bg-slate-50'
-            }`}>
-              <td className="px-4 py-2.5 text-sm font-medium text-[var(--color-text-primary)]">{b.barcode || '-'}</td>
-              <td className="px-4 py-2.5 text-sm text-[var(--color-text-secondary)]">{b.batchNumber || '-'}</td>
-              <td className="px-4 py-2.5">
-                <div className="flex items-center gap-1.5">
-                  {days !== null && days <= 7 && <Badge variant="danger">{days}d</Badge>}
-                  {days !== null && days > 7 && days <= 30 && <Badge variant="warning">{days}d</Badge>}
-                  <span className="text-sm text-[var(--color-text-secondary)]">
-                    {b.expiryDate ? new Date(b.expiryDate).toLocaleDateString() : '-'}
-                  </span>
-                </div>
-              </td>
-              <td className="px-4 py-2.5 text-sm font-medium text-[var(--color-text-primary)]">{b.quantity}</td>
-              <td className="px-4 py-2.5 text-sm text-[var(--color-text-secondary)]">{b.storeId ? b.storeId.substring(0, 8) + '...' : '-'}</td>
-            </tr>
-          )
-        }}
-      />
+      {/* Tabs */}
+      <div className="flex gap-1 bg-[var(--color-surface)] rounded-[var(--radius-md)] border border-[var(--color-border)] p-1">
+        {TABS.map((t, i) => (
+          <button key={t} onClick={() => setTab(i)} className={`flex-1 py-2 text-sm font-medium rounded-[var(--radius-md)] transition-colors cursor-pointer ${tab === i ? 'bg-[var(--color-primary)] text-white' : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-background)]'}`}>{t}</button>
+        ))}
+      </div>
 
-      {/* Stock In Drawer */}
-      <FormDrawer open={showStockIn} onClose={() => setShowStockIn(false)} title="Stock In" onSubmit={handleStockIn} submitLabel="Stock In" loading={stockInMutation.isPending}>
-        <FormField label="Barcode" required>
-          <Input value={stockInForm.barcode} onChange={(e) => setStockInForm({ ...stockInForm, barcode: e.target.value })} required />
-        </FormField>
-        <FormField label="Batch Number">
-          <Input value={stockInForm.batchNumber} onChange={(e) => setStockInForm({ ...stockInForm, batchNumber: e.target.value })} />
-        </FormField>
-        <FormField label="Expiry Date" required>
-          <Input type="date" value={stockInForm.expiryDate} onChange={(e) => setStockInForm({ ...stockInForm, expiryDate: e.target.value })} required />
-        </FormField>
-        <FormField label="Quantity" required>
-          <Input type="number" min="1" value={stockInForm.quantity} onChange={(e) => setStockInForm({ ...stockInForm, quantity: +e.target.value })} required />
-        </FormField>
-        <FormField label="Store ID" required hint="UUID format">
-          <Input value={stockInForm.storeId} onChange={(e) => setStockInForm({ ...stockInForm, storeId: e.target.value })} required placeholder="UUID" />
-        </FormField>
-      </FormDrawer>
+      {/* Batches tab */}
+      {tab === 0 && <DataTable columns={batchColumns} data={batches || []} loading={batchesLoading} currentPage={page} totalPages={totalPages} onPageChange={setPage} emptyMessage="No batches found" />}
 
-      {/* Deduct Drawer */}
-      <FormDrawer open={showDeduct} onClose={() => setShowDeduct(false)} title="Deduct Stock" onSubmit={handleDeduct} submitLabel="Deduct" loading={deductMutation.isPending}>
-        <FormField label="Barcode" required>
-          <Input value={deductForm.barcode} onChange={(e) => setDeductForm({ ...deductForm, barcode: e.target.value })} required />
-        </FormField>
-        <FormField label="Store ID" required hint="UUID format">
-          <Input value={deductForm.storeId} onChange={(e) => setDeductForm({ ...deductForm, storeId: e.target.value })} required placeholder="UUID" />
-        </FormField>
-        <FormField label="Quantity" required>
-          <Input type="number" min="1" value={deductForm.quantity} onChange={(e) => setDeductForm({ ...deductForm, quantity: +e.target.value })} required />
-        </FormField>
+      {/* Stock-In tab placeholder */}
+      {tab === 1 && !drawerOpen && (
+        <div className="bg-[var(--color-surface)] rounded-[var(--radius-lg)] border border-[var(--color-border)] p-8 text-center">
+          <p className="text-sm text-[var(--color-text-muted)]">Click "Stock In" to add new stock.</p>
+        </div>
+      )}
+
+      {/* Tasks tab */}
+      {tab === 2 && <div className="bg-[var(--color-surface)] rounded-[var(--radius-lg)] shadow-[var(--shadow-sm)] border border-[var(--color-border)] p-5"><ExpiryAlerts tasks={tasks || []} onAcknowledge={(id) => ackTask.mutate(id)} onResolve={(id) => resolveTask.mutate(id)} /></div>}
+
+      {/* Conversions tab placeholder */}
+      {tab === 3 && (
+        <div className="bg-[var(--color-surface)] rounded-[var(--radius-lg)] border border-[var(--color-border)] p-8 text-center">
+          <p className="text-sm text-[var(--color-text-muted)]">Unit conversions coming soon.</p>
+        </div>
+      )}
+
+      {/* Stock-In drawer */}
+      <FormDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} title="Stock In" onSubmit={form.handleSubmit(handleStockIn)} loading={stockIn.isPending}>
+        <div className="space-y-4">
+          <FormField label="Barcode" required error={form.formState.errors.barcode?.message}><Input {...form.register('barcode')} placeholder="Scan or enter barcode" /></FormField>
+          <FormField label="Batch Number" required error={form.formState.errors.batchNumber?.message}><Input {...form.register('batchNumber')} /></FormField>
+          <FormField label="Expiry Date" required error={form.formState.errors.expiryDate?.message}><Input type="date" {...form.register('expiryDate')} /></FormField>
+          <FormField label="Quantity" required error={form.formState.errors.quantity?.message}><Input type="number" {...form.register('quantity', { valueAsNumber: true })} /></FormField>
+        </div>
       </FormDrawer>
     </div>
   )
