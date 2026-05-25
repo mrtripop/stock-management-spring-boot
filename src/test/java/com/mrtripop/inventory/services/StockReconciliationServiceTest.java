@@ -3,6 +3,7 @@ package com.mrtripop.inventory.services;
 import static com.mrtripop.inventory.fixture.StockReconciliationFixture.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -56,6 +57,44 @@ class StockReconciliationServiceTest {
           INITIAL_BATCH_QTY.toString(),
           CORRECT_SUM_QTY.toString()
       );
+    }
+  }
+
+  @Nested
+  @DisplayName("Edge cases")
+  class EdgeCases {
+
+    @Test
+    @DisplayName("should do nothing when synchronized")
+    void shouldDoNothingWhenSynced() {
+      // Arrange
+      Batch batch = defaultBatch();
+      when(batchRepository.findById(VALID_BATCH_ID)).thenReturn(Optional.of(batch));
+      when(storeStockRepository.sumQuantityByBatchId(VALID_BATCH_ID)).thenReturn(INITIAL_BATCH_QTY);
+
+      // Act
+      service.reconcileBatch(VALID_BATCH_ID);
+
+      // Assert
+      verify(batchRepository, never()).save(any());
+      verify(auditService, never()).recordAudit(any(), any(), any(), any(), any());
+    }
+
+    @Test
+    @DisplayName("should set quantity to zero when batch is an orphan")
+    void shouldSetToZeroWhenOrphan() {
+      // Arrange
+      Batch batch = defaultBatch();
+      batch.setQuantity(50L);
+      when(batchRepository.findById(VALID_BATCH_ID)).thenReturn(Optional.of(batch));
+      when(storeStockRepository.sumQuantityByBatchId(VALID_BATCH_ID)).thenReturn(0L);
+
+      // Act
+      service.reconcileBatch(VALID_BATCH_ID);
+
+      // Assert
+      assertEquals(0L, batch.getQuantity());
+      verify(batchRepository).save(batch);
     }
   }
 }
