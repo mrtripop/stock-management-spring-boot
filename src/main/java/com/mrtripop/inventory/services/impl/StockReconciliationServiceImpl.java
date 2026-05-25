@@ -10,6 +10,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import java.util.Optional;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,12 +30,12 @@ public class StockReconciliationServiceImpl implements StockReconciliationServic
     int pageNumber = 0;
     Page<Batch> batchPage;
     do {
-      batchPage = batchRepository.findAll(PageRequest.of(pageNumber++, 100));
+      batchPage = batchRepository.findAll(PageRequest.of(pageNumber++, Sort.by("id"), 100));
       for (Batch batch : batchPage) {
         try {
           reconcileBatch(batch.getId());
         } catch (Exception e) {
-          log.error("Failed to reconcile batch {}: {}", batch.getId(), e.getMessage());
+          log.error("Failed to reconcile batch {}: ", batch.getId(), e);
         }
       }
     } while (batchPage.hasNext());
@@ -45,7 +47,7 @@ public class StockReconciliationServiceImpl implements StockReconciliationServic
     Batch batch = batchRepository.findById(batchId)
         .orElseThrow(() -> new NotFoundException("Batch not found"));
 
-    Long actualSum = storeStockRepository.sumQuantityByBatchId(batchId);
+    long actualSum = Optional.ofNullable(storeStockRepository.sumQuantityByBatchId(batchId)).orElse(0L);
     long oldQuantity = batch.getQuantity();
 
     if (oldQuantity != actualSum) {
