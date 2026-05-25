@@ -3,6 +3,8 @@ package com.mrtripop.transaction.services.impl;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.atLeast;
+import static org.mockito.Mockito.doThrow;
 
 import com.mrtripop.clinical.models.db.Store;
 import com.mrtripop.clinical.models.db.StoreProduct;
@@ -15,19 +17,24 @@ import com.mrtripop.inventory.models.db.Batch;
 import com.mrtripop.inventory.models.db.StoreStock;
 import com.mrtripop.inventory.repository.BatchRepository;
 import com.mrtripop.inventory.repository.StoreStockRepository;
+import com.mrtripop.inventory.services.BatchService;
 import com.mrtripop.transaction.component.InvoiceMapper;
 import com.mrtripop.transaction.constant.ErrorCode;
 import com.mrtripop.transaction.fixture.InvoiceFixture;
 import com.mrtripop.transaction.models.db.Invoice;
 import com.mrtripop.transaction.models.db.InvoiceItem;
+import com.mrtripop.transaction.models.db.InvoiceStatus;
 import com.mrtripop.transaction.models.dto.CreateInvoiceRequest;
+import com.mrtripop.transaction.models.dto.DailySalesSummaryDto;
 import com.mrtripop.transaction.models.dto.InvoiceDto;
 import com.mrtripop.transaction.models.dto.InvoiceItemDto;
 import com.mrtripop.transaction.repository.InvoiceItemRepository;
 import com.mrtripop.transaction.repository.InvoiceRepository;
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -40,6 +47,7 @@ import org.mockito.quality.Strictness;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
@@ -55,6 +63,7 @@ class InvoiceServiceImplTest {
   @Mock private StoreStockRepository storeStockRepository;
   @Mock private InvoiceMapper invoiceMapper;
   @Mock private AuditService auditService;
+  @Mock private BatchService batchService;
   @InjectMocks private InvoiceServiceImpl invoiceService;
 
   @Nested
@@ -358,6 +367,60 @@ class InvoiceServiceImplTest {
           assertThrows(ApplicationException.class, () -> invoiceService.complete(1L));
       assertEquals(ErrorCode.INVOICE_ALREADY_VOIDED, ex.getErrorCode());
     }
+
+    @Test
+    @DisplayName("should deduct stock for each item when completing invoice")
+    void shouldDeductStockWhenCompletingInvoice() throws ApplicationException {
+      // Arrange
+      Invoice invoice = InvoiceFixture.pendingInvoice();
+      InvoiceItem item = InvoiceFixture.validInvoiceItem(invoice);
+      InvoiceDto dto = InvoiceDto.builder()
+          .id(1L)
+          .storeId(InvoiceFixture.STORE_ID)
+          .storeName(InvoiceFixture.STORE_NAME)
+          .build();
+      InvoiceItemDto itemDto = InvoiceItemDto.builder()
+          .id(1L)
+          .brandName(InvoiceFixture.BRAND_NAME)
+          .build();
+
+      when(invoiceRepository.findById(1L)).thenReturn(Optional.of(invoice));
+      when(invoiceItemRepository.findByInvoiceId(1L)).thenReturn(List.of(item));
+      when(invoiceRepository.save(any(Invoice.class))).thenAnswer(inv -> inv.getArgument(0));
+      when(auditService.recordAudit(anyString(), anyString(), anyString(), anyString(), anyString()))
+          .thenReturn(null);
+      when(invoiceMapper.toDto(any(Invoice.class))).thenReturn(dto);
+      when(invoiceMapper.toItemDtoList(anyList())).thenReturn(List.of(itemDto));
+
+      // Act
+      InvoiceDto result = invoiceService.complete(1L);
+
+      // Assert
+      assertNotNull(result);
+      verify(batchService).deductStockByBatch(
+          InvoiceFixture.STORE_ID, InvoiceFixture.BATCH_ID, InvoiceFixture.VALID_QUANTITY);
+      verify(invoiceRepository).save(argThat(inv ->
+          inv.getStatus() == com.mrtripop.transaction.models.db.InvoiceStatus.COMPLETED));
+    }
+
+    @Test
+    @DisplayName("should rollback and not complete when stock deduction fails")
+    void shouldRollbackWhenDeductionFails() throws ApplicationException {
+      // Arrange
+      Invoice invoice = InvoiceFixture.pendingInvoice();
+      InvoiceItem item = InvoiceFixture.validInvoiceItem(invoice);
+
+      when(invoiceRepository.findById(1L)).thenReturn(Optional.of(invoice));
+      when(invoiceItemRepository.findByInvoiceId(1L)).thenReturn(List.of(item));
+      doThrow(new ApplicationException(
+          com.mrtripop.inventory.constant.ErrorCode.INSUFFICIENT_BATCH_QUANTITY, HttpStatus.CONFLICT))
+          .when(batchService).deductStockByBatch(any(), any(), any());
+
+      // Act & Assert
+      ApplicationException ex = assertThrows(ApplicationException.class,
+          () -> invoiceService.complete(1L));
+      assertEquals(com.mrtripop.inventory.constant.ErrorCode.INSUFFICIENT_BATCH_QUANTITY, ex.getErrorCode());
+    }
   }
 
   @Nested
@@ -415,6 +478,37 @@ class InvoiceServiceImplTest {
       ApplicationException ex =
           assertThrows(ApplicationException.class, () -> invoiceService.voidInvoice(1L));
       assertEquals(ErrorCode.INVOICE_ALREADY_VOIDED, ex.getErrorCode());
+    }
+
+    @Test
+    @DisplayName("should restore stock when voiding a completed invoice")
+    void shouldRestoreStockWhenVoidingCompletedInvoice() throws ApplicationException {
+      // Arrange
+      Invoice invoice = InvoiceFixture.completedInvoice();
+      InvoiceItem item = InvoiceFixture.validInvoiceItem(invoice);
+      InvoiceDto dto = InvoiceDto.builder()
+          .id(1L)
+          .storeId(InvoiceFixture.STORE_ID)
+          .storeName(InvoiceFixture.STORE_NAME)
+          .build();
+
+      when(invoiceRepository.findById(1L)).thenReturn(Optional.of(invoice));
+      when(invoiceItemRepository.findByInvoiceId(1L)).thenReturn(List.of(item));
+      when(invoiceRepository.save(any(Invoice.class))).thenAnswer(inv -> inv.getArgument(0));
+      when(auditService.recordAudit(anyString(), anyString(), anyString(), anyString(), anyString()))
+          .thenReturn(null);
+      when(invoiceMapper.toDto(any(Invoice.class))).thenReturn(dto);
+      when(invoiceMapper.toItemDtoList(anyList())).thenReturn(List.of());
+
+      // Act
+      InvoiceDto result = invoiceService.voidInvoice(1L);
+
+      // Assert
+      assertNotNull(result);
+      verify(batchService).restoreStock(
+          InvoiceFixture.STORE_ID, InvoiceFixture.BATCH_ID, InvoiceFixture.VALID_QUANTITY);
+      verify(invoiceRepository).save(argThat(inv ->
+          inv.getStatus() == InvoiceStatus.VOIDED));
     }
   }
 
@@ -491,6 +585,142 @@ class InvoiceServiceImplTest {
       // Assert
       assertEquals(1, result.getTotalElements());
       assertEquals(InvoiceFixture.STORE_NAME, result.getContent().get(0).getStoreName());
+    }
+  }
+
+  @Nested
+  @DisplayName("Dispense")
+  class Dispense {
+
+    @Test
+    @DisplayName("should create invoice and deduct stock in single call")
+    void shouldCreateAndCompleteInSingleCall() throws ApplicationException {
+      // Arrange
+      CreateInvoiceRequest request = InvoiceFixture.validCreateRequest();
+      Store store = InvoiceFixture.validStore();
+      Batch batch = InvoiceFixture.validBatch();
+      StoreProduct storeProduct = InvoiceFixture.validStoreProduct();
+      StoreStock storeStock = InvoiceFixture.validStoreStock();
+      InvoiceDto createdDto = InvoiceDto.builder()
+          .id(1L)
+          .storeId(InvoiceFixture.STORE_ID)
+          .storeName(InvoiceFixture.STORE_NAME)
+          .build();
+      InvoiceDto completedDto = InvoiceDto.builder()
+          .id(1L)
+          .storeId(InvoiceFixture.STORE_ID)
+          .storeName(InvoiceFixture.STORE_NAME)
+          .status(InvoiceStatus.COMPLETED)
+          .build();
+      InvoiceItemDto itemDto = InvoiceItemDto.builder()
+          .id(1L)
+          .brandName(InvoiceFixture.BRAND_NAME)
+          .build();
+
+      when(storeRepository.findById(InvoiceFixture.STORE_ID)).thenReturn(Optional.of(store));
+      when(brandRepository.findById(InvoiceFixture.BRAND_ID))
+          .thenReturn(Optional.of(InvoiceFixture.validBrand()));
+      when(batchRepository.findById(InvoiceFixture.BATCH_ID)).thenReturn(Optional.of(batch));
+      when(storeStockRepository.findByStoreIdAndBatchId(InvoiceFixture.STORE_ID, InvoiceFixture.BATCH_ID))
+          .thenReturn(Optional.of(storeStock));
+      when(storeProductRepository.findByStoreIdAndBrandId(InvoiceFixture.STORE_ID, InvoiceFixture.BRAND_ID))
+          .thenReturn(Optional.of(storeProduct));
+      when(invoiceRepository.save(any(Invoice.class))).thenAnswer(iom -> {
+        Invoice entity = iom.getArgument(0);
+        if (entity.getId() == null) {
+          entity.setId(1L);
+        }
+        return entity;
+      });
+      when(invoiceItemRepository.saveAll(anyList())).thenAnswer(inv -> inv.getArgument(0));
+      when(invoiceRepository.findById(1L)).thenAnswer(inv -> {
+        Invoice saved = InvoiceFixture.pendingInvoice();
+        saved.setId(1L);
+        saved.setStore(store);
+        return Optional.of(saved);
+      });
+      when(auditService.recordAudit(anyString(), anyString(), anyString(), any(), anyString()))
+          .thenReturn(null);
+      when(invoiceMapper.toDto(any(Invoice.class))).thenReturn(createdDto).thenReturn(completedDto);
+      when(invoiceMapper.toItemDtoList(anyList())).thenReturn(List.of(itemDto));
+      when(invoiceItemRepository.findByInvoiceId(1L)).thenAnswer(inv -> {
+        InvoiceItem item = InvoiceItem.builder()
+            .id(1L)
+            .batch(batch)
+            .quantity(InvoiceFixture.VALID_QUANTITY)
+            .build();
+        return List.of(item);
+      });
+
+      // Act
+      InvoiceDto result = invoiceService.dispense(request);
+
+      // Assert
+      assertNotNull(result);
+      verify(batchService).deductStockByBatch(
+          InvoiceFixture.STORE_ID, InvoiceFixture.BATCH_ID, InvoiceFixture.VALID_QUANTITY);
+      verify(invoiceRepository, atLeast(1)).save(argThat(inv ->
+          inv.getStatus() == InvoiceStatus.COMPLETED));
+    }
+  }
+
+  @Nested
+  @DisplayName("DailySummary")
+  class DailySummary {
+
+    @Test
+    @DisplayName("should return daily sales summary for a store")
+    void shouldReturnDailySummary() throws ApplicationException {
+      // Arrange
+      UUID storeId = InvoiceFixture.STORE_ID;
+      LocalDate date = LocalDate.now();
+      Invoice completedInvoice = InvoiceFixture.completedInvoice();
+      Invoice voidedInvoice = InvoiceFixture.voidedInvoice();
+      List<Long> completedIds = List.of(1L);
+
+      when(invoiceRepository.findByStoreIdAndStatusAndCreatedAtRange(
+          eq(storeId), eq(InvoiceStatus.COMPLETED), anyLong(), anyLong()))
+          .thenReturn(List.of(completedInvoice));
+      when(invoiceRepository.findByStoreIdAndStatusAndCreatedAtRange(
+          eq(storeId), eq(InvoiceStatus.VOIDED), anyLong(), anyLong()))
+          .thenReturn(List.of(voidedInvoice));
+      when(invoiceItemRepository.sumQuantityByInvoiceIds(completedIds))
+          .thenReturn(InvoiceFixture.VALID_QUANTITY);
+
+      // Act
+      DailySalesSummaryDto result = invoiceService.getDailySummary(storeId, date);
+
+      // Assert
+      assertNotNull(result);
+      assertEquals(date, result.getDate());
+      assertEquals(1, result.getTotalInvoices());
+      assertEquals(InvoiceFixture.VALID_QUANTITY.longValue(), result.getTotalItemsDispensed());
+      assertEquals(1, result.getVoidedCount());
+    }
+
+    @Test
+    @DisplayName("should return zero counts when no invoices exist")
+    void shouldReturnZeroCountsWhenNoInvoices() throws ApplicationException {
+      // Arrange
+      UUID storeId = InvoiceFixture.STORE_ID;
+      LocalDate date = LocalDate.now();
+
+      when(invoiceRepository.findByStoreIdAndStatusAndCreatedAtRange(
+          eq(storeId), eq(InvoiceStatus.COMPLETED), anyLong(), anyLong()))
+          .thenReturn(List.of());
+      when(invoiceRepository.findByStoreIdAndStatusAndCreatedAtRange(
+          eq(storeId), eq(InvoiceStatus.VOIDED), anyLong(), anyLong()))
+          .thenReturn(List.of());
+
+      // Act
+      DailySalesSummaryDto result = invoiceService.getDailySummary(storeId, date);
+
+      // Assert
+      assertNotNull(result);
+      assertEquals(0, result.getTotalInvoices());
+      assertEquals(0, result.getTotalItemsDispensed());
+      assertEquals(0, result.getVoidedCount());
+      assertEquals(BigDecimal.ZERO, result.getTotalRevenue());
     }
   }
 }

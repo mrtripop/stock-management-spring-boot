@@ -40,6 +40,10 @@ public interface StoreStockRepository extends JpaRepository<StoreStock, Long> {
       + "WHERE ss.id = :id AND ss.quantity >= :amount")
   int deductQuantity(@Param("id") Long id, @Param("amount") Long amount);
 
+  @Modifying
+  @Query("UPDATE StoreStock ss SET ss.quantity = ss.quantity + :amount WHERE ss.id = :id")
+  int restoreQuantity(@Param("id") Long id, @Param("amount") Long amount);
+
   @Query("SELECT ss FROM StoreStock ss JOIN FETCH ss.batch b JOIN FETCH b.brand br "
       + "WHERE ss.store.id = :storeId "
       + "AND b.status = 'AVAILABLE' "

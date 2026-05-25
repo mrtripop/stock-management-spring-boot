@@ -1,229 +1,109 @@
 import { useState } from 'react'
-import { Tab, TabGroup, TabList, TabPanel, TabPanels } from '@headlessui/react'
-import { toast } from 'sonner'
-import { Button } from '../atoms/Button'
-import { Badge } from '../atoms/Badge'
-import { Input } from '../atoms/Input'
-import { Select } from '../atoms/Select'
+import { useNavigate } from 'react-router-dom'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
+import { DataTable } from '../organisms/DataTable'
+import { FormDrawer } from '../organisms/FormDrawer'
 import { PageHeader } from '../molecules/PageHeader'
 import { SearchBar } from '../molecules/SearchBar'
 import { FormField } from '../molecules/FormField'
-import { DataTable } from '../organisms/DataTable'
-import { FormDrawer } from '../organisms/FormDrawer'
-import { AlertDialog } from '../organisms/AlertDialog'
-import { useQueryList, useCreateMutation, useDeleteMutation } from '../lib/hooks'
+import { Input } from '../atoms/Input'
+import { Badge } from '../atoms/Badge'
+import { Button } from '../atoms/Button'
+import { useSearchMolecules, useCreateMolecule, useBrandsByMolecule, useCreateBrand, useStoreList } from '../lib/hooks/useClinical'
+
+const TABS = ['Molecules', 'Brands', 'Stores']
+const moleculeSchema = z.object({ genericName: z.string().min(1), therapeuticClass: z.string().optional(), regulatorySchedule: z.string().optional(), dosageInstructions: z.string().optional(), safetyWarnings: z.string().optional() })
+const storeTypeVariant = { PHYSICAL: 'teal', HUB: 'info', LOGICAL: 'neutral' }
 
 export default function Clinical() {
-  const [tabIndex, setTabIndex] = useState(0)
+  const navigate = useNavigate()
+  const [tab, setTab] = useState(0)
+  const [search, setSearch] = useState('')
+  const [selectedMolecule, setSelectedMolecule] = useState(null)
+  const [drawerOpen, setDrawerOpen] = useState(false)
 
-  return (
-    <div>
-      <PageHeader title="Clinical" subtitle="Stores, molecules, and brands" />
+  const { data: moleculesRaw } = useSearchMolecules(search)
+  const { data: brandsRaw } = useBrandsByMolecule(selectedMolecule)
+  const { items: stores, totalPages, loading: storesLoading } = useStoreList({ page: 1, size: 20 })
+  const createMolecule = useCreateMolecule()
+  const createBrand = useCreateBrand()
 
-      <TabGroup selectedIndex={tabIndex} onChange={setTabIndex}>
-        <TabList className="flex gap-1 mb-5 bg-slate-100 rounded-[var(--radius-md)] p-1 w-fit">
-          {['Stores', 'Molecules', 'Brands'].map((name) => (
-            <Tab key={name} className="px-4 py-1.5 text-sm font-medium rounded-[var(--radius-sm)] cursor-pointer transition-colors data-[selected]:bg-white data-[selected]:text-[var(--color-primary)] data-[selected]:shadow-sm text-[var(--color-text-secondary)]">
-              {name}
-            </Tab>
-          ))}
-        </TabList>
-        <TabPanels>
-          <TabPanel><StoresTab /></TabPanel>
-          <TabPanel><MoleculesTab /></TabPanel>
-          <TabPanel><BrandsTab /></TabPanel>
-        </TabPanels>
-      </TabGroup>
-    </div>
-  )
-}
+  const molecules = Array.isArray(moleculesRaw) ? moleculesRaw : (moleculesRaw?.content ?? [])
+  const brands = Array.isArray(brandsRaw) ? brandsRaw : (brandsRaw?.content ?? [])
 
-/* ---- Stores Tab ---- */
-function StoresTab() {
-  const [page, setPage] = useState(1)
-  const [showForm, setShowForm] = useState(false)
-  const [form, setForm] = useState({ name: '', type: 'PHYSICAL' })
-  const [deleteTarget, setDeleteTarget] = useState(null)
+  const molForm = useForm({ resolver: zodResolver(moleculeSchema) })
 
-  const { items, totalPages, totalElements, loading } = useQueryList(
-    ['stores'], '/clinical/stores', { page, size: 10 }
-  )
-  const createMutation = useCreateMutation(['stores'], '/clinical/stores')
-  const deleteMutation = useDeleteMutation(['stores'], '/clinical/stores')
-
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-    try {
-      await createMutation.mutateAsync(form)
-      toast.success('Store created')
-      setShowForm(false)
-      setForm({ name: '', type: 'PHYSICAL' })
-    } catch (err) { toast.error(err.message) }
+  const handleCreateMolecule = async (data) => {
+    await createMolecule.mutateAsync(data)
+    setDrawerOpen(false)
   }
 
-  const handleDelete = async () => {
-    try {
-      await deleteMutation.mutateAsync(deleteTarget.id)
-      toast.success('Store deleted')
-      setDeleteTarget(null)
-    } catch (err) { toast.error(err.message) }
-  }
-
-  const columns = [
-    { key: 'name', label: 'Name' },
-    { key: 'type', label: 'Type' },
-    { key: 'actions', label: '', width: '80px' },
-  ]
-
   return (
-    <>
-      <div className="flex justify-end mb-3">
-        <Button onClick={() => setShowForm(true)}>+ Add Store</Button>
+    <div className="space-y-4">
+      <PageHeader title="Clinical" subtitle="Stores, molecules, and brands" actions={<Button onClick={() => setDrawerOpen(true)}>{tab === 0 ? 'Add Molecule' : tab === 2 ? 'Add Store' : ''}</Button>} />
+
+      <div className="flex gap-1 bg-[var(--color-surface)] rounded-[var(--radius-md)] border border-[var(--color-border)] p-1">
+        {TABS.map((t, i) => (
+          <button key={t} onClick={() => setTab(i)} className={`flex-1 py-2 text-sm font-medium rounded-[var(--radius-md)] transition-colors cursor-pointer ${tab === i ? 'bg-[var(--color-primary)] text-white' : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-background)]'}`}>{t}</button>
+        ))}
       </div>
-      <DataTable columns={columns} data={items} loading={loading}
-        currentPage={page} totalPages={totalPages} totalElements={totalElements}
-        pageSize={10} onPageChange={setPage} emptyMessage="No stores found"
-        renderRow={(s) => (
-          <tr key={s.id} className="border-b border-[var(--color-border-light)] hover:bg-slate-50">
-            <td className="px-4 py-2.5 text-sm text-[var(--color-text-primary)]">{s.name || '-'}</td>
-            <td className="px-4 py-2.5"><Badge variant="success">{s.type}</Badge></td>
-            <td className="px-4 py-2.5 text-right">
-              <button onClick={() => setDeleteTarget(s)} className="text-[var(--color-danger)] text-xs font-medium hover:underline cursor-pointer">Delete</button>
-            </td>
-          </tr>
-        )}
-      />
-      <FormDrawer open={showForm} onClose={() => setShowForm(false)} title="New Store" onSubmit={handleSubmit} loading={createMutation.isPending}>
-        <FormField label="Name" required><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required /></FormField>
-        <FormField label="Type">
-          <Select value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })}>
-            <option value="PHYSICAL">Physical</option>
-            <option value="HUB">Hub</option>
-            <option value="LOGICAL">Logical</option>
-          </Select>
-        </FormField>
-      </FormDrawer>
-      <AlertDialog open={!!deleteTarget} onClose={() => setDeleteTarget(null)} onConfirm={handleDelete}
-        title="Delete Store" message={deleteTarget ? `Delete "${deleteTarget.name}"?` : ''} loading={deleteMutation.isPending} />
-    </>
-  )
-}
 
-/* ---- Molecules Tab ---- */
-function MoleculesTab() {
-  const [search, setSearch] = useState('a')
-  const [showForm, setShowForm] = useState(false)
-  const [form, setForm] = useState({ genericName: '', therapeuticClass: '', regulatorySchedule: '', dosageInstructions: '', safetyWarnings: '' })
+      {tab === 0 && (
+        <>
+          <SearchBar value={search} onChange={setSearch} placeholder="Search molecules..." />
+          <DataTable
+            columns={[
+              { key: 'genericName', label: 'Generic Name' },
+              { key: 'therapeuticClass', label: 'Class' },
+              { key: 'regulatorySchedule', label: 'Schedule', render: (r) => r.regulatorySchedule ? <Badge variant="warning">{r.regulatorySchedule}</Badge> : '—' },
+            ]}
+            data={molecules}
+            emptyMessage="Search for molecules..."
+          />
+        </>
+      )}
 
-  const { items, loading } = useQueryList(
-    ['molecules'], '/clinical/catalog/molecules/search', { query: search || 'a' }
-  )
-  const createMutation = useCreateMutation(['molecules'], '/clinical/catalog/molecules')
+      {tab === 1 && (
+        <>
+          <SearchBar value={search} onChange={setSearch} placeholder="Search molecule first..." />
+          {molecules.length > 0 && (
+            <div className="flex gap-2 flex-wrap">
+              {molecules.slice(0, 10).map((m) => (
+                <Button key={m.id} variant={selectedMolecule === m.id ? 'primary' : 'secondary'} size="sm" onClick={() => setSelectedMolecule(m.id)}>{m.genericName}</Button>
+              ))}
+            </div>
+          )}
+          {selectedMolecule && (
+            <DataTable columns={[{ key: 'brandName', label: 'Brand' }, { key: 'strength', label: 'Strength' }, { key: 'form', label: 'Form' }]} data={brands} emptyMessage="No brands for this molecule" />
+          )}
+        </>
+      )}
 
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-    try {
-      await createMutation.mutateAsync(form)
-      toast.success('Molecule created')
-      setShowForm(false)
-      setForm({ genericName: '', therapeuticClass: '', regulatorySchedule: '', dosageInstructions: '', safetyWarnings: '' })
-    } catch (err) { toast.error(err.message) }
-  }
+      {tab === 2 && (
+        <DataTable
+          columns={[
+            { key: 'name', label: 'Name' },
+            { key: 'type', label: 'Type', render: (r) => <Badge variant={storeTypeVariant[r.type] || 'neutral'}>{r.type}</Badge> },
+            { key: 'active', label: 'Active', render: (r) => <Badge variant={r.active ? 'success' : 'neutral'}>{r.active ? 'Yes' : 'No'}</Badge> },
+            { key: 'actions', label: '', render: (r) => <Button size="sm" variant="ghost" onClick={() => navigate(`/clinical/stores/${r.id}/products`)}>Products</Button> },
+          ]}
+          data={stores || []}
+          loading={storesLoading}
+          totalPages={totalPages}
+        />
+      )}
 
-  const columns = [
-    { key: 'genericName', label: 'Generic Name' },
-    { key: 'therapeuticClass', label: 'Therapeutic Class' },
-    { key: 'regulatorySchedule', label: 'Schedule' },
-  ]
-
-  return (
-    <>
-      <div className="flex justify-between mb-3">
-        <div className="w-64"><SearchBar placeholder="Search molecules..." onSearch={setSearch} /></div>
-        <Button onClick={() => setShowForm(true)}>+ Add Molecule</Button>
-      </div>
-      <DataTable columns={columns} data={items} loading={loading} emptyMessage="No molecules found"
-        renderRow={(m) => (
-          <tr key={m.id} className="border-b border-[var(--color-border-light)] hover:bg-slate-50">
-            <td className="px-4 py-2.5 text-sm font-medium text-[var(--color-text-primary)]">{m.genericName}</td>
-            <td className="px-4 py-2.5 text-sm text-[var(--color-text-secondary)]">{m.therapeuticClass || '-'}</td>
-            <td className="px-4 py-2.5 text-sm text-[var(--color-text-secondary)]">{m.regulatorySchedule || '-'}</td>
-          </tr>
-        )}
-      />
-      <FormDrawer open={showForm} onClose={() => setShowForm(false)} title="New Molecule" onSubmit={handleSubmit} loading={createMutation.isPending}>
-        <FormField label="Generic Name" required><Input value={form.genericName} onChange={(e) => setForm({ ...form, genericName: e.target.value })} required /></FormField>
-        <FormField label="Therapeutic Class"><Input value={form.therapeuticClass} onChange={(e) => setForm({ ...form, therapeuticClass: e.target.value })} /></FormField>
-        <FormField label="Regulatory Schedule"><Input value={form.regulatorySchedule} onChange={(e) => setForm({ ...form, regulatorySchedule: e.target.value })} /></FormField>
-        <FormField label="Dosage Instructions"><textarea value={form.dosageInstructions} onChange={(e) => setForm({ ...form, dosageInstructions: e.target.value })} rows={2} className="w-full px-3 py-2 text-sm rounded-[var(--radius-md)] border border-[var(--color-border)] outline-none" /></FormField>
-        <FormField label="Safety Warnings"><textarea value={form.safetyWarnings} onChange={(e) => setForm({ ...form, safetyWarnings: e.target.value })} rows={2} className="w-full px-3 py-2 text-sm rounded-[var(--radius-md)] border border-[var(--color-border)] outline-none" /></FormField>
-      </FormDrawer>
-    </>
-  )
-}
-
-/* ---- Brands Tab ---- */
-function BrandsTab() {
-  const [moleculeId, setMoleculeId] = useState('')
-  const [showForm, setShowForm] = useState(false)
-  const [form, setForm] = useState({ moleculeId: '', brandName: '', strength: '', form: '', baseUnit: '', barcode: '' })
-
-  const { items: allMolecules } = useQueryList(['molecules-list'], '/clinical/catalog/molecules/search', { query: 'a' })
-  const { items: brands, loading } = useQueryList(
-    ['brands'], `/clinical/catalog/molecules/${moleculeId}/brands`, {}, { enabled: !!moleculeId }
-  )
-  const createMutation = useCreateMutation(['brands'], '/clinical/catalog/brands')
-
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-    try {
-      await createMutation.mutateAsync({ ...form, moleculeId })
-      toast.success('Brand created')
-      setShowForm(false)
-      setForm({ moleculeId: '', brandName: '', strength: '', form: '', baseUnit: '', barcode: '' })
-    } catch (err) { toast.error(err.message) }
-  }
-
-  const columns = [
-    { key: 'brandName', label: 'Brand Name' },
-    { key: 'barcode', label: 'Barcode' },
-    { key: 'strength', label: 'Strength' },
-    { key: 'form', label: 'Form' },
-    { key: 'baseUnit', label: 'Base Unit' },
-  ]
-
-  return (
-    <>
-      <div className="flex justify-between items-center mb-3">
-        <div className="flex items-center gap-2">
-          <label className="text-xs font-medium text-[var(--color-text-secondary)]">Filter by Molecule:</label>
-          <select value={moleculeId} onChange={(e) => setMoleculeId(e.target.value)}
-            className="px-3 py-1.5 text-sm rounded-[var(--radius-md)] border border-[var(--color-border)] outline-none bg-white">
-            <option value="">-- Select molecule --</option>
-            {allMolecules.map((m) => <option key={m.id} value={m.id}>{m.genericName}</option>)}
-          </select>
+      <FormDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} title="Create Molecule" onSubmit={molForm.handleSubmit(handleCreateMolecule)} loading={createMolecule.isPending}>
+        <div className="space-y-4">
+          <FormField label="Generic Name" required error={molForm.formState.errors.genericName?.message}><Input {...molForm.register('genericName')} /></FormField>
+          <FormField label="Therapeutic Class"><Input {...molForm.register('therapeuticClass')} /></FormField>
+          <FormField label="Regulatory Schedule"><Input {...molForm.register('regulatorySchedule')} placeholder="e.g. Schedule II" /></FormField>
+          <FormField label="Dosage Instructions"><Input {...molForm.register('dosageInstructions')} /></FormField>
+          <FormField label="Safety Warnings"><Input {...molForm.register('safetyWarnings')} /></FormField>
         </div>
-        <Button onClick={() => setShowForm(true)} disabled={!moleculeId}>+ Add Brand</Button>
-      </div>
-      <DataTable columns={columns} data={brands} loading={loading}
-        emptyMessage={moleculeId ? 'No brands found' : 'Select a molecule above'}
-        renderRow={(b) => (
-          <tr key={b.id} className="border-b border-[var(--color-border-light)] hover:bg-slate-50">
-            <td className="px-4 py-2.5 text-sm font-medium text-[var(--color-text-primary)]">{b.brandName}</td>
-            <td className="px-4 py-2.5 text-sm text-[var(--color-text-secondary)] font-mono">{b.barcode || '-'}</td>
-            <td className="px-4 py-2.5 text-sm text-[var(--color-text-secondary)]">{b.strength || '-'}</td>
-            <td className="px-4 py-2.5 text-sm text-[var(--color-text-secondary)]">{b.form || '-'}</td>
-            <td className="px-4 py-2.5 text-sm text-[var(--color-text-secondary)]">{b.baseUnit || '-'}</td>
-          </tr>
-        )}
-      />
-      <FormDrawer open={showForm} onClose={() => setShowForm(false)} title="New Brand" onSubmit={handleSubmit} loading={createMutation.isPending}>
-        <FormField label="Brand Name" required><Input value={form.brandName} onChange={(e) => setForm({ ...form, brandName: e.target.value })} required /></FormField>
-        <FormField label="Barcode"><Input value={form.barcode} onChange={(e) => setForm({ ...form, barcode: e.target.value })} /></FormField>
-        <FormField label="Strength"><Input value={form.strength} onChange={(e) => setForm({ ...form, strength: e.target.value })} placeholder="e.g. 500mg" /></FormField>
-        <FormField label="Form"><Input value={form.form} onChange={(e) => setForm({ ...form, form: e.target.value })} placeholder="e.g. Tablet" /></FormField>
-        <FormField label="Base Unit"><Input value={form.baseUnit} onChange={(e) => setForm({ ...form, baseUnit: e.target.value })} placeholder="e.g. tablet" /></FormField>
       </FormDrawer>
-    </>
+    </div>
   )
 }

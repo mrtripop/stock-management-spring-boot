@@ -293,6 +293,54 @@ public class BatchServiceImpl implements BatchService {
   }
 
   @Override
+  @Transactional(rollbackFor = ApplicationException.class)
+  public void deductStockByBatch(UUID storeId, Long batchId, Long quantity)
+      throws ApplicationException {
+    StoreStock storeStock =
+        storeStockRepository
+            .findByStoreIdAndBatchId(storeId, batchId)
+            .orElseThrow(
+                () -> new ApplicationException(ErrorCode.STOCK_NOT_FOUND_FOR_BATCH, HttpStatus.NOT_FOUND));
+
+    long oldQuantity = storeStock.getQuantity();
+    int updated = storeStockRepository.deductQuantity(storeStock.getId(), quantity);
+    if (updated == 0) {
+      throw new ApplicationException(ErrorCode.INSUFFICIENT_BATCH_QUANTITY, HttpStatus.CONFLICT);
+    }
+
+    storeStock.setQuantity(oldQuantity - quantity);
+
+    auditService.recordAudit(
+        "INVENTORY_OUT",
+        "StoreStock",
+        storeStock.getId().toString(),
+        String.valueOf(oldQuantity),
+        String.valueOf(storeStock.getQuantity()));
+  }
+
+  @Override
+  @Transactional(rollbackFor = ApplicationException.class)
+  public void restoreStock(UUID storeId, Long batchId, Long quantity)
+      throws ApplicationException {
+    StoreStock storeStock =
+        storeStockRepository
+            .findByStoreIdAndBatchId(storeId, batchId)
+            .orElseThrow(
+                () -> new ApplicationException(ErrorCode.STOCK_NOT_FOUND_FOR_BATCH, HttpStatus.NOT_FOUND));
+
+    long oldQuantity = storeStock.getQuantity();
+    storeStockRepository.restoreQuantity(storeStock.getId(), quantity);
+    storeStock.setQuantity(oldQuantity + quantity);
+
+    auditService.recordAudit(
+        "INVENTORY_IN",
+        "StoreStock",
+        storeStock.getId().toString(),
+        String.valueOf(oldQuantity),
+        String.valueOf(storeStock.getQuantity()));
+  }
+
+  @Override
   @Transactional(readOnly = true)
   public StoreStockDto getStoreStock(UUID storeId, Long batchId) throws ApplicationException {
     StoreStock storeStock =

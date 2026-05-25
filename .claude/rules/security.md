@@ -2,7 +2,7 @@
 
 Security-specific rules that go beyond standard API design and Spring Boot practices. Each rule has a correct and incorrect example.
 
-**Note:** Input validation (`@Valid @RequestBody`) and response wrapping are in `api-design.md`. Repository query safety (parameterized queries) is in `spring-boot-practices.md`.
+**Note:** Input validation (`@Valid @RequestBody`) and response wrapping are in `api-design.md`.
 
 ## XSS Prevention
 

@@ -6,10 +6,12 @@ import com.mrtripop.model.BaseQueryParams;
 import com.mrtripop.model.ResponseBody;
 import com.mrtripop.transaction.constant.SuccessCode;
 import com.mrtripop.transaction.models.dto.CreateInvoiceRequest;
+import com.mrtripop.transaction.models.dto.DailySalesSummaryDto;
 import com.mrtripop.transaction.models.dto.InvoiceDto;
 import com.mrtripop.transaction.services.InvoiceService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
+import java.time.LocalDate;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -96,6 +98,33 @@ public class InvoiceController {
       throws ApplicationException {
     InvoiceDto result = invoiceService.voidInvoice(invoiceId);
     BaseStatusCode success = SuccessCode.TXN2005_VOID_INVOICE_IS_SUCCESS;
+    return ResponseBody.builder()
+        .code(success.getCode())
+        .message(success.getMessage())
+        .data(result)
+        .build()
+        .toResponseEntity(HttpStatus.OK);
+  }
+
+  @PostMapping("/dispense")
+  public ResponseEntity<Object> dispense(@Valid @RequestBody CreateInvoiceRequest request)
+      throws ApplicationException {
+    InvoiceDto result = invoiceService.dispense(request);
+    BaseStatusCode success = SuccessCode.TXN2008_DISPENSE_IS_SUCCESS;
+    return ResponseBody.builder()
+        .code(success.getCode())
+        .message(success.getMessage())
+        .data(result)
+        .build()
+        .toResponseEntity(HttpStatus.CREATED);
+  }
+
+  @GetMapping("/daily-summary")
+  public ResponseEntity<Object> getDailySummary(
+      @RequestParam UUID storeId,
+      @RequestParam(required = false) LocalDate date) throws ApplicationException {
+    DailySalesSummaryDto result = invoiceService.getDailySummary(storeId, date);
+    BaseStatusCode success = SuccessCode.TXN2009_GET_DAILY_SUMMARY_IS_SUCCESS;
     return ResponseBody.builder()
         .code(success.getCode())
         .message(success.getMessage())

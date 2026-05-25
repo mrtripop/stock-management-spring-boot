@@ -2,7 +2,7 @@
 
 Performance-specific rules for database queries, data access, and resource management. Each rule has a correct and incorrect example.
 
-**Note:** Transaction boundaries (`@Transactional` placement) and caching (`@Cacheable`) are in `spring-boot-practices.md`. Pagination in endpoints is in `api-design.md`.
+**Note:** Pagination in endpoints is in `api-design.md`.
 
 ## N+1 Query Prevention
 

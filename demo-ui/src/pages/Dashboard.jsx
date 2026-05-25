@@ -1,79 +1,69 @@
 import { useNavigate } from 'react-router-dom'
-import { Button } from '../atoms/Button'
+import { useStoreId } from '../lib/auth'
+import { useProductList } from '../lib/hooks/useProducts'
+import { useBatchList, useTaskList } from '../lib/hooks/useInventory'
+import { useInvoiceList, useDailySummary } from '../lib/hooks/useTransactions'
 import { StatCard } from '../molecules/StatCard'
-import { ExpiryAlerts } from '../organisms/ExpiryAlerts'
 import { ActivityFeed } from '../organisms/ActivityFeed'
-import { useQueryList } from '../lib/hooks'
+import { ExpiryAlerts } from '../organisms/ExpiryAlerts'
+import { Icon } from '../atoms/Icon'
+
+const QUICK_ACTIONS = [
+  { label: 'Stock In', icon: 'archive', to: '/inventory', color: 'text-teal-600 bg-teal-50' },
+  { label: 'Dispense', icon: 'receipt', to: '/dispensing', color: 'text-blue-600 bg-blue-50' },
+  { label: 'Search', icon: 'search', to: '/products', color: 'text-purple-600 bg-purple-50' },
+  { label: 'Reports', icon: 'chart', to: '/transactions', color: 'text-amber-600 bg-amber-50' },
+]
 
 export default function Dashboard() {
   const navigate = useNavigate()
+  const storeId = useStoreId()
+  const { totalElements: productCount } = useProductList({ size: 1 })
+  const { totalElements: batchCount } = useBatchList({ size: 1 })
+  const { data: summary } = useDailySummary(storeId)
+  const { items: taskItems } = useTaskList({ storeId, status: 'PENDING', size: 10 })
+  const { items: recentTx } = useInvoiceList({ storeId, size: 10, orderBy: 'DESC' })
 
-  const { items: productData, totalElements: productCount } = useQueryList(
-    ['products'], '/products', { page: 1, size: 1 }
-  )
-
-  const { items: batchData, totalElements: batchCount } = useQueryList(
-    ['batches'], '/inventory/batches', { page: 1, size: 1 }
-  )
-
-  const { items: expiringBatches } = useQueryList(
-    ['batches-expiring'], '/inventory/batches', { page: 1, size: 5 }
-  )
-
-  const { items: recentTransactions } = useQueryList(
-    ['transactions-recent'], '/transactions', { page: 1, size: 5 }
-  )
-
-  const stats = [
-    { title: 'Products', value: productCount ?? '-', change: '', trend: null, accentColor: 'var(--color-primary)' },
-    { title: 'Expiring Soon', value: '-', change: '', trend: null, accentColor: 'var(--color-warning)' },
-    { title: 'Batches', value: batchCount ?? '-', change: 'Active batches', trend: null, accentColor: 'var(--color-purple)' },
-    { title: 'Low Stock', value: '-', change: 'Below reorder', trend: null, accentColor: 'var(--color-danger)' },
-  ]
-
-  const activities = recentTransactions.map((t) => ({
-    type: t.type === 0 ? 'STOCK_IN' : t.type === 1 ? 'DEDUCT' : 'default',
-    title: `Transaction #${t.id}`,
-    description: t.code || '-',
-    time: t.createdAt ? new Date(t.createdAt).toLocaleTimeString() : '-',
+  const feedItems = (recentTx || []).map((tx) => ({
+    id: tx.id,
+    type: 'transaction',
+    message: `Invoice #${tx.id} — ${tx.status || 'Created'}`,
+    timestamp: tx.createdAt ? new Date(tx.createdAt).toLocaleString() : '',
   }))
 
   return (
-    <div>
-      {/* Quick Actions Bar */}
-      <div className="flex gap-2 mb-5">
-        <Button icon={ArrowDownIcon} onClick={() => navigate('/inventory')}>Stock In</Button>
-        <Button variant="secondary" onClick={() => navigate('/inventory')}>Deduct Stock</Button>
-        <Button variant="secondary" onClick={() => navigate('/products')}>Search Product</Button>
-        <Button variant="secondary">Run Report</Button>
+    <div className="space-y-6">
+      {/* Stat cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard label="Products" value={productCount ?? 0} icon="cube" />
+        <StatCard label="Active Batches" value={batchCount ?? 0} icon="archive" />
+        <StatCard label="Today's Revenue" value={`$${(summary?.totalRevenue ?? 0).toFixed(2)}`} icon="credit-card" variant="success" />
+        <StatCard label="Items Dispensed" value={summary?.totalItemsDispensed ?? 0} icon="receipt" />
       </div>
 
-      {/* Stat Cards */}
-      <div className="grid grid-cols-4 gap-3 mb-5">
-        {stats.map((stat) => (
-          <StatCard key={stat.title} {...stat} />
+      {/* Alerts + Activity */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="bg-[var(--color-surface)] rounded-[var(--radius-lg)] shadow-[var(--shadow-sm)] border border-[var(--color-border)] p-5">
+          <h3 className="text-sm font-semibold text-[var(--color-text-primary)] mb-4">Active Alerts</h3>
+          <ExpiryAlerts tasks={taskItems || []} onAcknowledge={() => {}} onResolve={() => {}} />
+        </div>
+        <div className="bg-[var(--color-surface)] rounded-[var(--radius-lg)] shadow-[var(--shadow-sm)] border border-[var(--color-border)] p-5">
+          <h3 className="text-sm font-semibold text-[var(--color-text-primary)] mb-4">Recent Activity</h3>
+          <ActivityFeed items={feedItems} />
+        </div>
+      </div>
+
+      {/* Quick actions */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {QUICK_ACTIONS.map((action) => (
+          <button key={action.label} onClick={() => navigate(action.to)} className="bg-[var(--color-surface)] rounded-[var(--radius-lg)] shadow-[var(--shadow-sm)] border border-[var(--color-border)] p-4 flex flex-col items-center gap-2 hover:border-[var(--color-primary)] transition-colors cursor-pointer">
+            <div className={`w-10 h-10 rounded-full ${action.color} flex items-center justify-center`}>
+              <Icon name={action.icon} className="w-5 h-5" />
+            </div>
+            <span className="text-sm font-medium text-[var(--color-text-primary)]">{action.label}</span>
+          </button>
         ))}
       </div>
-
-      {/* Expiry Alerts + Activity Feed */}
-      <div className="grid grid-cols-2 gap-4">
-        <ExpiryAlerts items={expiringBatches.map((b) => ({
-          id: b.id,
-          productName: b.barcode || 'Unknown',
-          batchNumber: b.batchNumber,
-          quantity: b.quantity,
-          expiryDate: b.expiryDate,
-        }))} />
-        <ActivityFeed items={activities} />
-      </div>
     </div>
-  )
-}
-
-function ArrowDownIcon({ className }) {
-  return (
-    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-    </svg>
   )
 }

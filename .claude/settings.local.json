@@ -16,7 +16,15 @@
       "Write(pom.xml)",
       "Write(_bmad-output/*)",
       "Write(_bmad/*)",
-      "WebSearch"
+      "WebSearch",
+      "Bash(curl -s http://localhost:8080/*)",
+      "Bash(npm install *)",
+      "Bash(npx vite *)",
+      "mcp__gitnexus__query",
+      "mcp__gitnexus__context",
+      "mcp__gitnexus__route_map",
+      "mcp__gitnexus__impact",
+      "mcp__gitnexus__cypher"
     ],
     "deny": [
       "Bash(rm -rf *)",

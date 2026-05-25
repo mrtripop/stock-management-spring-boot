@@ -1,191 +1,97 @@
 import { useState } from 'react'
-import { toast } from 'sonner'
-import { Button } from '../atoms/Button'
-import { Badge } from '../atoms/Badge'
-import { Input } from '../atoms/Input'
-import { Select } from '../atoms/Select'
-import { Icon } from '../atoms/Icon'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
+import { DataTable } from '../organisms/DataTable'
+import { FormDrawer } from '../organisms/FormDrawer'
 import { PageHeader } from '../molecules/PageHeader'
 import { SearchBar } from '../molecules/SearchBar'
 import { FormField } from '../molecules/FormField'
-import { DataTable } from '../organisms/DataTable'
-import { FormDrawer } from '../organisms/FormDrawer'
-import { AlertDialog } from '../organisms/AlertDialog'
-import { useQueryList, useCreateMutation, useUpdateMutation, useDeleteMutation } from '../lib/hooks'
+import { Input } from '../atoms/Input'
+import { Badge } from '../atoms/Badge'
+import { Button } from '../atoms/Button'
+import { useProductList, useCreateProduct, useUpdateProduct, useDeleteProduct } from '../lib/hooks/useProducts'
 
-const EMPTY_PRODUCT = {
-  code: '', barcode: '', name: '', description: '', category: '',
-  reorderQuantity: 0, packedWeight: 0, packedHeight: 0,
-  packedWidth: 0, packedDepth: 0, isActive: true,
-}
+const productSchema = z.object({
+  code: z.string().min(1, 'Code is required'),
+  barcode: z.string().min(1, 'Barcode is required'),
+  name: z.string().min(1, 'Name is required'),
+  description: z.string().max(300, 'Max 300 characters'),
+  category: z.string().min(1, 'Category is required'),
+  reorderQuantity: z.number().min(0, 'Must be >= 0'),
+  packedWeight: z.number().min(0),
+  packedHeight: z.number().min(0),
+  packedWidth: z.number().min(0),
+  packedDepth: z.number().min(0),
+  isActive: z.boolean(),
+})
 
-const COLUMNS = [
-  { key: 'code', label: 'Code' },
-  { key: 'name', label: 'Name' },
-  { key: 'category', label: 'Category' },
-  { key: 'reorderQuantity', label: 'Reorder Qty' },
-  { key: 'status', label: 'Status' },
-  { key: 'actions', label: '', width: '120px' },
+const columns = [
+  { key: 'code', label: 'Code', sortable: true },
+  { key: 'name', label: 'Name', sortable: true },
+  { key: 'category', label: 'Category', sortable: true },
+  { key: 'isActive', label: 'Status', render: (row) => <Badge variant={row.isActive ? 'success' : 'neutral'}>{row.isActive ? 'Active' : 'Inactive'}</Badge> },
 ]
+
+const DEFAULT_VALUES = { isActive: true, reorderQuantity: 0, packedWeight: 0, packedHeight: 0, packedWidth: 0, packedDepth: 0 }
 
 export default function Products() {
   const [page, setPage] = useState(1)
   const [search, setSearch] = useState('')
-  const [showForm, setShowForm] = useState(false)
-  const [editingProduct, setEditingProduct] = useState(null)
-  const [deleteTarget, setDeleteTarget] = useState(null)
-  const [form, setForm] = useState(EMPTY_PRODUCT)
+  const [drawerOpen, setDrawerOpen] = useState(false)
+  const [editing, setEditing] = useState(null)
 
-  const { items: products, totalPages, totalElements, loading } = useQueryList(
-    ['products'], '/products', { page, size: 10, search }
-  )
+  const { items, totalPages, totalElements, loading } = useProductList({ page, size: 20 })
+  const createProduct = useCreateProduct()
+  const updateProduct = useUpdateProduct()
+  const deleteProduct = useDeleteProduct()
 
-  const createMutation = useCreateMutation(['products'], '/products')
-  const updateMutation = useUpdateMutation(['products'], '/products')
-  const deleteMutation = useDeleteMutation(['products'], '/products')
+  const form = useForm({ resolver: zodResolver(productSchema), defaultValues: DEFAULT_VALUES })
 
-  const openCreate = () => {
-    setForm(EMPTY_PRODUCT)
-    setEditingProduct(null)
-    setShowForm(true)
+  const filtered = (items || []).filter((p) => !search || p.name?.toLowerCase().includes(search.toLowerCase()) || p.code?.toLowerCase().includes(search.toLowerCase()))
+
+  const openCreate = () => { setEditing(null); form.reset(DEFAULT_VALUES); setDrawerOpen(true) }
+  const openEdit = (row) => { setEditing(row); form.reset(row); setDrawerOpen(true) }
+
+  const onSubmit = async (data) => {
+    if (editing) { await updateProduct.mutateAsync({ id: editing.id, ...data }) }
+    else { await createProduct.mutateAsync(data) }
+    setDrawerOpen(false)
   }
 
-  const openEdit = (product) => {
-    setForm({
-      code: product.code, barcode: product.barcode, name: product.name,
-      description: product.description, category: product.category,
-      reorderQuantity: product.reorderQuantity, packedWeight: product.packedWeight,
-      packedHeight: product.packedHeight, packedWidth: product.packedWidth,
-      packedDepth: product.packedDepth, isActive: product.isActive,
-    })
-    setEditingProduct(product)
-    setShowForm(true)
-  }
-
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-    try {
-      if (editingProduct) {
-        await updateMutation.mutateAsync({ id: editingProduct.id, ...form })
-        toast.success('Product updated')
-      } else {
-        await createMutation.mutateAsync(form)
-        toast.success('Product created')
-      }
-      setShowForm(false)
-    } catch (err) {
-      toast.error(err.message)
-    }
-  }
-
-  const handleDelete = async () => {
-    try {
-      await deleteMutation.mutateAsync(deleteTarget.id)
-      toast.success('Product deleted')
-      setDeleteTarget(null)
-    } catch (err) {
-      toast.error(err.message)
-    }
-  }
-
-  const formLoading = createMutation.isPending || updateMutation.isPending
+  const actionColumn = { key: 'actions', label: '', width: '80px', render: (row) => (
+    <div className="flex gap-1">
+      <Button size="sm" variant="ghost" onClick={() => openEdit(row)}>Edit</Button>
+      <Button size="sm" variant="ghost" onClick={() => { if (confirm('Delete?')) deleteProduct.mutate(row.id) }}>Del</Button>
+    </div>
+  )}
 
   return (
-    <div>
-      <PageHeader
-        title="Products"
-        subtitle="Manage your product catalog"
-        actions={<Button onClick={openCreate}>+ Add Product</Button>}
-      />
-
-      <div className="mb-4">
-        <SearchBar placeholder="Search products..." onSearch={setSearch} />
-      </div>
-
-      <DataTable
-        columns={COLUMNS}
-        data={products}
-        loading={loading}
-        currentPage={page}
-        totalPages={totalPages}
-        totalElements={totalElements}
-        pageSize={10}
-        onPageChange={setPage}
-        emptyMessage="No products found"
-        renderRow={(p) => (
-          <tr key={p.id} className="border-b border-[var(--color-border-light)] hover:bg-slate-50 transition-colors">
-            <td className="px-4 py-2.5 text-sm font-medium text-[var(--color-text-primary)]">{p.code}</td>
-            <td className="px-4 py-2.5 text-sm text-[var(--color-text-primary)]">{p.name}</td>
-            <td className="px-4 py-2.5 text-sm text-[var(--color-text-secondary)]">{p.category || '-'}</td>
-            <td className="px-4 py-2.5 text-sm text-[var(--color-text-secondary)]">{p.reorderQuantity}</td>
-            <td className="px-4 py-2.5">
-              <Badge variant={p.isActive ? 'success' : 'neutral'}>{p.isActive ? 'Active' : 'Inactive'}</Badge>
-            </td>
-            <td className="px-4 py-2.5 text-right">
-              <button onClick={() => openEdit(p)} className="text-[var(--color-primary)] text-xs font-medium hover:underline mr-3 cursor-pointer">Edit</button>
-              <button onClick={() => setDeleteTarget(p)} className="text-[var(--color-danger)] text-xs font-medium hover:underline cursor-pointer">Delete</button>
-            </td>
-          </tr>
-        )}
-      />
-
-      {/* Create/Edit Drawer */}
-      <FormDrawer
-        open={showForm}
-        onClose={() => setShowForm(false)}
-        title={editingProduct ? 'Edit Product' : 'New Product'}
-        onSubmit={handleSubmit}
-        submitLabel={editingProduct ? 'Update' : 'Create'}
-        loading={formLoading}
-      >
-        <FormField label="Product Code" required>
-          <Input value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value })} required />
-        </FormField>
-        <FormField label="Barcode">
-          <Input value={form.barcode} onChange={(e) => setForm({ ...form, barcode: e.target.value })} />
-        </FormField>
-        <FormField label="Product Name" required>
-          <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
-        </FormField>
-        <FormField label="Description">
-          <Input value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
-        </FormField>
-        <FormField label="Category">
-          <Input value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} />
-        </FormField>
-        <FormField label="Reorder Quantity" required>
-          <Input type="number" min="0" value={form.reorderQuantity} onChange={(e) => setForm({ ...form, reorderQuantity: +e.target.value })} />
-        </FormField>
-        <FormField label="Packed Weight (kg)">
-          <Input type="number" min="0" step="0.01" value={form.packedWeight} onChange={(e) => setForm({ ...form, packedWeight: +e.target.value })} />
-        </FormField>
-        <FormField label="Packed Height (cm)">
-          <Input type="number" min="0" step="0.01" value={form.packedHeight} onChange={(e) => setForm({ ...form, packedHeight: +e.target.value })} />
-        </FormField>
-        <FormField label="Packed Width (cm)">
-          <Input type="number" min="0" step="0.01" value={form.packedWidth} onChange={(e) => setForm({ ...form, packedWidth: +e.target.value })} />
-        </FormField>
-        <FormField label="Packed Depth (cm)">
-          <Input type="number" min="0" step="0.01" value={form.packedDepth} onChange={(e) => setForm({ ...form, packedDepth: +e.target.value })} />
-        </FormField>
-        <FormField label="Active">
-          <Select value={String(form.isActive)} onChange={(e) => setForm({ ...form, isActive: e.target.value === 'true' })}>
-            <option value="true">Yes</option>
-            <option value="false">No</option>
-          </Select>
-        </FormField>
+    <div className="space-y-4">
+      <PageHeader title="Products" subtitle="Manage your product catalog" actions={<Button onClick={openCreate}>Add Product</Button>} />
+      <SearchBar value={search} onChange={setSearch} placeholder="Search products..." />
+      <DataTable columns={[...columns, actionColumn]} data={filtered} loading={loading} currentPage={page} totalPages={totalPages} totalElements={totalElements} onPageChange={setPage} emptyMessage="No products found" />
+      <FormDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} title={editing ? 'Edit Product' : 'Create Product'} onSubmit={form.handleSubmit(onSubmit)} loading={createProduct.isPending || updateProduct.isPending}>
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <FormField label="Code" required error={form.formState.errors.code?.message}><Input {...form.register('code')} /></FormField>
+            <FormField label="Barcode" required error={form.formState.errors.barcode?.message}><Input {...form.register('barcode')} /></FormField>
+          </div>
+          <FormField label="Name" required error={form.formState.errors.name?.message}><Input {...form.register('name')} /></FormField>
+          <FormField label="Description" error={form.formState.errors.description?.message}><Input {...form.register('description')} /></FormField>
+          <div className="grid grid-cols-2 gap-4">
+            <FormField label="Category" required error={form.formState.errors.category?.message}><Input {...form.register('category')} /></FormField>
+            <FormField label="Reorder Qty" error={form.formState.errors.reorderQuantity?.message}><Input type="number" {...form.register('reorderQuantity', { valueAsNumber: true })} /></FormField>
+          </div>
+          <div className="grid grid-cols-4 gap-3">
+            <FormField label="Weight" error={form.formState.errors.packedWeight?.message}><Input type="number" step="0.01" {...form.register('packedWeight', { valueAsNumber: true })} /></FormField>
+            <FormField label="Height" error={form.formState.errors.packedHeight?.message}><Input type="number" step="0.01" {...form.register('packedHeight', { valueAsNumber: true })} /></FormField>
+            <FormField label="Width" error={form.formState.errors.packedWidth?.message}><Input type="number" step="0.01" {...form.register('packedWidth', { valueAsNumber: true })} /></FormField>
+            <FormField label="Depth" error={form.formState.errors.packedDepth?.message}><Input type="number" step="0.01" {...form.register('packedDepth', { valueAsNumber: true })} /></FormField>
+          </div>
+          <label className="flex items-center gap-2 text-sm"><input type="checkbox" {...form.register('isActive')} className="rounded" /> Active</label>
+        </div>
       </FormDrawer>
-
-      {/* Delete Confirmation */}
-      <AlertDialog
-        open={!!deleteTarget}
-        onClose={() => setDeleteTarget(null)}
-        onConfirm={handleDelete}
-        title="Delete Product"
-        message={deleteTarget ? `Are you sure you want to delete "${deleteTarget.name}"? This action cannot be undone.` : ''}
-        confirmLabel="Delete"
-        loading={deleteMutation.isPending}
-      />
     </div>
   )
 }

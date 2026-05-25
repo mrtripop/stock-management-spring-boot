@@ -2,7 +2,7 @@
 
 **Date:** 2026-05-16
 **Scope:** Full UI redesign of `demo-ui/` admin dashboard
-**Status:** Draft — awaiting user review
+**Status:** Approved — proceeding to implementation planning
 
 ---
 
