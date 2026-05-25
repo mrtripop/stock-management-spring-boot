@@ -30,7 +30,7 @@ public class StockReconciliationServiceImpl implements StockReconciliationServic
     int pageNumber = 0;
     Page<Batch> batchPage;
     do {
-      batchPage = batchRepository.findAll(PageRequest.of(pageNumber++, Sort.by("id"), 100));
+      batchPage = batchRepository.findAll(PageRequest.of(pageNumber++, 100, Sort.by("id")));
       for (Batch batch : batchPage) {
         try {
           reconcileBatch(batch.getId());
