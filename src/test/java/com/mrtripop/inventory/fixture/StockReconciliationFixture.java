@@ -2,7 +2,6 @@ package com.mrtripop.inventory.fixture;
 
 import com.mrtripop.inventory.models.db.Batch;
 import com.mrtripop.inventory.models.db.StoreStock;
-import java.util.UUID;
 
 public final class StockReconciliationFixture {
     private StockReconciliationFixture() {}
