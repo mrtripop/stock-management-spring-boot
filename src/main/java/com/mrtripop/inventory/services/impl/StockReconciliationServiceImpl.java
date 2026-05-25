@@ -8,6 +8,8 @@ import com.mrtripop.inventory.repository.StoreStockRepository;
 import com.mrtripop.inventory.services.StockReconciliationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,7 +25,18 @@ public class StockReconciliationServiceImpl implements StockReconciliationServic
 
   @Override
   public void reconcileAll() {
-    // To be implemented in Task 4
+    int pageNumber = 0;
+    Page<Batch> batchPage;
+    do {
+      batchPage = batchRepository.findAll(PageRequest.of(pageNumber++, 100));
+      for (Batch batch : batchPage) {
+        try {
+          reconcileBatch(batch.getId());
+        } catch (Exception e) {
+          log.error("Failed to reconcile batch {}: {}", batch.getId(), e.getMessage());
+        }
+      }
+    } while (batchPage.hasNext());
   }
 
   @Override
