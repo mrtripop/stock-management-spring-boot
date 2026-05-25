@@ -7,10 +7,12 @@ import com.mrtripop.inventory.repository.BatchRepository;
 import com.mrtripop.inventory.repository.StoreStockRepository;
 import com.mrtripop.inventory.services.StockReconciliationService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class StockReconciliationServiceImpl implements StockReconciliationService {
 
@@ -33,12 +35,13 @@ public class StockReconciliationServiceImpl implements StockReconciliationServic
     long oldQuantity = batch.getQuantity();
 
     if (oldQuantity != actualSum) {
+      log.info("Corrected stock drift for batch {}: {} -> {}", batchId, oldQuantity, actualSum);
       batch.setQuantity(actualSum);
       batchRepository.save(batch);
 
       auditService.recordAudit(
-          "STOCK_RECONCILIATION",
-          "Batch",
+          StockReconciliationService.ACTION_RECONCILIATION,
+          StockReconciliationService.ENTITY_BATCH,
           batch.getId().toString(),
           String.valueOf(oldQuantity),
           String.valueOf(actualSum)
