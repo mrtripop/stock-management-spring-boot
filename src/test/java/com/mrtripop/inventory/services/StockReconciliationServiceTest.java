@@ -2,6 +2,8 @@ package com.mrtripop.inventory.services;
 
 import static com.mrtripop.inventory.fixture.StockReconciliationFixture.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -95,6 +97,25 @@ class StockReconciliationServiceTest {
       // Assert
       assertEquals(0L, batch.getQuantity());
       verify(batchRepository).save(batch);
+    }
+  }
+
+  @Nested
+  @DisplayName("Resilience")
+  class Resilience {
+
+    @Test
+    @DisplayName("should handle optimistic lock failure and not record audit")
+    void shouldHandleOptimisticLockFailure() {
+      // Arrange
+      Batch batch = defaultBatch();
+      when(batchRepository.findById(VALID_BATCH_ID)).thenReturn(Optional.of(batch));
+      when(storeStockRepository.sumQuantityByBatchId(VALID_BATCH_ID)).thenReturn(CORRECT_SUM_QTY);
+      when(batchRepository.save(any())).thenThrow(new ObjectOptimisticLockingFailureException(Batch.class, VALID_BATCH_ID));
+
+      // Act & Assert
+      assertDoesNotThrow(() -> service.reconcileBatch(VALID_BATCH_ID));
+      verify(auditService, never()).recordAudit(any(), any(), any(), any(), any());
     }
   }
 }

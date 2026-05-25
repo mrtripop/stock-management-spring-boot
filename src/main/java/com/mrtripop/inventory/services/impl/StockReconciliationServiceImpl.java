@@ -8,6 +8,7 @@ import com.mrtripop.inventory.repository.StoreStockRepository;
 import com.mrtripop.inventory.services.StockReconciliationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -37,7 +38,12 @@ public class StockReconciliationServiceImpl implements StockReconciliationServic
     if (oldQuantity != actualSum) {
       log.info("Corrected stock drift for batch {}: {} -> {}", batchId, oldQuantity, actualSum);
       batch.setQuantity(actualSum);
-      batchRepository.save(batch);
+      try {
+        batchRepository.save(batch);
+      } catch (ObjectOptimisticLockingFailureException e) {
+        log.warn("Optimistic lock failure reconciling batch {}: skipping", batchId);
+        return;
+      }
 
       auditService.recordAudit(
           StockReconciliationService.ACTION_RECONCILIATION,
