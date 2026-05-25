@@ -85,7 +85,7 @@ class StockReconciliationServiceTest {
     void shouldSetToZeroWhenOrphan() {
       // Arrange
       Batch batch = defaultBatch();
-      batch.setQuantity(50L);
+      batch.setQuantity(INITIAL_BATCH_QTY);
       when(batchRepository.findById(VALID_BATCH_ID)).thenReturn(Optional.of(batch));
       when(storeStockRepository.sumQuantityByBatchId(VALID_BATCH_ID)).thenReturn(0L);
 
