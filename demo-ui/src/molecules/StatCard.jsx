@@ -38,20 +38,20 @@ export function StatCard({ icon, value, label, trend, trendValue, variant = 'def
     <div className={`bg-[var(--color-surface)] rounded-[var(--radius-lg)] p-[var(--space-5)] shadow-[var(--shadow-sm)] border border-[var(--color-border)] transition-all duration-200 hover:shadow-[var(--shadow-md)] hover:-translate-y-0.5 ${className}`}>
       <div className="flex items-start justify-between">
         <div className="flex-1 min-w-0">
-          <div className="text-[length:var(--text-xs)] font-[var(--font-medium)] text-[var(--color-text-muted)] uppercase tracking-wider truncate">
+          <div className={`text-[var(--font-size-xs)] font-[var(--font-weight-medium)] text-[var(--color-text-muted)] uppercase tracking-wider truncate`}>
             {label}
           </div>
           {loading ? (
-            <div className="mt-[var(--space-2)] h-8 w-20 bg-[var(--color-background)] rounded-[var(--radius-sm)] animate-pulse" />
+            <div className={`mt-[var(--space-2)] h-[var(--space-8)] w-20 bg-[var(--color-background)] rounded-[var(--radius-sm)] animate-pulse`} />
           ) : (
-            <div className="text-[length:var(--text-3xl)] font-[var(--font-bold)] text-[var(--color-text-primary)] mt-[var(--space-1)] leading-tight">
+            <div className={`text-3xl font-[var(--font-weight-bold)] text-[var(--color-text-primary)] mt-[var(--space-1)] leading-[var(--line-height-tight)]`}>
               {value}
             </div>
           )}
           {trendValue && !loading && (
-            <div className={`flex items-center gap-[var(--space-1)] text-[length:var(--text-xs)] mt-[var(--space-1)] ${trendColors[trend] || trendColors.flat}`}>
+            <div className={`flex items-center gap-[var(--space-1)] text-[var(--font-size-xs)] mt-[var(--space-1)] ${trendColors[trend] || trendColors.flat}`}>
               {trend && trendIcons[trend] && (
-                <Icon name={trendIcons[trend]} className="w-3 h-3" />
+                <Icon name={trendIcons[trend]} className="w-[var(--space-3)] h-[var(--space-3)]" />
               )}
               <span>{trendValue}</span>
             </div>
