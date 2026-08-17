@@ -82,4 +82,7 @@ public interface StoreStockRepository extends JpaRepository<StoreStock, Long> {
 
   @EntityGraph(attributePaths = {"store", "batch", "batch.brand"})
   List<StoreStock> findByBatchIdAndQuantityGreaterThan(Long batchId, Long quantity);
+
+  @Query("SELECT COALESCE(SUM(ss.quantity), 0L) FROM StoreStock ss WHERE ss.batch.id = :batchId")
+  Long sumQuantityByBatchId(@Param("batchId") Long batchId);
 }
