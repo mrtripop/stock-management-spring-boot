@@ -18,12 +18,12 @@ export const AlertBanner = ({ message, type = 'warning' }) => {
       ...currentStyle,
       display: 'flex',
       alignItems: 'center',
-      gap: '12px',
-      padding: '12px 16px',
-      borderRadius: '4px',
-      marginBottom: '20px',
-      fontWeight: '500',
-      fontSize: '0.875rem',
+      gap: 'var(--space-3)',
+      padding: 'var(--space-3) var(--space-4)',
+      borderRadius: 'var(--radius-sm)',
+      marginBottom: 'var(--space-5)',
+      fontWeight: 'var(--font-medium)',
+      fontSize: 'var(--text-sm)',
     }}>
       <Spinner size="sm" />
       <span>{message}</span>
