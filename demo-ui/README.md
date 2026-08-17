@@ -174,10 +174,30 @@ Outputs a static site to `storybook-static/` that can be deployed to any hosting
 
 ## Design Tokens
 
-The theme uses CSS custom properties defined in `src/styles/tokens.css`. Colors, typography, spacing, borders, and
-shadows are all tokenized. A JS mirror exists at `src/foundations/theme.js` for programmatic use.
+This project uses a centralized token system for all design values (spacing, typography, sizing, shadows).
 
-The color palette is a **teal pharmacy theme** (`#0d9488` primary).
+**Quick Start:**
+
+```javascript
+import { tokens } from './src/foundations/theme'
+
+// Use tokens in components
+padding: tokens.spacing[3]  // 12px
+fontSize: tokens.fontSize.sm  // 0.875rem
+```
+
+**Resources:**
+- **Token Reference:** See Storybook > Tokens > Showcase
+- **Usage Guide:** [Design System Token Guide](../../docs/design-system/tokens-guide.md)
+- **Available Patterns:** CSS variables, imported tokens, Tailwind arbitrary values (see guide)
+
+**Key Files:**
+- `src/foundations/theme.js` — Token registry
+- `src/foundations/tokens.css` — CSS variables
+- `src/foundations/index.js` — Centralized exports
+
+**Rule:** When adding or updating a token value, update BOTH `theme.js` AND `tokens.css` to keep them in sync.
+
 
 ## Component Architecture
 
