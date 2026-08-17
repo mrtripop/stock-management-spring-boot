@@ -6,6 +6,7 @@ import { DataTable } from '../organisms/DataTable'
 import { FormDrawer } from '../organisms/FormDrawer'
 import { ExpiryAlerts } from '../organisms/ExpiryAlerts'
 import { PageHeader } from '../molecules/PageHeader'
+import { AlertBanner } from '../molecules/AlertBanner'
 import { FormField } from '../molecules/FormField'
 import { Input } from '../atoms/Input'
 import { Badge } from '../atoms/Badge'
@@ -82,22 +83,7 @@ export default function Inventory() {
       />
 
       {isProcessing && (
-        <div style={{
-          backgroundColor: 'var(--color-warning-subtle)',
-          borderLeft: '4px solid var(--color-warning)',
-          color: 'var(--color-warning-text)',
-          padding: '12px 16px',
-          borderRadius: '4px',
-          marginBottom: '20px',
-          fontWeight: '500',
-          fontSize: '0.875rem',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '12px',
-        }}>
-          <Spinner size="sm" />
-          <span>Stock reconciliation in progress... Correcting quantity drifts across all batches.</span>
-        </div>
+        <AlertBanner message="Stock reconciliation in progress... Correcting quantity drifts across all batches." />
       )}
 
       {/* Tabs */}
