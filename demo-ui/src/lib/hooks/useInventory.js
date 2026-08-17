@@ -6,6 +6,13 @@ const STORE_STOCK_KEY = ['inventory', 'store-stock'];
 const TASKS_KEY = ['inventory', 'tasks'];
 const CONVERSIONS_KEY = ['inventory', 'conversions'];
 
+function parsePaginatedResponse(payload) {
+  const items = Array.isArray(payload) ? payload : (payload?.content ?? []);
+  const totalPages = payload?.totalPages ?? 1;
+  const totalElements = payload?.totalElements ?? items.length;
+  return { items, totalPages, totalElements };
+}
+
 // ── Batch hooks ───────────────────────────────────────────────────
 
 export function useBatchList(params = {}) {
@@ -15,14 +22,11 @@ export function useBatchList(params = {}) {
 
   const result = useQuery({
     queryKey: [...BATCHES_KEY, params],
-    queryFn: () => api.get(`/inventory/batches?${queryParams.toString()}`),
+    queryFn: async () => (await api.get(`/inventory/batches?${queryParams.toString()}`)).data,
     placeholderData: (prev) => prev,
   });
 
-  const raw = result.data?.data;
-  const items = Array.isArray(raw) ? raw : (raw?.content ?? []);
-  const totalPages = raw?.totalPages ?? 1;
-  const totalElements = raw?.totalElements ?? items.length;
+  const { items, totalPages, totalElements } = parsePaginatedResponse(result.data);
 
   return { ...result, loading: result.isLoading, items, totalPages, totalElements };
 }
@@ -78,15 +82,12 @@ export function useStoreStock(storeId, params = {}) {
 
   const result = useQuery({
     queryKey: [...STORE_STOCK_KEY, storeId, params],
-    queryFn: () => api.get(`/inventory/stores/${storeId}/stock?${queryParams.toString()}`),
+    queryFn: async () => (await api.get(`/inventory/stores/${storeId}/stock?${queryParams.toString()}`)).data,
     placeholderData: (prev) => prev,
     enabled: !!storeId,
   });
 
-  const raw = result.data?.data;
-  const items = Array.isArray(raw) ? raw : (raw?.content ?? []);
-  const totalPages = raw?.totalPages ?? 1;
-  const totalElements = raw?.totalElements ?? items.length;
+  const { items, totalPages, totalElements } = parsePaginatedResponse(result.data);
 
   return { ...result, loading: result.isLoading, items, totalPages, totalElements };
 }
@@ -101,14 +102,11 @@ export function useTaskList(params = {}) {
 
   const result = useQuery({
     queryKey: [...TASKS_KEY, params],
-    queryFn: () => api.get(`/inventory/tasks?${queryParams.toString()}`),
+    queryFn: async () => (await api.get(`/inventory/tasks?${queryParams.toString()}`)).data,
     placeholderData: (prev) => prev,
   });
 
-  const raw = result.data?.data;
-  const items = Array.isArray(raw) ? raw : (raw?.content ?? []);
-  const totalPages = raw?.totalPages ?? 1;
-  const totalElements = raw?.totalElements ?? items.length;
+  const { items, totalPages, totalElements } = parsePaginatedResponse(result.data);
 
   return { ...result, loading: result.isLoading, items, totalPages, totalElements };
 }
@@ -207,7 +205,7 @@ export function useReconcileStatus() {
       return res.data;
     },
     refetchInterval: (query) => {
-      const status = query?.state?.data?.data?.status;
+      const status = query?.state?.data?.status;
       return status === 'PROCESSING' ? 10000 : false;
     },
   });
