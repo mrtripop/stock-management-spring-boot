@@ -103,6 +103,16 @@ to keep the catalog clean for pharmacy staff.
 Ticket: JIRA-123
 ```
 
+### Git Branch Workflow
+
+Follow GitFlow.
+
+- `master` — production-ready code only. Never commit directly; merge in via `release/*` or `hotfix/*`.
+- `develop` — integration branch for the next release. Default base for new work.
+- `feature/<name>` — branch off `develop`, merge back into `develop` via PR.
+- `release/<version>` — branch off `develop` when preparing a release; merge into both `master` and `develop`, then tag `master`.
+- `hotfix/<name>` — branch off `master` for urgent production fixes; merge into both `master` and `develop`, then tag `master`.
+
 ### Searching Code
 
 Prefer dedicated tools and simple bash commands. Do not use `find -exec` — it triggers permission prompts.
