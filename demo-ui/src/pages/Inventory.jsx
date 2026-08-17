@@ -10,7 +10,8 @@ import { FormField } from '../molecules/FormField'
 import { Input } from '../atoms/Input'
 import { Badge } from '../atoms/Badge'
 import { Button } from '../atoms/Button'
-import { useBatchList, useStockIn, useTaskList, useAcknowledgeTask, useResolveTask, useTriggerScan, useTriggerReconcile } from '../lib/hooks/useInventory'
+import { Spinner } from '../atoms/Spinner'
+import { useBatchList, useStockIn, useTaskList, useAcknowledgeTask, useResolveTask, useTriggerScan, useTriggerReconcile, useReconcileStatus } from '../lib/hooks/useInventory'
 import { useStoreId, useHasRole } from '../lib/auth'
 import { ConfirmationDialog } from '../molecules/ConfirmationDialog'
 
@@ -45,6 +46,9 @@ export default function Inventory() {
   const resolveTask = useResolveTask()
   const triggerScan = useTriggerScan()
   const triggerReconcile = useTriggerReconcile()
+  const reconcileStatus = useReconcileStatus()
+
+  const isProcessing = reconcileStatus.data?.data?.status === 'PROCESSING'
 
   const form = useForm({ resolver: zodResolver(stockInSchema), defaultValues: { quantity: 1 } })
 
@@ -65,8 +69,8 @@ export default function Inventory() {
               <Button onClick={() => triggerScan.mutate()}>Run Scan</Button>
               <Button
                 onClick={() => setConfirmOpen(true)}
-                disabled={!isAdmin}
-                title={!isAdmin ? "Administrator privileges required to trigger stock reconciliation." : ""}
+                disabled={!isAdmin || isProcessing}
+                title={!isAdmin ? "Administrator privileges required to trigger stock reconciliation." : isProcessing ? "Reconciliation already in progress." : ""}
               >
                 Reconcile Stock
               </Button>
@@ -76,6 +80,25 @@ export default function Inventory() {
           ) : null
         }
       />
+
+      {isProcessing && (
+        <div style={{
+          backgroundColor: 'var(--color-warning-subtle)',
+          borderLeft: '4px solid var(--color-warning)',
+          color: 'var(--color-warning-text)',
+          padding: '12px 16px',
+          borderRadius: '4px',
+          marginBottom: '20px',
+          fontWeight: '500',
+          fontSize: '0.875rem',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px',
+        }}>
+          <Spinner size="sm" />
+          <span>Stock reconciliation in progress... Correcting quantity drifts across all batches.</span>
+        </div>
+      )}
 
       {/* Tabs */}
       <div className="flex gap-1 bg-[var(--color-surface)] rounded-[var(--radius-md)] border border-[var(--color-border)] p-1">
