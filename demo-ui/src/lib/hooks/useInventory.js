@@ -187,16 +187,28 @@ export function useDeleteConversion() {
   });
 }
 
-// ── Recall hook ───────────────────────────────────────────────────
+// ── Admin hooks ───────────────────────────────────────────────────────
 
-export function useRecallBatch() {
+export function useTriggerReconcile() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (batchId) => api.post('/inventory/compliance/recall', { batchId }),
+    mutationFn: () => api.post('/inventory/admin/reconcile', {}),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: BATCHES_KEY });
-      queryClient.invalidateQueries({ queryKey: STORE_STOCK_KEY });
       queryClient.invalidateQueries({ queryKey: TASKS_KEY });
+    },
+  });
+}
+
+export function useReconcileStatus() {
+  return useQuery({
+    queryKey: ['inventory', 'reconcile-status'],
+    queryFn: async () => {
+      const res = await api.get('/inventory/admin/reconcile/status');
+      return res.data;
+    },
+    refetchInterval: (query) => {
+      const status = query?.state?.data?.data?.status;
+      return status === 'PROCESSING' ? 10000 : false;
     },
   });
 }
