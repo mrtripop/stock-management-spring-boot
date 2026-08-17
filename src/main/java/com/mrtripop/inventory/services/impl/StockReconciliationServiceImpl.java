@@ -11,6 +11,7 @@ import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -35,6 +36,9 @@ public class StockReconciliationServiceImpl implements StockReconciliationServic
   @Lazy
   private StockReconciliationService self;
 
+  @Value("${stock.reconciliation.batch-page-size:100}")
+  private int batchPageSize;
+
   private static final String STATUS_COMPLETED = "COMPLETED";
   private static final String STATUS_FAILED = "FAILED";
 
@@ -48,7 +52,8 @@ public class StockReconciliationServiceImpl implements StockReconciliationServic
       long processedBatches = 0;
       Page<Batch> batchPage;
       do {
-        batchPage = batchRepository.findAll(PageRequest.of(pageNumber++, 100, Sort.by("id")));
+        batchPage =
+            batchRepository.findAll(PageRequest.of(pageNumber++, batchPageSize, Sort.by("id")));
         for (Batch batch : batchPage) {
           try {
             // Use self-reference to ensure @Transactional proxy is invoked
@@ -77,23 +82,25 @@ public class StockReconciliationServiceImpl implements StockReconciliationServic
     long actualSum = Optional.ofNullable(storeStockRepository.sumQuantityByBatchId(batchId)).orElse(0L);
     long oldQuantity = batch.getQuantity();
 
-    if (oldQuantity != actualSum) {
-      log.info("Corrected stock drift for batch {}: {} -> {}", batchId, oldQuantity, actualSum);
-      batch.setQuantity(actualSum);
-      try {
-        batchRepository.save(batch);
-      } catch (ObjectOptimisticLockingFailureException e) {
-        log.warn("Optimistic lock failure reconciling batch {}: skipping", batchId);
-        return;
-      }
-
-      auditService.recordAudit(
-          StockReconciliationService.ACTION_RECONCILIATION,
-          StockReconciliationService.ENTITY_BATCH,
-          batch.getId().toString(),
-          String.valueOf(oldQuantity),
-          String.valueOf(actualSum)
-      );
+    if (oldQuantity == actualSum) {
+      return;
     }
+
+    log.info("Corrected stock drift for batch {}: {} -> {}", batchId, oldQuantity, actualSum);
+    batch.setQuantity(actualSum);
+    try {
+      batchRepository.save(batch);
+    } catch (ObjectOptimisticLockingFailureException e) {
+      log.warn("Optimistic lock failure reconciling batch {}: skipping", batchId);
+      return;
+    }
+
+    auditService.recordAudit(
+        StockReconciliationService.ACTION_RECONCILIATION,
+        StockReconciliationService.ENTITY_BATCH,
+        batch.getId().toString(),
+        String.valueOf(oldQuantity),
+        String.valueOf(actualSum)
+    );
   }
 }

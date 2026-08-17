@@ -44,8 +44,9 @@ class StockReconciliationServiceTest {
   @InjectMocks private StockReconciliationServiceImpl service;
 
   @BeforeEach
-  void injectSelfReference() {
+  void setUp() {
     ReflectionTestUtils.setField(service, "self", service);
+    ReflectionTestUtils.setField(service, "batchPageSize", BATCH_PAGE_SIZE);
   }
 
   @Nested

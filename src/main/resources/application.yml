@@ -72,4 +72,9 @@ auth:
     digits: 6
     period: 30
 
+stock:
+  reconciliation:
+    cron: ${STOCK_RECONCILIATION_CRON:0 0 2 * * ?}
+    batch-page-size: ${STOCK_RECONCILIATION_BATCH_PAGE_SIZE:100}
+
 

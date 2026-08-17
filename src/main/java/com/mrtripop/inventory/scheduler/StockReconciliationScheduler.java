@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
 public class StockReconciliationScheduler {
     private final StockReconciliationService reconciliationService;
 
-    @Scheduled(cron = "0 0 2 * * ?") // 2 AM daily
+    @Scheduled(cron = "${stock.reconciliation.cron:0 0 2 * * ?}")
     public void scheduledReconciliation() {
         log.info("Starting scheduled stock reconciliation...");
         reconciliationService.reconcileAll();
