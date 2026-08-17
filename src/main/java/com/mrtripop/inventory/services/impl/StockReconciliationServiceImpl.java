@@ -5,6 +5,7 @@ import com.mrtripop.exception.NotFoundException;
 import com.mrtripop.inventory.models.db.Batch;
 import com.mrtripop.inventory.repository.BatchRepository;
 import com.mrtripop.inventory.repository.StoreStockRepository;
+import com.mrtripop.inventory.services.ReconciliationStatusService;
 import com.mrtripop.inventory.services.StockReconciliationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -13,6 +14,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import java.util.Optional;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,21 +26,35 @@ public class StockReconciliationServiceImpl implements StockReconciliationServic
   private final BatchRepository batchRepository;
   private final StoreStockRepository storeStockRepository;
   private final AuditService auditService;
+  private final ReconciliationStatusService statusService;
 
   @Override
+  @Async
   public void reconcileAll() {
-    int pageNumber = 0;
-    Page<Batch> batchPage;
-    do {
-      batchPage = batchRepository.findAll(PageRequest.of(pageNumber++, 100, Sort.by("id")));
-      for (Batch batch : batchPage) {
-        try {
-          reconcileBatch(batch.getId());
-        } catch (Exception e) {
-          log.error("Failed to reconcile batch {}: ", batch.getId(), e);
+    statusService.startProcess();
+    try {
+      long totalBatches = batchRepository.count();
+      int pageNumber = 0;
+      long processedBatches = 0;
+      Page<Batch> batchPage;
+      do {
+        batchPage = batchRepository.findAll(PageRequest.of(pageNumber++, 100, Sort.by("id")));
+        for (Batch batch : batchPage) {
+          try {
+            reconcileBatch(batch.getId());
+          } catch (Exception e) {
+            log.error("Failed to reconcile batch {}: ", batch.getId(), e);
+          }
+          processedBatches++;
         }
-      }
-    } while (batchPage.hasNext());
+        int progress = (int) ((processedBatches * 100) / (totalBatches == 0 ? 1 : totalBatches));
+        statusService.updateProgress(progress);
+      } while (batchPage.hasNext());
+      statusService.updateStatus("COMPLETED");
+    } catch (Exception e) {
+      log.error("Stock reconciliation process failed", e);
+      statusService.updateStatus("FAILED");
+    }
   }
 
   @Override
