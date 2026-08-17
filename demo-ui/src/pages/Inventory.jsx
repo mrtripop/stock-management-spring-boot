@@ -10,8 +10,9 @@ import { FormField } from '../molecules/FormField'
 import { Input } from '../atoms/Input'
 import { Badge } from '../atoms/Badge'
 import { Button } from '../atoms/Button'
-import { useBatchList, useStockIn, useTaskList, useAcknowledgeTask, useResolveTask, useTriggerScan } from '../lib/hooks/useInventory'
-import { useStoreId } from '../lib/auth'
+import { useBatchList, useStockIn, useTaskList, useAcknowledgeTask, useResolveTask, useTriggerScan, useTriggerReconcile } from '../lib/hooks/useInventory'
+import { useStoreId, useHasRole } from '../lib/auth'
+import { ConfirmationDialog } from '../molecules/ConfirmationDialog'
 
 const TABS = ['Batches', 'Stock-In', 'Tasks', 'Conversions']
 const statusVariant = { AVAILABLE: 'success', RECALLED: 'danger', QUARANTINED: 'warning' }
@@ -31,9 +32,11 @@ const stockInSchema = z.object({
 
 export default function Inventory() {
   const storeId = useStoreId()
+  const isAdmin = useHasRole('ADMIN')
   const [tab, setTab] = useState(0)
   const [page, setPage] = useState(1)
   const [drawerOpen, setDrawerOpen] = useState(false)
+  const [confirmOpen, setConfirmOpen] = useState(false)
 
   const { items: batches, totalPages, loading: batchesLoading } = useBatchList({ page, size: 20 })
   const { items: tasks } = useTaskList({ storeId, status: 'PENDING', size: 50 })
@@ -41,6 +44,7 @@ export default function Inventory() {
   const ackTask = useAcknowledgeTask()
   const resolveTask = useResolveTask()
   const triggerScan = useTriggerScan()
+  const triggerReconcile = useTriggerReconcile()
 
   const form = useForm({ resolver: zodResolver(stockInSchema), defaultValues: { quantity: 1 } })
 
@@ -52,7 +56,26 @@ export default function Inventory() {
 
   return (
     <div className="space-y-4">
-      <PageHeader title="Inventory" subtitle="Batch management and stock operations" actions={tab === 2 ? <Button onClick={() => triggerScan.mutate()}>Run Scan</Button> : tab === 1 ? <Button onClick={() => setDrawerOpen(true)}>Stock In</Button> : null} />
+      <PageHeader
+        title="Inventory"
+        subtitle="Batch management and stock operations"
+        actions={
+          tab === 2 ? (
+            <div className="flex gap-2">
+              <Button onClick={() => triggerScan.mutate()}>Run Scan</Button>
+              <Button
+                onClick={() => setConfirmOpen(true)}
+                disabled={!isAdmin}
+                title={!isAdmin ? "Administrator privileges required to trigger stock reconciliation." : ""}
+              >
+                Reconcile Stock
+              </Button>
+            </div>
+          ) : tab === 1 ? (
+            <Button onClick={() => setDrawerOpen(true)}>Stock In</Button>
+          ) : null
+        }
+      />
 
       {/* Tabs */}
       <div className="flex gap-1 bg-[var(--color-surface)] rounded-[var(--radius-md)] border border-[var(--color-border)] p-1">
@@ -90,6 +113,18 @@ export default function Inventory() {
           <FormField label="Quantity" required error={form.formState.errors.quantity?.message}><Input type="number" {...form.register('quantity', { valueAsNumber: true })} /></FormField>
         </div>
       </FormDrawer>
+
+      <ConfirmationDialog
+        open={confirmOpen}
+        onClose={() => setConfirmOpen(false)}
+        title="Confirm Reconciliation"
+        message="Triggering a full stock reconciliation will analyze all batches and correct any quantity drifts. This may take a moment. Do you wish to proceed?"
+        onConfirm={async () => {
+          await triggerReconcile.mutateAsync();
+          setConfirmOpen(false);
+        }}
+        loading={triggerReconcile.isPending}
+      />
     </div>
   )
 }
