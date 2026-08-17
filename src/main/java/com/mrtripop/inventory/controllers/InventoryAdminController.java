@@ -19,29 +19,29 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('ADMIN')")
 public class InventoryAdminController {
-    private final StockReconciliationService reconciliationService;
-    private final ReconciliationStatusService statusService;
+  private final StockReconciliationService reconciliationService;
+  private final ReconciliationStatusService statusService;
 
-    @PostMapping("/reconcile")
-    public ResponseEntity<Object> triggerReconciliation() {
-        reconciliationService.reconcileAll();
-        SuccessCode success = SuccessCode.INV2004_RECONCILE_ALL_SUCCESS;
-        return ResponseBody.builder()
-            .code(success.getCode())
-            .message(success.getMessage())
-            .build()
-            .toResponseEntity(HttpStatus.OK);
-    }
+  @PostMapping("/reconcile")
+  public ResponseEntity<Object> triggerReconciliation() {
+    reconciliationService.reconcileAll();
+    SuccessCode success = SuccessCode.INV2004_RECONCILE_ALL_SUCCESS;
+    return ResponseBody.builder()
+      .code(success.getCode())
+      .message(success.getMessage())
+      .build()
+      .toResponseEntity(HttpStatus.OK);
+  }
 
-    @GetMapping("/reconcile/status")
-    public ResponseEntity<Object> getReconciliationStatus() {
-        ReconciliationStatusDto status = statusService.getStatus();
-        SuccessCode success = SuccessCode.INV2005_GET_RECONCILE_STATUS_SUCCESS;
-        return ResponseBody.builder()
-            .code(success.getCode())
-            .message(success.getMessage())
-            .data(status)
-            .build()
-            .toResponseEntity(HttpStatus.OK);
-    }
+  @GetMapping("/reconcile/status")
+  public ResponseEntity<Object> getReconciliationStatus() {
+    ReconciliationStatusDto status = statusService.getStatus();
+    SuccessCode success = SuccessCode.INV2005_GET_RECONCILE_STATUS_SUCCESS;
+    return ResponseBody.builder()
+      .code(success.getCode())
+      .message(success.getMessage())
+      .data(status)
+      .build()
+      .toResponseEntity(HttpStatus.OK);
+  }
 }

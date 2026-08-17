@@ -49,7 +49,7 @@ export default function Inventory() {
   const triggerReconcile = useTriggerReconcile()
   const reconcileStatus = useReconcileStatus()
 
-  const isProcessing = reconcileStatus.data?.data?.status === 'PROCESSING'
+  const isProcessing = reconcileStatus.data?.status === 'PROCESSING' || reconcileStatus.data?.status === 'IN_PROGRESS'
 
   const form = useForm({ resolver: zodResolver(stockInSchema), defaultValues: { quantity: 1 } })
 
@@ -125,7 +125,7 @@ export default function Inventory() {
 
       <ConfirmationDialog
         open={confirmOpen}
-        onClose={() => setConfirmOpen(false)}
+        onCancel={() => setConfirmOpen(false)}
         title="Confirm Reconciliation"
         message="Triggering a full stock reconciliation will analyze all batches and correct any quantity drifts. This may take a moment. Do you wish to proceed?"
         onConfirm={async () => {

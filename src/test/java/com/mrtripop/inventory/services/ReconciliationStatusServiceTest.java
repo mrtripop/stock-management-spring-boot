@@ -1,10 +1,10 @@
 package com.mrtripop.inventory.services;
 
 import com.mrtripop.inventory.models.dto.ReconciliationStatusDto;
+import com.mrtripop.inventory.fixture.ReconciliationStatusFixture;
 import com.mrtripop.inventory.services.impl.ReconciliationStatusServiceImpl;
 import java.time.Instant;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -34,8 +34,6 @@ class ReconciliationStatusServiceTest {
   @InjectMocks
   private ReconciliationStatusServiceImpl service;
 
-  private static final String REDIS_KEY = "inventory:reconcile:status";
-
   @BeforeEach
   void setUp() {
     when(redisTemplate.opsForHash()).thenReturn(hashOperations);
@@ -49,15 +47,23 @@ class ReconciliationStatusServiceTest {
     @DisplayName("should initialize status to IN_PROGRESS and progress to 0")
     void shouldInitializeStatusAndProgress() {
       // Arrange
-      // (RedisTemplate is already mocked in setUp)
 
       // Act
       service.startProcess();
 
       // Assert
-      verify(hashOperations).put(REDIS_KEY, "status", "IN_PROGRESS");
-      verify(hashOperations).put(REDIS_KEY, "progress", 0);
-      verify(hashOperations, times(2)).put(eq(REDIS_KEY), anyString(), any(Instant.class));
+      verify(hashOperations).put(
+          ReconciliationStatusFixture.REDIS_KEY,
+          ReconciliationStatusFixture.FIELD_STATUS,
+          ReconciliationStatusFixture.STATUS_IN_PROGRESS);
+      verify(hashOperations).put(
+          ReconciliationStatusFixture.REDIS_KEY,
+          ReconciliationStatusFixture.FIELD_PROGRESS,
+          ReconciliationStatusFixture.DEFAULT_PROGRESS);
+      verify(hashOperations, times(2)).put(
+          eq(ReconciliationStatusFixture.REDIS_KEY),
+          anyString(),
+          any(Instant.class));
     }
   }
 
@@ -75,8 +81,14 @@ class ReconciliationStatusServiceTest {
       service.updateProgress(progress);
 
       // Assert
-      verify(hashOperations).put(REDIS_KEY, "progress", progress);
-      verify(hashOperations).put(eq(REDIS_KEY), eq("updated_time"), any(Instant.class));
+      verify(hashOperations).put(
+          ReconciliationStatusFixture.REDIS_KEY,
+          ReconciliationStatusFixture.FIELD_PROGRESS,
+          progress);
+      verify(hashOperations).put(
+          eq(ReconciliationStatusFixture.REDIS_KEY),
+          eq(ReconciliationStatusFixture.FIELD_UPDATED_TIME),
+          any(Instant.class));
     }
   }
 
@@ -88,14 +100,20 @@ class ReconciliationStatusServiceTest {
     @DisplayName("should update status and updated time")
     void shouldUpdateStatus() {
       // Arrange
-      String newStatus = "COMPLETED";
+      String newStatus = ReconciliationStatusFixture.STATUS_COMPLETED;
 
       // Act
       service.updateStatus(newStatus);
 
       // Assert
-      verify(hashOperations).put(REDIS_KEY, "status", newStatus);
-      verify(hashOperations).put(eq(REDIS_KEY), eq("updated_time"), any(Instant.class));
+      verify(hashOperations).put(
+          ReconciliationStatusFixture.REDIS_KEY,
+          ReconciliationStatusFixture.FIELD_STATUS,
+          newStatus);
+      verify(hashOperations).put(
+          eq(ReconciliationStatusFixture.REDIS_KEY),
+          eq(ReconciliationStatusFixture.FIELD_UPDATED_TIME),
+          any(Instant.class));
     }
   }
 
@@ -108,21 +126,17 @@ class ReconciliationStatusServiceTest {
     void shouldReturnDtoWhenDataExists() {
       // Arrange
       Instant now = Instant.now();
-      Map<Object, Object> redisData = new HashMap<>();
-      redisData.put("status", "IN_PROGRESS");
-      redisData.put("progress", 25);
-      redisData.put("start_time", now);
-      redisData.put("updated_time", now);
+      Map<Object, Object> redisData = ReconciliationStatusFixture.createRedisData(now);
 
-      when(hashOperations.entries(REDIS_KEY)).thenReturn(redisData);
+      when(hashOperations.entries(ReconciliationStatusFixture.REDIS_KEY)).thenReturn(redisData);
 
       // Act
       ReconciliationStatusDto result = service.getStatus();
 
       // Assert
       assertNotNull(result);
-      assertEquals("IN_PROGRESS", result.getStatus());
-      assertEquals(25, result.getProgress());
+      assertEquals(ReconciliationStatusFixture.STATUS_IN_PROGRESS, result.getStatus());
+      assertEquals(ReconciliationStatusFixture.MOCK_PROGRESS, result.getProgress());
       assertEquals(now, result.getStartTime());
       assertEquals(now, result.getUpdatedTime());
     }
@@ -131,7 +145,8 @@ class ReconciliationStatusServiceTest {
     @DisplayName("should return null when Redis is empty")
     void shouldReturnNullWhenRedisEmpty() {
       // Arrange
-      when(hashOperations.entries(REDIS_KEY)).thenReturn(Collections.emptyMap());
+      when(hashOperations.entries(ReconciliationStatusFixture.REDIS_KEY))
+          .thenReturn(Collections.emptyMap());
 
       // Act
       ReconciliationStatusDto result = service.getStatus();
@@ -144,7 +159,8 @@ class ReconciliationStatusServiceTest {
     @DisplayName("should return null when Redis throws exception")
     void shouldReturnNullWhenRedisThrows() {
       // Arrange
-      when(hashOperations.entries(REDIS_KEY)).thenThrow(new RuntimeException("Redis connection failed"));
+      when(hashOperations.entries(ReconciliationStatusFixture.REDIS_KEY))
+          .thenThrow(new RuntimeException("Redis connection failed"));
 
       // Act
       ReconciliationStatusDto result = service.getStatus();

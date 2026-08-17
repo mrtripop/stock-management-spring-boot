@@ -13,7 +13,9 @@ import com.mrtripop.clinical.services.AuditService;
 import com.mrtripop.inventory.models.db.Batch;
 import com.mrtripop.inventory.repository.BatchRepository;
 import com.mrtripop.inventory.repository.StoreStockRepository;
+import com.mrtripop.inventory.services.ReconciliationStatusService;
 import com.mrtripop.inventory.services.impl.StockReconciliationServiceImpl;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -21,7 +23,13 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 
+import java.util.List;
 import java.util.Optional;
 
 @ExtendWith(MockitoExtension.class)
@@ -31,8 +39,14 @@ class StockReconciliationServiceTest {
   @Mock private BatchRepository batchRepository;
   @Mock private StoreStockRepository storeStockRepository;
   @Mock private AuditService auditService;
+  @Mock private ReconciliationStatusService statusService;
 
   @InjectMocks private StockReconciliationServiceImpl service;
+
+  @BeforeEach
+  void injectSelfReference() {
+    ReflectionTestUtils.setField(service, "self", service);
+  }
 
   @Nested
   @DisplayName("Reconcile single batch")
@@ -116,6 +130,56 @@ class StockReconciliationServiceTest {
       // Act & Assert
       assertDoesNotThrow(() -> service.reconcileBatch(VALID_BATCH_ID));
       verify(auditService, never()).recordAudit(any(), any(), any(), any(), any());
+    }
+  }
+
+  @Nested
+  @DisplayName("Reconcile all batches")
+  class ReconcileAll {
+
+    @Test
+    @DisplayName("should start process, update progress and complete on success")
+    void shouldStartProcessUpdateProgressAndCompleteOnSuccess() {
+      // Arrange
+      long totalBatches = 2L;
+      when(batchRepository.count()).thenReturn(totalBatches);
+
+      Batch b1 = defaultBatch();
+      Batch b2 = defaultBatch();
+      Page<Batch> page1 = new PageImpl<Batch>(List.of(b1), PageRequest.of(0, 1), 2);
+      Page<Batch> page2 = new PageImpl<Batch>(List.of(b2), PageRequest.of(1, 1), 2);
+
+      // Two pages, each with one batch
+      when(batchRepository.findAll(any(PageRequest.class)))
+          .thenReturn(page1)
+          .thenReturn(page2);
+
+      when(batchRepository.findById(any())).thenReturn(Optional.of(b1));
+      when(storeStockRepository.sumQuantityByBatchId(any())).thenReturn(INITIAL_BATCH_QTY);
+
+      // Act
+      service.reconcileAll();
+
+      // Assert
+      verify(statusService).startProcess();
+      verify(statusService).updateProgress(50);
+      verify(statusService).updateProgress(100);
+      verify(statusService).updateStatus("COMPLETED");
+    }
+
+    @Test
+    @DisplayName("should update status to failed when exception occurs")
+    void shouldUpdateStatusToFailedOnException() {
+      // Arrange
+      when(batchRepository.count()).thenThrow(new RuntimeException("DB Error"));
+
+      // Act
+      service.reconcileAll();
+
+      // Assert
+      verify(statusService).startProcess();
+      verify(statusService).updateStatus("FAILED");
+      verify(statusService, never()).updateStatus("COMPLETED");
     }
   }
 }

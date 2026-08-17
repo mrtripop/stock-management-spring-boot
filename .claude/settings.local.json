@@ -24,7 +24,12 @@
       "mcp__gitnexus__context",
       "mcp__gitnexus__route_map",
       "mcp__gitnexus__impact",
-      "mcp__gitnexus__cypher"
+      "mcp__gitnexus__cypher",
+      "Skill(subagent-driven-development)",
+      "Skill(superpowers:writing-plans)",
+      "Skill(superpowers:subagent-driven-development)",
+      "Skill(superpowers:brainstorming)",
+      "Skill(gitnexus-debugging)"
     ],
     "deny": [
       "Bash(rm -rf *)",
@@ -89,7 +94,7 @@
     ]
   },
   "sandbox": {
-    "enabled": true,
-    "autoAllowBashIfSandboxed": true
+    "enabled": false,
+    "autoAllowBashIfSandboxed": false
   }
 }

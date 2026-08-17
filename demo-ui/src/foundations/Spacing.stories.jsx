@@ -26,7 +26,7 @@ export default {
 export function SpacingScale() {
   return (
     <div className="space-y-6">
-      <h2 className="text-[var(--text-xl)] font-semibold text-[var(--color-text-primary)]">Spacing Scale</h2>
+      <h2 className="text-xl font-semibold text-[var(--color-text-primary)]">Spacing Scale</h2>
       <div className="space-y-2">
         {SPACING_ENTRIES.map(({ key, use }) => {
           const value = theme.spacing[key]
@@ -35,10 +35,10 @@ export function SpacingScale() {
           return (
             <div key={key} className="flex items-center gap-4">
               <div className="w-8 text-right shrink-0">
-                <span className="text-[var(--text-2xs)] font-mono text-[var(--color-text-muted)]">{key}</span>
+                <span className="text-[0.625rem] font-mono text-[var(--color-text-muted)]">{key}</span>
               </div>
               <div className="w-20 text-right shrink-0">
-                <span className="text-[var(--text-xs)] font-mono text-[var(--color-text-secondary)]">{value}</span>
+                <span className="text-xs font-mono text-[var(--color-text-secondary)]">{value}</span>
               </div>
               <div className="flex-1">
                 <div
@@ -51,10 +51,10 @@ export function SpacingScale() {
                 />
               </div>
               <div className="w-12 text-right shrink-0">
-                <span className="text-[var(--text-2xs)] text-[var(--color-text-muted)]">{pxValue}px</span>
+                <span className="text-[0.625rem] text-[var(--color-text-muted)]">{pxValue}px</span>
               </div>
               <div className="w-28 text-right shrink-0">
-                <span className="text-[var(--text-2xs)] text-[var(--color-text-secondary)]">{use}</span>
+                <span className="text-[0.625rem] text-[var(--color-text-secondary)]">{use}</span>
               </div>
             </div>
           )

@@ -206,7 +206,7 @@ export function useReconcileStatus() {
     },
     refetchInterval: (query) => {
       const status = query?.state?.data?.status;
-      return status === 'PROCESSING' ? 10000 : false;
+      return (status === 'PROCESSING' || status === 'IN_PROGRESS') ? 10000 : false;
     },
   });
 }

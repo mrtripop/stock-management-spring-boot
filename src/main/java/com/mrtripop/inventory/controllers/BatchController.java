@@ -1,19 +1,13 @@
 package com.mrtripop.inventory.controllers;
 
-import com.mrtripop.clinical.component.ClinicalMapper;
-import com.mrtripop.clinical.models.db.Brand;
 import com.mrtripop.clinical.models.dto.BrandDto;
-import com.mrtripop.clinical.repository.BrandRepository;
-import com.mrtripop.exception.ApplicationException;
-import com.mrtripop.inventory.component.BatchMapper;
-import com.mrtripop.inventory.constant.ErrorCode;
+import com.mrtripop.inventory.constant.SuccessCode;
 import com.mrtripop.inventory.models.dto.BatchDto;
 import com.mrtripop.inventory.models.dto.StockDeductionRequest;
 import com.mrtripop.inventory.models.dto.StockDeductionResponseDto;
 import com.mrtripop.inventory.models.dto.StockEntryRequest;
 import com.mrtripop.inventory.models.dto.StockEntryResponseDto;
 import com.mrtripop.inventory.models.dto.StoreStockDto;
-import com.mrtripop.inventory.repository.BatchRepository;
 import com.mrtripop.inventory.services.BatchService;
 import com.mrtripop.model.BaseQueryParams;
 import com.mrtripop.model.ResponseBody;
@@ -43,41 +37,35 @@ import org.springframework.web.bind.annotation.RestController;
 public class BatchController {
 
   private final BatchService batchService;
-  private final BatchRepository batchRepository;
-  private final BatchMapper batchMapper;
-  private final BrandRepository brandRepository;
-  private final ClinicalMapper clinicalMapper;
 
   @PostMapping("/batches/stock-in")
-  public ResponseEntity<Object> createBatchFromBarcode(
-      @Valid @RequestBody StockEntryRequest request) throws ApplicationException {
+  public ResponseEntity<Object> createBatchFromBarcode(@Valid @RequestBody StockEntryRequest request) {
     StockEntryResponseDto result = batchService.createBatchFromBarcode(request);
     return ResponseBody.builder()
-        .code("STOCK_CREATED")
-        .message("Batch and store stock created successfully")
+        .code(SuccessCode.INV2006_STOCK_IN_SUCCESS.getCode())
+        .message(SuccessCode.INV2006_STOCK_IN_SUCCESS.getMessage())
         .data(result)
         .build()
         .toResponseEntity(HttpStatus.CREATED);
   }
 
   @PostMapping("/stock/deduct")
-  public ResponseEntity<Object> deductStock(@Valid @RequestBody StockDeductionRequest request)
-      throws ApplicationException {
+  public ResponseEntity<Object> deductStock(@Valid @RequestBody StockDeductionRequest request) {
     StockDeductionResponseDto result = batchService.deductStock(request);
     return ResponseBody.builder()
-        .code("STOCK_DEDUCTED")
-        .message("Stock deducted successfully")
+        .code(SuccessCode.INV2007_STOCK_DEDUCT_SUCCESS.getCode())
+        .message(SuccessCode.INV2007_STOCK_DEDUCT_SUCCESS.getMessage())
         .data(result)
         .build()
         .toResponseEntity(HttpStatus.OK);
   }
 
   @GetMapping("/batches/{id}")
-  public ResponseEntity<Object> getBatchById(@PathVariable Long id) throws ApplicationException {
+  public ResponseEntity<Object> getBatchById(@PathVariable Long id) {
     BatchDto result = batchService.getBatchById(id);
     return ResponseBody.builder()
-        .code("BATCH_FOUND")
-        .message("Batch retrieved successfully")
+        .code(SuccessCode.INV2008_GET_BATCH_SUCCESS.getCode())
+        .message(SuccessCode.INV2008_GET_BATCH_SUCCESS.getMessage())
         .data(result)
         .build()
         .toResponseEntity(HttpStatus.OK);
@@ -87,23 +75,16 @@ public class BatchController {
   public ResponseEntity<Object> getBatches(
       @RequestParam(required = false) UUID brandId, @Valid BaseQueryParams params) {
     Page<BatchDto> result;
+    PageRequest pageable = PageRequest.of(
+        params.getPage() - 1, params.getSize(), Sort.by(params.getOrderBy(), "id"));
     if (brandId != null) {
-      result =
-          batchService.getBatchesByBrandId(
-              brandId,
-              PageRequest.of(
-                  params.getPage() - 1, params.getSize(), Sort.by(params.getOrderBy(), "id")));
+      result = batchService.getBatchesByBrandId(brandId, pageable);
     } else {
-      result =
-          batchRepository
-              .findAll(
-                  PageRequest.of(
-                      params.getPage() - 1, params.getSize(), Sort.by(params.getOrderBy(), "id")))
-              .map(batchMapper::toBatchDto);
+      result = batchService.getBatches(pageable);
     }
     return ResponseBody.builder()
-        .code("BATCHES_FOUND")
-        .message("Batches retrieved successfully")
+        .code(SuccessCode.INV2009_GET_BATCHES_SUCCESS.getCode())
+        .message(SuccessCode.INV2009_GET_BATCHES_SUCCESS.getMessage())
         .data(result)
         .build()
         .toResponseEntity(HttpStatus.OK);
@@ -112,34 +93,24 @@ public class BatchController {
   @GetMapping("/stores/{storeId}/stock")
   public ResponseEntity<Object> getStoreStocks(
       @PathVariable UUID storeId, @Valid BaseQueryParams params) {
-    Page<StoreStockDto> result =
-        batchService.getStoreStocksByStoreId(
-            storeId,
-            PageRequest.of(
-                params.getPage() - 1, params.getSize(), Sort.by(params.getOrderBy(), "id")));
+    Page<StoreStockDto> result = batchService.getStoreStocksByStoreId(
+        storeId,
+        PageRequest.of(params.getPage() - 1, params.getSize(), Sort.by(params.getOrderBy(), "id")));
     return ResponseBody.builder()
-        .code("STORE_STOCK_FOUND")
-        .message("Store stock retrieved successfully")
+        .code(SuccessCode.INV2010_GET_STORE_STOCK_SUCCESS.getCode())
+        .message(SuccessCode.INV2010_GET_STORE_STOCK_SUCCESS.getMessage())
         .data(result)
         .build()
         .toResponseEntity(HttpStatus.OK);
   }
 
   @GetMapping("/barcode/resolve")
-  public ResponseEntity<Object> resolveBarcode(@RequestParam String barcode)
-      throws ApplicationException {
-    Brand brand =
-        brandRepository
-            .findByBarcode(barcode)
-            .orElseThrow(
-                () ->
-                    new ApplicationException(
-                        ErrorCode.BARCODE_NOT_RECOGNIZED, HttpStatus.NOT_FOUND));
-    BrandDto brandDto = clinicalMapper.toBrandDto(brand);
+  public ResponseEntity<Object> resolveBarcode(@RequestParam String barcode) {
+    BrandDto result = batchService.resolveBarcode(barcode);
     return ResponseBody.builder()
-        .code("BARCODE_RESOLVED")
-        .message("Barcode resolved successfully")
-        .data(brandDto)
+        .code(SuccessCode.INV2011_RESOLVE_BARCODE_SUCCESS.getCode())
+        .message(SuccessCode.INV2011_RESOLVE_BARCODE_SUCCESS.getMessage())
+        .data(result)
         .build()
         .toResponseEntity(HttpStatus.OK);
   }

@@ -19,15 +19,16 @@ import com.mrtripop.inventory.models.dto.ActionQueueScanResult;
 import com.mrtripop.inventory.models.dto.TaskDto;
 import com.mrtripop.inventory.repository.StoreStockRepository;
 import com.mrtripop.inventory.repository.TaskRepository;
+import java.time.Clock;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
@@ -50,7 +51,8 @@ class ActionQueueServiceImplTest {
     @Mock private TaskMapper taskMapper;
     @Mock private ActionQueueProperties properties;
 
-    @InjectMocks private ActionQueueServiceImpl actionQueueService;
+    private final Clock clock = Clock.systemDefaultZone();
+    private ActionQueueServiceImpl actionQueueService;
 
     private final UUID storeId = UUID.randomUUID();
     private final Pageable pageable = PageRequest.of(0, 20);
@@ -58,6 +60,13 @@ class ActionQueueServiceImplTest {
     private Store store;
     private Brand brand;
     private Task pendingTask;
+
+    @BeforeEach
+    void injectService() {
+        actionQueueService = new ActionQueueServiceImpl(
+                taskRepository, storeStockRepository, storeProductRepository,
+                auditService, taskMapper, properties, clock);
+    }
 
     private void setupCommonFixtures() {
         store = Store.builder().id(storeId).name("Test Store").build();

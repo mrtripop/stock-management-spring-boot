@@ -1,15 +1,18 @@
 package com.mrtripop.inventory.services.impl;
 
+import com.mrtripop.clinical.component.ClinicalMapper;
 import com.mrtripop.clinical.models.db.Brand;
 import com.mrtripop.clinical.models.db.RegulatorySchedule;
 import com.mrtripop.clinical.models.db.Store;
 import com.mrtripop.clinical.models.db.StoreProduct;
+import com.mrtripop.clinical.models.dto.BrandDto;
 import com.mrtripop.clinical.repository.BrandRepository;
 import com.mrtripop.clinical.repository.StoreProductRepository;
 import com.mrtripop.clinical.repository.StoreRepository;
 import com.mrtripop.clinical.services.AuditService;
 import com.mrtripop.exception.ApplicationException;
 import com.mrtripop.inventory.component.BatchMapper;
+import com.mrtripop.inventory.constant.AuditAction;
 import com.mrtripop.inventory.constant.ErrorCode;
 import com.mrtripop.inventory.models.db.Batch;
 import com.mrtripop.inventory.models.db.BatchStatus;
@@ -58,6 +61,7 @@ public class BatchServiceImpl implements BatchService {
   private final StoreProductRepository storeProductRepository;
   private final AuditService auditService;
   private final BatchMapper batchMapper;
+  private final ClinicalMapper clinicalMapper;
   private final UnitConversionService unitConversionService;
   private final SyncSealService syncSealService;
   private final DigitalSignatureService digitalSignatureService;
@@ -107,7 +111,7 @@ public class BatchServiceImpl implements BatchService {
     StoreStockDto storeStockDto = batchMapper.toStoreStockDto(storeStock);
 
     auditService.recordAudit(
-        "INVENTORY_IN", "Batch", batch.getId().toString(), null, batchDto.toString());
+        AuditAction.INVENTORY_IN, AuditAction.ENTITY_BATCH, batch.getId().toString(), null, batchDto.toString());
 
     return StockEntryResponseDto.builder()
         .batch(batchDto)
@@ -207,8 +211,8 @@ public class BatchServiceImpl implements BatchService {
       long newQuantity = stock.getQuantity();
 
       auditService.recordAudit(
-          "INVENTORY_OUT",
-          "StoreStock",
+          AuditAction.INVENTORY_OUT,
+          AuditAction.ENTITY_STORE_STOCK,
           stock.getId().toString(),
           String.valueOf(oldQuantity),
           String.valueOf(newQuantity));
@@ -229,8 +233,8 @@ public class BatchServiceImpl implements BatchService {
             stock.getId(), request.getSignature().getLicenseNumber(), syncSealResult);
       }
       auditService.recordAudit(
-          "CONTROLLED_SUBSTANCE_SIGNED",
-          "StockDeduction",
+          AuditAction.CONTROLLED_SUBSTANCE_SIGNED,
+          AuditAction.ENTITY_STOCK_DEDUCTION,
           brand.getId().toString(),
           null,
           String.format(AUDIT_SIGNATURE_FORMAT,
@@ -293,6 +297,20 @@ public class BatchServiceImpl implements BatchService {
   }
 
   @Override
+  @Transactional(readOnly = true)
+  public Page<BatchDto> getBatches(Pageable pageable) {
+    return batchRepository.findAll(pageable).map(batchMapper::toBatchDto);
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public BrandDto resolveBarcode(String barcode) throws ApplicationException {
+    Brand brand = brandRepository.findByBarcode(barcode)
+        .orElseThrow(() -> new ApplicationException(ErrorCode.BARCODE_NOT_RECOGNIZED, HttpStatus.NOT_FOUND));
+    return clinicalMapper.toBrandDto(brand);
+  }
+
+  @Override
   @Transactional(rollbackFor = ApplicationException.class)
   public void deductStockByBatch(UUID storeId, Long batchId, Long quantity)
       throws ApplicationException {
@@ -333,7 +351,7 @@ public class BatchServiceImpl implements BatchService {
     storeStock.setQuantity(oldQuantity + quantity);
 
     auditService.recordAudit(
-        "INVENTORY_IN",
+        AuditAction.INVENTORY_IN,
         "StoreStock",
         storeStock.getId().toString(),
         String.valueOf(oldQuantity),

@@ -3,6 +3,7 @@ package com.mrtripop.inventory.services.impl;
 import com.mrtripop.clinical.models.db.Brand;
 import com.mrtripop.clinical.services.AuditService;
 import com.mrtripop.exception.ApplicationException;
+import com.mrtripop.inventory.constant.AuditAction;
 import com.mrtripop.inventory.constant.ErrorCode;
 import com.mrtripop.inventory.models.db.Batch;
 import com.mrtripop.inventory.models.db.BatchStatus;
@@ -53,7 +54,7 @@ public class ComplianceServiceImpl implements ComplianceService {
 
     batch.setStatus(BatchStatus.RECALLED);
 
-    auditService.recordAudit("COMPLIANCE_BATCH_RECALLED", "Batch", batchId.toString(), previousStatus.name(), "RECALLED");
+    auditService.recordAudit(AuditAction.COMPLIANCE_BATCH_RECALLED, AuditAction.ENTITY_BATCH, batchId.toString(), previousStatus.name(), "RECALLED");
 
     List<StoreStock> affectedStocks = storeStockRepository.findByBatchIdAndQuantityGreaterThan(batchId, 0L);
 
@@ -80,7 +81,7 @@ public class ComplianceServiceImpl implements ComplianceService {
     if (!tasks.isEmpty()) {
       List<Task> savedTasks = taskRepository.saveAll(tasks);
       for (Task task : savedTasks) {
-        auditService.recordAudit("COMPLIANCE_RECALL_ALERT_CREATED", "Task", task.getId().toString(), null, task.getMessage());
+        auditService.recordAudit(AuditAction.COMPLIANCE_RECALL_ALERT_CREATED, AuditAction.ENTITY_TASK, task.getId().toString(), null, task.getMessage());
       }
     }
 

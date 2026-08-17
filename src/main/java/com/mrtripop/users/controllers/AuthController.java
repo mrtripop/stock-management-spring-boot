@@ -62,7 +62,7 @@ public class AuthController {
       @RequestHeader("Authorization") String authorization,
       @Valid @RequestBody VerifyTotpRequest request) throws ApplicationException {
     String tempToken = authorization.replace("Bearer ", "");
-    VerifyTotpResponse result = authService.verifyTotp(tempToken);
+    VerifyTotpResponse result = authService.verifyTotp(tempToken, request.getCode());
     BaseStatusCode success = SuccessCode.AUTH_TOTP_VERIFIED;
     return ResponseBody.builder()
         .code(success.getCode())

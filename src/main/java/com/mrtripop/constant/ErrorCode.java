@@ -2,11 +2,23 @@ package com.mrtripop.constant;
 
 import lombok.Getter;
 
+/**
+ * Global error codes. Domain-specific error codes have been migrated to their respective packages:
+ * <ul>
+ *   <li>{@link com.mrtripop.inventory.constant.ErrorCode} — inventory module</li>
+ *   <li>{@link com.mrtripop.clinical.constant.ErrorCode} — clinical module</li>
+ *   <li>{@link com.mrtripop.users.constant.ErrorCode} — users module</li>
+ *   <li>{@link com.mrtripop.product.constant.ErrorCode} — product module</li>
+ *   <li>{@link com.mrtripop.transaction.constant.ErrorCode} — transaction module</li>
+ *   <li>{@link com.mrtripop.location.constant.ErrorCode} — location module</li>
+ * </ul>
+ */
 @Getter
-public enum ErrorCode {
-  CANNOT_GET_ALL_SONG_BY_INTERRUPT_EXCEPTION("SBI4001", "Cannot get song by interrupt exception"),
-  CANNOT_GET_ALL_SONG_EXCEPTION("SBE4002", "Cannot get song exception"),
-  USER5000_RETRIEVE_USERS_IS_FAILED("USER5000", "Cannot get users from database");
+public enum ErrorCode implements BaseStatusCode {
+
+  // All codes migrated to domain-specific packages. Add new codes there.
+
+  ;
 
   private final String code;
   private final String message;

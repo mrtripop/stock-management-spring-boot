@@ -23,7 +23,7 @@ const dotColors = {
 export function Badge({ variant = 'neutral', dot = false, children, className = '' }) {
   return (
     <span
-      className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-[var(--radius-full)] text-[var(--text-xs)] font-medium ${variants[variant]} ${className}`}
+      className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-[var(--radius-full)] text-xs font-medium ${variants[variant]} ${className}`}
     >
       {dot && <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${dotColors[variant]}`} />}
       {children}

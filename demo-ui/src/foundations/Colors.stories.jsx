@@ -111,9 +111,9 @@ function ColorSwatch({ color, label, hex }) {
         className="w-14 h-14 rounded-[var(--radius-md)] border border-[var(--color-border)]"
         style={{ backgroundColor: color }}
       />
-      <span className="text-[var(--text-2xs)] font-medium text-[var(--color-text-secondary)]">{label}</span>
+      <span className="text-[0.625rem] font-medium text-[var(--color-text-secondary)]">{label}</span>
       {hex && (
-        <span className="text-[var(--text-2xs)] text-[var(--color-text-muted)]">{hex}</span>
+        <span className="text-[0.625rem] text-[var(--color-text-muted)]">{hex}</span>
       )}
     </div>
   )
@@ -124,11 +124,11 @@ function SemanticSwatch({ cssVar, name }) {
     <div className="flex items-center gap-3 p-2 rounded-[var(--radius-md)] bg-[var(--color-surface)]">
       <div
         className="w-10 h-10 rounded-[var(--radius-md)] border border-[var(--color-border)] shrink-0"
-        style={{ backgroundColor: `var(${cssVar})` }}
+        style={{ backgroundColor: `var(--${cssVar})` }}
       />
       <div className="min-w-0">
-        <div className="text-[var(--text-xs)] font-medium text-[var(--color-text-primary)] truncate">{name}</div>
-        <div className="text-[var(--text-2xs)] text-[var(--color-text-muted)]">{cssVar}</div>
+        <div className="text-xs font-medium text-[var(--color-text-primary)] truncate">{name}</div>
+        <div className="text-[0.625rem] text-[var(--color-text-muted)]">--{cssVar}</div>
       </div>
     </div>
   )
@@ -144,10 +144,10 @@ export default {
 export function PrimitiveScales() {
   return (
     <div className="space-y-8">
-      <h2 className="text-[var(--text-xl)] font-semibold text-[var(--color-text-primary)]">Primitive Color Scales</h2>
+      <h2 className="text-xl font-semibold text-[var(--color-text-primary)]">Primitive Color Scales</h2>
       {SCALE_NAMES.map((scaleName) => (
         <div key={scaleName}>
-          <h3 className="text-[var(--text-sm)] font-semibold text-[var(--color-text-secondary)] mb-3 capitalize">{scaleName}</h3>
+          <h3 className="text-sm font-semibold text-[var(--color-text-secondary)] mb-3 capitalize">{scaleName}</h3>
           <div className="flex flex-wrap gap-2">
             {SCALE_STEPS.map((step) => {
               const hex = theme.primitives[scaleName][step]
@@ -173,10 +173,10 @@ export function SemanticTokens() {
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between">
-        <h2 className="text-[var(--text-xl)] font-semibold text-[var(--color-text-primary)]">Semantic Token Mappings</h2>
+        <h2 className="text-xl font-semibold text-[var(--color-text-primary)]">Semantic Token Mappings</h2>
         <button
           onClick={() => setIsDark(!isDark)}
-          className="px-3 py-1.5 text-[var(--text-xs)] font-medium rounded-[var(--radius-md)] border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-raised)] cursor-pointer transition-colors"
+          className="px-3 py-1.5 text-xs font-medium rounded-[var(--radius-md)] border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-raised)] cursor-pointer transition-colors"
         >
           {isDark ? 'Light Mode' : 'Dark Mode'}
         </button>
@@ -184,7 +184,7 @@ export function SemanticTokens() {
       <div data-theme={isDark ? 'dark' : undefined} className="space-y-6 rounded-[var(--radius-lg)] p-4" style={{ backgroundColor: isDark ? '#020617' : '#f8fafc' }}>
         {SEMANTIC_GROUPS.map((group) => (
           <div key={group.title}>
-            <h3 className="text-[var(--text-sm)] font-semibold text-[var(--color-text-secondary)] mb-2">{group.title}</h3>
+            <h3 className="text-sm font-semibold text-[var(--color-text-secondary)] mb-2">{group.title}</h3>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
               {group.tokens.map((token) => (
                 <SemanticSwatch key={token.cssVar} cssVar={token.cssVar} name={token.name} />

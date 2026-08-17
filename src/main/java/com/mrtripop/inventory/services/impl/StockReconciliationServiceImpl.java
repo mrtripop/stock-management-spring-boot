@@ -7,12 +7,14 @@ import com.mrtripop.inventory.repository.BatchRepository;
 import com.mrtripop.inventory.repository.StoreStockRepository;
 import com.mrtripop.inventory.services.ReconciliationStatusService;
 import com.mrtripop.inventory.services.StockReconciliationService;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
-import java.util.Optional;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -28,6 +30,14 @@ public class StockReconciliationServiceImpl implements StockReconciliationServic
   private final AuditService auditService;
   private final ReconciliationStatusService statusService;
 
+  // Self-injection to ensure Spring proxy is used for @Transactional self-invocation
+  @Autowired
+  @Lazy
+  private StockReconciliationService self;
+
+  private static final String STATUS_COMPLETED = "COMPLETED";
+  private static final String STATUS_FAILED = "FAILED";
+
   @Override
   @Async
   public void reconcileAll() {
@@ -41,7 +51,8 @@ public class StockReconciliationServiceImpl implements StockReconciliationServic
         batchPage = batchRepository.findAll(PageRequest.of(pageNumber++, 100, Sort.by("id")));
         for (Batch batch : batchPage) {
           try {
-            reconcileBatch(batch.getId());
+            // Use self-reference to ensure @Transactional proxy is invoked
+            self.reconcileBatch(batch.getId());
           } catch (Exception e) {
             log.error("Failed to reconcile batch {}: ", batch.getId(), e);
           }
@@ -50,10 +61,10 @@ public class StockReconciliationServiceImpl implements StockReconciliationServic
         int progress = (int) ((processedBatches * 100) / (totalBatches == 0 ? 1 : totalBatches));
         statusService.updateProgress(progress);
       } while (batchPage.hasNext());
-      statusService.updateStatus("COMPLETED");
+      statusService.updateStatus(STATUS_COMPLETED);
     } catch (Exception e) {
       log.error("Stock reconciliation process failed", e);
-      statusService.updateStatus("FAILED");
+      statusService.updateStatus(STATUS_FAILED);
     }
   }
 

@@ -42,7 +42,7 @@ export default function Clinical() {
 
   return (
     <div className="space-y-4">
-      <PageHeader title="Clinical" subtitle="Stores, molecules, and brands" actions={<Button onClick={() => setDrawerOpen(true)}>{tab === 0 ? 'Add Molecule' : tab === 2 ? 'Add Store' : ''}</Button>} />
+      <PageHeader title="Clinical" subtitle="Stores, molecules, and brands" actions={<Button onClick={() => setDrawerOpen(true)}>{tab === 0 ? 'Add Molecule' : tab === 1 ? 'Add Brand' : 'Add Store'}</Button>} />
 
       <div className="flex gap-1 bg-[var(--color-surface)] rounded-[var(--radius-md)] border border-[var(--color-border)] p-1">
         {TABS.map((t, i) => (

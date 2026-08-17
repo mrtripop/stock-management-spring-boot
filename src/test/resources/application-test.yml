@@ -23,6 +23,10 @@ spring:
       password:
       timeout: 1000
 
+auth:
+  jwt:
+    secret: "this-is-a-very-long-and-secure-secret-key-that-is-at-least-32-bytes-long-for-jwt-hmac-sha-256"
+
 CACHE_REDIS_TTL: 60000
 JPA_PROPERTIES_HIBERNATE_FORMAT_SQL: true
 JPA_PROPERTIES_SHOW_SQL: true

@@ -38,6 +38,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         Claims claims;
         try {
           claims = jwtService.extractClaims(token);
+          log.debug("Extracted JWT claims: {}", claims);
         } catch (com.mrtripop.exception.ApplicationException e) {
           log.warn("JWT claims extraction failed: {}", e.getMessage());
           filterChain.doFilter(request, response);
@@ -46,6 +47,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         UUID userId = UUID.fromString(claims.getSubject());
         String role = claims.get("role", String.class);
         List<SimpleGrantedAuthority> authorities = List.of(new SimpleGrantedAuthority("ROLE_" + role));
+        log.debug("User {} authenticated with authorities: {}", userId, authorities);
         UsernamePasswordAuthenticationToken authentication =
             new UsernamePasswordAuthenticationToken(userId, null, authorities);
         SecurityContextHolder.getContext().setAuthentication(authentication);

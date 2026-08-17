@@ -62,17 +62,21 @@ public class AuthServiceImpl implements AuthService {
     String accessToken = jwtService.generateAccessToken(user.getId(), user.getUsername(), user.getRole(), null);
     return LoginResponse.builder()
         .mfaRequired(false)
-        .tempToken(accessToken)
+        .accessToken(accessToken)
+        .role(user.getRole())
         .message(SuccessCode.AUTH_LOGIN_SUCCESS.getMessage())
         .build();
   }
+
+  private static final String TOKEN_TYPE_TEMP = "TEMP";
+  private static final String TOKEN_TYPE_BEARER = "Bearer";
 
   @Override
   @Transactional(readOnly = true)
   public AuthResponse verifyMfa(MfaVerifyRequest request) throws ApplicationException {
     io.jsonwebtoken.Claims claims = jwtService.extractClaims(request.getTempToken());
 
-    if (!"TEMP".equals(claims.get("type", String.class))) {
+    if (!TOKEN_TYPE_TEMP.equals(claims.get("type", String.class))) {
       throw new ApplicationException(ErrorCode.AUTH_TOKEN_INVALID, HttpStatus.UNAUTHORIZED);
     }
 
@@ -80,11 +84,14 @@ public class AuthServiceImpl implements AuthService {
     AuthUser user = authUserRepository.findById(userId)
         .orElseThrow(() -> new ApplicationException(ErrorCode.AUTH_USER_NOT_FOUND, HttpStatus.UNAUTHORIZED));
 
-    // MFA verification not yet implemented — bypass validation and return access token
+    if (!totpService.validateCode(user.getMfaSecret(), request.getTotpCode())) {
+      throw new ApplicationException(ErrorCode.AUTH_INVALID_MFA_CODE, HttpStatus.UNAUTHORIZED);
+    }
+
     String accessToken = jwtService.generateAccessToken(user.getId(), user.getUsername(), user.getRole(), null);
     return AuthResponse.builder()
         .accessToken(accessToken)
-        .tokenType("Bearer")
+        .tokenType(TOKEN_TYPE_BEARER)
         .expiresIn(jwtService.getAccessTokenExpiration())
         .role(user.getRole())
         .username(user.getUsername())
@@ -94,14 +101,17 @@ public class AuthServiceImpl implements AuthService {
 
   @Override
   @Transactional(readOnly = true)
-  public VerifyTotpResponse verifyTotp(String tempToken) throws ApplicationException {
+  public VerifyTotpResponse verifyTotp(String tempToken, String totpCode) throws ApplicationException {
     io.jsonwebtoken.Claims claims = jwtService.extractClaims(tempToken);
 
     UUID userId = UUID.fromString(claims.getSubject());
     AuthUser user = authUserRepository.findById(userId)
         .orElseThrow(() -> new ApplicationException(ErrorCode.AUTH_USER_NOT_FOUND, HttpStatus.UNAUTHORIZED));
 
-    // TOTP verification not yet implemented — bypass and return access token
+    if (!totpService.validateCode(user.getMfaSecret(), totpCode)) {
+      throw new ApplicationException(ErrorCode.AUTH_INVALID_MFA_CODE, HttpStatus.UNAUTHORIZED);
+    }
+
     String accessToken = jwtService.generateAccessToken(user.getId(), user.getUsername(), user.getRole(), null);
     return VerifyTotpResponse.builder()
         .token(accessToken)

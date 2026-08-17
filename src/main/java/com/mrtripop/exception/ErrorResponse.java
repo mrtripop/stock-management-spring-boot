@@ -52,7 +52,7 @@ public class ErrorResponse {
     }
 
     public ErrorResponseBuilder withTimestamp() {
-      this.timestamp = Date.from(Instant.EPOCH);
+      this.timestamp = Date.from(Instant.now());
       return this;
     }
 

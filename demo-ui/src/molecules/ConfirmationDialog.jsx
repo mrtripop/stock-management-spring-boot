@@ -19,7 +19,7 @@ const variantConfig = {
 export function ConfirmationDialog({
   open,
   onConfirm,
-  onCancel,
+  onCancel = () => {},
   title,
   message,
   variant = 'info',
@@ -35,12 +35,12 @@ export function ConfirmationDialog({
       <div className="fixed inset-0 flex items-center justify-center p-4">
         <DialogPanel className="w-full max-w-sm bg-[var(--color-surface)] rounded-[var(--radius-xl)] shadow-[var(--shadow-xl)] p-[var(--space-6)]">
           {title && (
-            <DialogTitle className="text-[length:var(--text-lg)] font-[var(--font-semibold)] text-[var(--color-text-primary)]">
+            <DialogTitle className="text-lg font-semibold text-[var(--color-text-primary)]">
               {title}
             </DialogTitle>
           )}
           {message && (
-            <p className="text-[length:var(--text-sm)] text-[var(--color-text-secondary)] mt-[var(--space-2)]">
+            <p className="text-sm text-[var(--color-text-secondary)] mt-[var(--space-2)]">
               {message}
             </p>
           )}

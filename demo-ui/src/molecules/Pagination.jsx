@@ -1,5 +1,4 @@
 import { Button } from '../atoms/Button'
-import { Select } from '../atoms/Select'
 
 function getPageRange(current, total, maxVisible = 7) {
   if (total <= maxVisible) {
@@ -60,21 +59,21 @@ export function Pagination({
   return (
     <div className={`flex flex-wrap justify-between items-center gap-[var(--space-3)] py-[var(--space-3)] px-[var(--space-4)] border-t border-[var(--color-border)] ${className}`}>
       <div className="flex items-center gap-[var(--space-3)]">
-        <span className="text-[length:var(--text-xs)] text-[var(--color-text-secondary)]">
+        <span className="text-xs text-[var(--color-text-secondary)]">
           Showing {startItem}–{endItem} of {totalElements}
         </span>
         {onPageSizeChange && (
           <div className="flex items-center gap-[var(--space-1)]">
-            <span className="text-[length:var(--text-xs)] text-[var(--color-text-muted)]">per page</span>
-            <Select
+            <span className="text-xs text-[var(--color-text-muted)]">per page</span>
+            <select
               value={pageSize}
               onChange={(e) => onPageSizeChange(Number(e.target.value))}
-              className="w-16 h-7 text-[length:var(--text-xs)] py-0 px-1"
+              className="h-7 px-1 text-xs rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] outline-none"
             >
               {PAGE_SIZE_OPTIONS.map((size) => (
                 <option key={size} value={size}>{size}</option>
               ))}
-            </Select>
+            </select>
           </div>
         )}
       </div>
@@ -93,20 +92,23 @@ export function Pagination({
             page === '...' ? (
               <span
                 key={`ellipsis-${index}`}
-                className="px-1 text-[length:var(--text-xs)] text-[var(--color-text-muted)] select-none"
+                className="w-7 h-7 flex items-center justify-center text-xs text-[var(--color-text-muted)] select-none"
               >
                 &hellip;
               </span>
             ) : (
-              <Button
+              <button
                 key={page}
-                variant={page === currentPage ? 'primary' : 'ghost'}
-                size="sm"
                 onClick={() => onPageChange(page)}
                 aria-current={page === currentPage ? 'page' : undefined}
+                className={`inline-flex items-center justify-center min-w-[28px] h-7 px-2 text-xs font-medium rounded-[var(--radius-md)] transition-colors cursor-pointer ${
+                  page === currentPage
+                    ? 'bg-[var(--color-primary)] text-[var(--color-text-inverse)] shadow-sm'
+                    : 'text-[var(--color-primary)] hover:bg-[var(--color-primary-subtle)]'
+                }`}
               >
                 {page}
-              </Button>
+              </button>
             )
           )}
           <Button

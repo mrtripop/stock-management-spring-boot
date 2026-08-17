@@ -88,15 +88,15 @@ export const VariantMatrix = {
   render: () => (
     <div className="flex flex-col gap-8">
       <div>
-        <p className="text-[length:var(--text-xs)] text-[var(--color-text-muted)] mb-2">5 pages, on page 1</p>
+        <p className="text-xs text-[var(--color-text-muted)] mb-2">5 pages, on page 1</p>
         <Pagination currentPage={1} totalPages={5} totalElements={48} pageSize={10} onPageChange={() => {}} />
       </div>
       <div>
-        <p className="text-[length:var(--text-xs)] text-[var(--color-text-muted)] mb-2">50 pages, on page 15</p>
+        <p className="text-xs text-[var(--color-text-muted)] mb-2">50 pages, on page 15</p>
         <Pagination currentPage={15} totalPages={50} totalElements={492} pageSize={10} onPageChange={() => {}} />
       </div>
       <div>
-        <p className="text-[length:var(--text-xs)] text-[var(--color-text-muted)] mb-2">With page size selector</p>
+        <p className="text-xs text-[var(--color-text-muted)] mb-2">With page size selector</p>
         <Pagination currentPage={2} totalPages={10} totalElements={96} pageSize={10} onPageChange={() => {}} onPageSizeChange={() => {}} />
       </div>
     </div>

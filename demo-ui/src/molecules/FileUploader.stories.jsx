@@ -60,19 +60,19 @@ export const VariantMatrix = {
   render: () => (
     <div className="flex flex-col gap-8 max-w-md">
       <div>
-        <p className="text-[length:var(--text-xs)] text-[var(--color-text-muted)] mb-2">Default</p>
+        <p className="text-xs text-[var(--color-text-muted)] mb-2">Default</p>
         <FileUploader onFile={(f) => console.log(f)} />
       </div>
       <div>
-        <p className="text-[length:var(--text-xs)] text-[var(--color-text-muted)] mb-2">CSV only</p>
+        <p className="text-xs text-[var(--color-text-muted)] mb-2">CSV only</p>
         <FileUploader accept=".csv" onFile={(f) => console.log(f)} />
       </div>
       <div>
-        <p className="text-[length:var(--text-xs)] text-[var(--color-text-muted)] mb-2">Loading</p>
+        <p className="text-xs text-[var(--color-text-muted)] mb-2">Loading</p>
         <FileUploader loading onFile={() => {}} />
       </div>
       <div>
-        <p className="text-[length:var(--text-xs)] text-[var(--color-text-muted)] mb-2">Error state</p>
+        <p className="text-xs text-[var(--color-text-muted)] mb-2">Error state</p>
         <FileUploader error="Invalid file format. Please upload a CSV file." onFile={() => {}} />
       </div>
     </div>

@@ -1,0 +1,914 @@
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] ------------------------< com.learn:management >------------------------
+[INFO] Building management 0.0.1-SNAPSHOT
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- maven-resources-plugin:3.3.1:resources (default-resources) @ management ---
+[INFO] Copying 2 resources from src/main/resources to target/classes
+[INFO] Copying 1 resource from src/main/resources to target/classes
+[INFO] 
+[INFO] --- download-maven-plugin:1.7.1:wget (default) @ management ---
+[INFO] File already exist, skipping
+[INFO] 
+[INFO] --- maven-compiler-plugin:3.13.0:compile (default-compile) @ management ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- maven-resources-plugin:3.3.1:testResources (default-testResources) @ management ---
+[INFO] Copying 2 resources from src/test/resources to target/test-classes
+[INFO] 
+[INFO] --- maven-compiler-plugin:3.13.0:testCompile (default-testCompile) @ management ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- maven-surefire-plugin:3.5.2:test (default-test) @ management ---
+[INFO] Using auto detected provider org.apache.maven.surefire.junitplatform.JUnitPlatformProvider
+[INFO] 
+[INFO] -------------------------------------------------------
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] Running com.mrtripop.inventory.controllers.InventoryAdminControllerIT
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v3.4.2)
+
+{"timestamp": "2026-05-27T00:37:01,516", "level": "INFO", "trace_id": "", "span_id": "", "service": "internal.util.Version", "msg": "HV000001: Hibernate Validator 8.0.2.Final"}
+{"timestamp": "2026-05-27T00:37:01,534", "level": "INFO", "trace_id": "", "span_id": "", "service": "springframework.boot.StartupInfoLogger", "msg": "Starting InventoryAdminControllerIT using Java 17.0.4 with PID 8682 (started by mrtripop in /Users/mrtripop/Documents/programming/backend/spring-boot/stock-management-spring-boot)"}
+{"timestamp": "2026-05-27T00:37:01,536", "level": "DEBUG", "trace_id": "", "span_id": "", "service": "springframework.boot.StartupInfoLogger", "msg": "Running with Spring Boot v3.4.2, Spring v6.2.2"}
+{"timestamp": "2026-05-27T00:37:01,537", "level": "INFO", "trace_id": "", "span_id": "", "service": "springframework.boot.SpringApplication", "msg": "The following 1 profile is active: \"test\""}
+{"timestamp": "2026-05-27T00:37:02,115", "level": "INFO", "trace_id": "", "span_id": "", "service": "repository.config.RepositoryConfigurationDelegate", "msg": "Multiple Spring Data modules found, entering strict repository configuration mode"}
+{"timestamp": "2026-05-27T00:37:02,116", "level": "INFO", "trace_id": "", "span_id": "", "service": "repository.config.RepositoryConfigurationDelegate", "msg": "Bootstrapping Spring Data JPA repositories in DEFAULT mode."}
+{"timestamp": "2026-05-27T00:37:02,245", "level": "INFO", "trace_id": "", "span_id": "", "service": "repository.config.RepositoryConfigurationDelegate", "msg": "Finished Spring Data repository scanning in 122 ms. Found 21 JPA repository interfaces."}
+{"timestamp": "2026-05-27T00:37:03,130", "level": "INFO", "trace_id": "", "span_id": "", "service": "internal.util.LogHelper", "msg": "HHH000204: Processing PersistenceUnitInfo [name: default]"}
+{"timestamp": "2026-05-27T00:37:03,167", "level": "INFO", "trace_id": "", "span_id": "", "service": "org.hibernate.Version", "msg": "HHH000412: Hibernate ORM core version 6.6.5.Final"}
+{"timestamp": "2026-05-27T00:37:03,189", "level": "INFO", "trace_id": "", "span_id": "", "service": "cache.internal.RegionFactoryInitiator", "msg": "HHH000026: Second-level cache disabled"}
+{"timestamp": "2026-05-27T00:37:03,268", "level": "INFO", "trace_id": "", "span_id": "", "service": "jpa.persistenceunit.SpringPersistenceUnitInfo", "msg": "No LoadTimeWeaver setup: ignoring JPA class transformer"}
+{"timestamp": "2026-05-27T00:37:03,284", "level": "INFO", "trace_id": "", "span_id": "", "service": "zaxxer.hikari.HikariDataSource", "msg": "HikariPool-1 - Starting..."}
+{"timestamp": "2026-05-27T00:37:03,380", "level": "INFO", "trace_id": "", "span_id": "", "service": "hikari.pool.HikariPool", "msg": "HikariPool-1 - Added connection conn0: url=jdbc:h2:mem:testdb user=SA"}
+{"timestamp": "2026-05-27T00:37:03,382", "level": "INFO", "trace_id": "", "span_id": "", "service": "zaxxer.hikari.HikariDataSource", "msg": "HikariPool-1 - Start completed."}
+{"timestamp": "2026-05-27T00:37:03,402", "level": "WARN", "trace_id": "", "span_id": "", "service": "hibernate.dialect.Dialect", "msg": "HHH000511: The 2.3.232 version for [org.hibernate.dialect.PostgreSQLDialect] is no longer supported, hence certain features may not work properly. The minimum supported version is 12.0.0. Check the community dialects project for available legacy versions."}
+{"timestamp": "2026-05-27T00:37:03,405", "level": "WARN", "trace_id": "", "span_id": "", "service": "dialect.internal.DialectFactoryImpl", "msg": "HHH90000025: PostgreSQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)"}
+{"timestamp": "2026-05-27T00:37:03,415", "level": "INFO", "trace_id": "", "span_id": "", "service": "env.internal.JdbcEnvironmentInitiator", "msg": "HHH10001005: Database info:\n\tDatabase JDBC URL [Connecting through datasource 'HikariDataSource (HikariPool-1)']\n\tDatabase driver: undefined/unknown\n\tDatabase version: 2.3.232\n\tAutocommit mode: undefined/unknown\n\tIsolation level: undefined/unknown\n\tMinimum pool size: undefined/unknown\n\tMaximum pool size: undefined/unknown"}
+{"timestamp": "2026-05-27T00:37:04,026", "level": "INFO", "trace_id": "", "span_id": "", "service": "platform.internal.JtaPlatformInitiator", "msg": "HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)"}
+Hibernate: 
+    set client_min_messages = WARNING
+Hibernate: 
+    alter table if exists action_queue_tasks 
+       drop constraint if exists FKhtwyf4db3trc3tduo5bdyvxmc
+Hibernate: 
+    alter table if exists action_queue_tasks 
+       drop constraint if exists FKjckqc8e5xknbw3t6nqcmqlbg2
+Hibernate: 
+    alter table if exists action_queue_tasks 
+       drop constraint if exists FK8410tr80j01qo7vnnyxjk52oy
+Hibernate: 
+    alter table if exists batches 
+       drop constraint if exists FKsix4c05regb3md3y3elp0ftg7
+Hibernate: 
+    alter table if exists brands 
+       drop constraint if exists FKkvi310omdj4bobxfahem2ar6s
+Hibernate: 
+    alter table if exists digital_signatures 
+       drop constraint if exists FKfa4ercmfe7o1uwjbwigcwv6nj
+Hibernate: 
+    alter table if exists invoice_items 
+       drop constraint if exists FK1tass34s65383oon2ts1r1xly
+Hibernate: 
+    alter table if exists invoice_items 
+       drop constraint if exists FK3x5pwjbpglm4gefmsuyw9qipg
+Hibernate: 
+    alter table if exists invoice_items 
+       drop constraint if exists FK46ae0lhu1oqs7cv91fn6y9n7w
+Hibernate: 
+    alter table if exists invoices 
+       drop constraint if exists FK25nwq5whgnqti951k7k19ar47
+Hibernate: 
+    alter table if exists order_info 
+       drop constraint if exists FK5t5eebda0cr1bxegj5nrbkmt8
+Hibernate: 
+    alter table if exists order_info 
+       drop constraint if exists FKgb06s9qkvgo5hdgu90whc1iek
+Hibernate: 
+    alter table if exists store_products 
+       drop constraint if exists FKet9en3n7e3xmgpx94f9p78m2q
+Hibernate: 
+    alter table if exists store_products 
+       drop constraint if exists FKf7xjkv3of5tjf4cgn23ui8sre
+Hibernate: 
+    alter table if exists store_stocks 
+       drop constraint if exists FK5ondpjtpqqb9jp2ggnd7flmw7
+Hibernate: 
+    alter table if exists store_stocks 
+       drop constraint if exists FK41341uuxrclknay14dtust447
+Hibernate: 
+    alter table if exists transaction 
+       drop constraint if exists FKldp2b8d5694jwutxocoasobud
+Hibernate: 
+    alter table if exists transaction 
+       drop constraint if exists FKmsxb91nb6beqc39k9u2aiiv3t
+Hibernate: 
+    alter table if exists unit_conversions 
+       drop constraint if exists FKrrxqq6ph3dblu05f2ijqmsx6d
+Hibernate: 
+    alter table if exists warehouses 
+       drop constraint if exists FK4e4lvoo6ncfomibepxlmok94l
+Hibernate: 
+    drop table if exists action_queue_tasks cascade
+Hibernate: 
+    drop table if exists addresses cascade
+Hibernate: 
+    drop table if exists audit_ledger cascade
+Hibernate: 
+    drop table if exists auth_users cascade
+Hibernate: 
+    drop table if exists batches cascade
+Hibernate: 
+    drop table if exists brands cascade
+Hibernate: 
+    drop table if exists digital_signatures cascade
+Hibernate: 
+    drop table if exists invoice_items cascade
+Hibernate: 
+    drop table if exists invoices cascade
+Hibernate: 
+    drop table if exists molecules cascade
+Hibernate: 
+    drop table if exists order_info cascade
+Hibernate: 
+    drop table if exists product cascade
+Hibernate: 
+    drop table if exists product_history cascade
+Hibernate: 
+    drop table if exists store_products cascade
+Hibernate: 
+    drop table if exists store_stocks cascade
+Hibernate: 
+    drop table if exists stores cascade
+Hibernate: 
+    drop table if exists transaction cascade
+Hibernate: 
+    drop table if exists unit_conversions cascade
+Hibernate: 
+    drop table if exists user_balances cascade
+Hibernate: 
+    drop table if exists user_info cascade
+Hibernate: 
+    drop table if exists warehouses cascade
+Hibernate: 
+    drop sequence if exists addresses_id_seq
+Hibernate: 
+    drop sequence if exists batches_sequence
+Hibernate: 
+    drop sequence if exists digital_signature_seq
+Hibernate: 
+    drop sequence if exists invoice_items_sequence
+Hibernate: 
+    drop sequence if exists invoices_sequence
+Hibernate: 
+    drop sequence if exists order_info_seq
+Hibernate: 
+    drop sequence if exists product_seq
+Hibernate: 
+    drop sequence if exists store_stocks_sequence
+Hibernate: 
+    drop sequence if exists task_seq
+Hibernate: 
+    drop sequence if exists transaction_seq
+Hibernate: 
+    drop sequence if exists unit_conversion_seq
+Hibernate: 
+    drop sequence if exists user_balances_seq
+Hibernate: 
+    drop sequence if exists user_info_seq
+Hibernate: 
+    drop sequence if exists warehouse_id_seq
+Hibernate: 
+    create sequence addresses_id_seq start with 1 increment by 1
+Hibernate: 
+    create sequence batches_sequence start with 1 increment by 1
+Hibernate: 
+    create sequence digital_signature_seq start with 1 increment by 1
+Hibernate: 
+    create sequence invoice_items_sequence start with 1 increment by 1
+Hibernate: 
+    create sequence invoices_sequence start with 1 increment by 1
+Hibernate: 
+    create sequence order_info_seq start with 1 increment by 1
+Hibernate: 
+    create sequence product_seq start with 1 increment by 1
+Hibernate: 
+    create sequence store_stocks_sequence start with 1 increment by 1
+Hibernate: 
+    create sequence task_seq start with 1 increment by 1
+Hibernate: 
+    create sequence transaction_seq start with 1 increment by 1
+Hibernate: 
+    create sequence unit_conversion_seq start with 1 increment by 1
+Hibernate: 
+    create sequence user_balances_seq start with 1 increment by 50
+Hibernate: 
+    create sequence user_info_seq start with 1 increment by 1
+Hibernate: 
+    create sequence warehouse_id_seq start with 1 increment by 1
+Hibernate: 
+    create table action_queue_tasks (
+        days_until_expiry integer,
+        batch_id bigint,
+        created_at BIGINT,
+        current_quantity bigint,
+        id bigint not null,
+        threshold_quantity bigint,
+        updated_at BIGINT,
+        version bigint not null,
+        brand_id uuid not null,
+        store_id uuid not null,
+        status varchar(20) not null check (status in ('PENDING','ACKNOWLEDGED','RESOLVED')),
+        task_type varchar(30) not null check (task_type in ('EXPIRY_WARNING','REORDER_NEEDED','RECALL_ALERT')),
+        message varchar(500) not null,
+        primary key (id)
+    )
+Hibernate: 
+    create table addresses (
+        created_at BIGINT,
+        id bigint not null,
+        updated_at BIGINT,
+        address_name TEXT,
+        city TEXT,
+        country TEXT,
+        line1 TEXT,
+        line2 TEXT,
+        postal_code TEXT,
+        province TEXT,
+        primary key (id)
+    )
+Hibernate: 
+    create table audit_ledger (
+        timestamp timestamp(6) not null,
+        id uuid not null,
+        action_type varchar(255) not null,
+        checksum varchar(255),
+        entity_id varchar(255) not null,
+        entity_name varchar(255) not null,
+        new_value TEXT,
+        old_value TEXT,
+        user_id varchar(255),
+        primary key (id)
+    )
+Hibernate: 
+    create table auth_users (
+        mfa_enabled boolean not null,
+        created_at BIGINT,
+        updated_at BIGINT,
+        version bigint not null,
+        id uuid not null,
+        role varchar(20) not null check (role in ('EMPLOYEE','PHARMACIST','MANAGER','ADMIN')),
+        username varchar(100) not null unique,
+        mfa_secret varchar(200),
+        password varchar(255) not null,
+        primary key (id)
+    )
+Hibernate: 
+    create table batches (
+        expiry_date date not null,
+        created_at BIGINT,
+        id bigint not null,
+        quantity bigint not null,
+        updated_at BIGINT,
+        version bigint not null,
+        brand_id uuid not null,
+        status varchar(20) not null check (status in ('AVAILABLE','RECALLED','QUARANTINED')),
+        batch_number varchar(100) not null,
+        manufacturer_lot_number varchar(200),
+        storage_conditions varchar(200),
+        supplier_reference varchar(200),
+        primary key (id),
+        constraint idx_batches_brand_batch unique (brand_id, batch_number)
+    )
+Hibernate: 
+    create table brands (
+        created_at BIGINT,
+        updated_at BIGINT,
+        id uuid not null,
+        molecule_id uuid not null,
+        barcode varchar(50),
+        base_unit varchar(255),
+        brand_name varchar(255) not null,
+        form varchar(255),
+        strength varchar(255),
+        primary key (id)
+    )
+Hibernate: 
+    create table digital_signatures (
+        created_at BIGINT,
+        id bigint not null,
+        store_stock_id bigint not null,
+        updated_at BIGINT,
+        verified_at bigint not null,
+        verification_status varchar(20) not null check (verification_status in ('VERIFIED','FAILED','PENDING')),
+        pharmacist_license_number varchar(30) not null,
+        signature_hash varchar(64),
+        signature_payload text,
+        primary key (id)
+    )
+Hibernate: 
+    create table invoice_items (
+        insurance_claim_amount numeric(10,2) not null,
+        insurance_coverage_percent integer not null,
+        line_total numeric(10,2) not null,
+        patient_owed numeric(10,2) not null,
+        unit_price numeric(10,2) not null,
+        batch_id bigint not null,
+        id bigint not null,
+        invoice_id bigint not null,
+        quantity bigint not null,
+        brand_id uuid not null,
+        primary key (id)
+    )
+Hibernate: 
+    create table invoices (
+        insurance_claim_amount numeric(10,2) not null,
+        patient_owed numeric(10,2) not null,
+        total_amount numeric(10,2) not null,
+        created_at BIGINT,
+        id bigint not null,
+        updated_at BIGINT,
+        version bigint not null,
+        store_id uuid not null,
+        status varchar(20) not null check (status in ('PENDING','COMPLETED','VOIDED')),
+        primary key (id)
+    )
+Hibernate: 
+    create table molecules (
+        created_at BIGINT,
+        updated_at BIGINT,
+        id uuid not null,
+        dosage_instructions TEXT,
+        generic_name varchar(255) not null,
+        regulatory_schedule varchar(255) check (regulatory_schedule in ('OTC','RX','CONTROLLED','UNSCHEDULED')),
+        safety_warnings TEXT,
+        therapeutic_class varchar(255),
+        primary key (id)
+    )
+Hibernate: 
+    create table order_info (
+        discount float4,
+        grand_total float4,
+        item_discount float4,
+        shipping float4,
+        status smallint,
+        sub_total float4,
+        tax float4,
+        total float4,
+        type smallint,
+        address_id bigint not null,
+        created_at timestamp(6) with time zone,
+        id bigint not null,
+        updated_at timestamp(6) with time zone,
+        user_id bigint not null,
+        content text,
+        promo varchar(50),
+        primary key (id)
+    )
+Hibernate: 
+    create table product (
+        is_active BOOLEAN,
+        packed_depth DECIMAL,
+        packed_height DECIMAL,
+        packed_weight DECIMAL,
+        packed_width DECIMAL,
+        reorder_quantity SMALLINT,
+        created_at BIGINT,
+        id bigint not null,
+        updated_at BIGINT,
+        barcode TEXT,
+        category TEXT,
+        code TEXT not null,
+        description TEXT,
+        name TEXT,
+        primary key (id)
+    )
+Hibernate: 
+    create table product_history (
+        is_active BOOLEAN,
+        packed_depth DECIMAL,
+        packed_height DECIMAL,
+        packed_weight DECIMAL,
+        packed_width DECIMAL,
+        reorder_quantity SMALLINT,
+        created_at BIGINT,
+        id bigint not null,
+        updated_at BIGINT,
+        barcode TEXT,
+        category TEXT,
+        code TEXT not null,
+        description TEXT,
+        name TEXT,
+        primary key (id)
+    )
+Hibernate: 
+    create table store_products (
+        is_active boolean not null,
+        price numeric(10,2),
+        created_at BIGINT,
+        reorder_threshold bigint,
+        updated_at BIGINT,
+        brand_id uuid not null,
+        id uuid not null,
+        store_id uuid not null,
+        shelf_location varchar(100),
+        primary key (id),
+        constraint idx_store_products_store_brand unique (store_id, brand_id)
+    )
+Hibernate: 
+    create table store_stocks (
+        batch_id bigint not null,
+        created_at BIGINT,
+        id bigint not null,
+        quantity bigint not null,
+        updated_at BIGINT,
+        version bigint not null,
+        store_id uuid not null,
+        location varchar(100),
+        primary key (id),
+        constraint idx_store_stocks_store_batch unique (store_id, batch_id)
+    )
+Hibernate: 
+    create table stores (
+        active boolean not null,
+        created_at BIGINT,
+        updated_at BIGINT,
+        version bigint,
+        id uuid not null,
+        type varchar(20) not null check (type in ('PHYSICAL','HUB','LOGICAL')),
+        name varchar(255) not null,
+        primary key (id),
+        constraint stores_name_key unique (name)
+    )
+Hibernate: 
+    create table transaction (
+        mode smallint,
+        status smallint,
+        type smallint,
+        created_at timestamp(6) with time zone,
+        id bigint not null,
+        order_id bigint not null,
+        updated_at timestamp(6) with time zone,
+        user_id bigint not null,
+        code varchar(100),
+        content text,
+        primary key (id)
+    )
+Hibernate: 
+    create table unit_conversions (
+        ratio integer not null,
+        created_at BIGINT,
+        id bigint not null,
+        updated_at BIGINT,
+        brand_id uuid not null,
+        from_unit varchar(50) not null,
+        to_unit varchar(50) not null,
+        primary key (id),
+        constraint uc_brand_from_unit unique (brand_id, from_unit)
+    )
+Hibernate: 
+    create table user_balances (
+        balance float(53),
+        id bigint not null,
+        name varchar(255),
+        primary key (id)
+    )
+Hibernate: 
+    create table user_info (
+        id bigint not null,
+        last_login timestamp(6) with time zone,
+        registered_at timestamp(6) with time zone,
+        role_id bigint,
+        email varchar(50),
+        first_name varchar(50),
+        intro text,
+        last_name varchar(50),
+        mobile varchar(15),
+        password_hash varchar(32),
+        profile text,
+        username varchar(50),
+        primary key (id)
+    )
+Hibernate: 
+    create table warehouses (
+        is_refrigerated BOOLEAN,
+        address_id bigint,
+        created_at BIGINT,
+        id bigint not null,
+        updated_at BIGINT,
+        warehouse_name TEXT,
+        primary key (id)
+    )
+Hibernate: 
+    create index aqt_store_status 
+       on action_queue_tasks (store_id, status)
+Hibernate: 
+    create index aqt_type_status 
+       on action_queue_tasks (task_type, status)
+Hibernate: 
+    create index aqt_batch_type_status 
+       on action_queue_tasks (batch_id, task_type, status)
+Hibernate: 
+    create index addresses_created_at 
+       on addresses (created_at)
+Hibernate: 
+    create index addresses_updated_at 
+       on addresses (updated_at)
+Hibernate: 
+    create index idx_batches_expiry_date 
+       on batches (expiry_date)
+Hibernate: 
+    create index idx_batches_status 
+       on batches (status)
+Hibernate: 
+    create index idx_brands_barcode 
+       on brands (barcode)
+Hibernate: 
+    create index ds_store_stock 
+       on digital_signatures (store_stock_id)
+Hibernate: 
+    create index idx_invoice_items_invoice_id 
+       on invoice_items (invoice_id)
+Hibernate: 
+    create index idx_invoices_store_id 
+       on invoices (store_id)
+Hibernate: 
+    create index idx_invoices_status 
+       on invoices (status)
+Hibernate: 
+    create index product_code 
+       on product (code)
+Hibernate: 
+    create index product_created_at 
+       on product (created_at)
+Hibernate: 
+    create index product_updated_at 
+       on product (updated_at)
+Hibernate: 
+    create index product_history_created_at 
+       on product_history (created_at)
+Hibernate: 
+    create index idx_store_products_store_active 
+       on store_products (store_id, is_active)
+Hibernate: 
+    create index idx_store_stocks_batch_id 
+       on store_stocks (batch_id)
+Hibernate: 
+    alter table if exists action_queue_tasks 
+       add constraint FKhtwyf4db3trc3tduo5bdyvxmc 
+       foreign key (batch_id) 
+       references batches
+Hibernate: 
+    alter table if exists action_queue_tasks 
+       add constraint FKjckqc8e5xknbw3t6nqcmqlbg2 
+       foreign key (brand_id) 
+       references brands
+Hibernate: 
+    alter table if exists action_queue_tasks 
+       add constraint FK8410tr80j01qo7vnnyxjk52oy 
+       foreign key (store_id) 
+       references stores
+Hibernate: 
+    alter table if exists batches 
+       add constraint FKsix4c05regb3md3y3elp0ftg7 
+       foreign key (brand_id) 
+       references brands
+Hibernate: 
+    alter table if exists brands 
+       add constraint FKkvi310omdj4bobxfahem2ar6s 
+       foreign key (molecule_id) 
+       references molecules
+Hibernate: 
+    alter table if exists digital_signatures 
+       add constraint FKfa4ercmfe7o1uwjbwigcwv6nj 
+       foreign key (store_stock_id) 
+       references store_stocks
+Hibernate: 
+    alter table if exists invoice_items 
+       add constraint FK1tass34s65383oon2ts1r1xly 
+       foreign key (batch_id) 
+       references batches
+Hibernate: 
+    alter table if exists invoice_items 
+       add constraint FK3x5pwjbpglm4gefmsuyw9qipg 
+       foreign key (brand_id) 
+       references brands
+Hibernate: 
+    alter table if exists invoice_items 
+       add constraint FK46ae0lhu1oqs7cv91fn6y9n7w 
+       foreign key (invoice_id) 
+       references invoices
+Hibernate: 
+    alter table if exists invoices 
+       add constraint FK25nwq5whgnqti951k7k19ar47 
+       foreign key (store_id) 
+       references stores
+Hibernate: 
+    alter table if exists order_info 
+       add constraint FK5t5eebda0cr1bxegj5nrbkmt8 
+       foreign key (address_id) 
+       references addresses 
+       on delete cascade
+Hibernate: 
+    alter table if exists order_info 
+       add constraint FKgb06s9qkvgo5hdgu90whc1iek 
+       foreign key (user_id) 
+       references user_info 
+       on delete cascade
+Hibernate: 
+    alter table if exists store_products 
+       add constraint FKet9en3n7e3xmgpx94f9p78m2q 
+       foreign key (brand_id) 
+       references brands
+Hibernate: 
+    alter table if exists store_products 
+       add constraint FKf7xjkv3of5tjf4cgn23ui8sre 
+       foreign key (store_id) 
+       references stores
+Hibernate: 
+    alter table if exists store_stocks 
+       add constraint FK5ondpjtpqqb9jp2ggnd7flmw7 
+       foreign key (batch_id) 
+       references batches
+Hibernate: 
+    alter table if exists store_stocks 
+       add constraint FK41341uuxrclknay14dtust447 
+       foreign key (store_id) 
+       references stores
+Hibernate: 
+    alter table if exists transaction 
+       add constraint FKldp2b8d5694jwutxocoasobud 
+       foreign key (order_id) 
+       references order_info 
+       on delete cascade
+Hibernate: 
+    alter table if exists transaction 
+       add constraint FKmsxb91nb6beqc39k9u2aiiv3t 
+       foreign key (user_id) 
+       references user_info 
+       on delete cascade
+Hibernate: 
+    alter table if exists unit_conversions 
+       add constraint FKrrxqq6ph3dblu05f2ijqmsx6d 
+       foreign key (brand_id) 
+       references brands
+Hibernate: 
+    alter table if exists warehouses 
+       add constraint FK4e4lvoo6ncfomibepxlmok94l 
+       foreign key (address_id) 
+       references addresses
+{"timestamp": "2026-05-27T00:37:04,090", "level": "INFO", "trace_id": "", "span_id": "", "service": "orm.jpa.AbstractEntityManagerFactoryBean", "msg": "Initialized JPA EntityManagerFactory for persistence unit 'default'"}
+{"timestamp": "2026-05-27T00:37:04,419", "level": "INFO", "trace_id": "", "span_id": "", "service": "repository.query.QueryEnhancerFactory", "msg": "Hibernate is in classpath; If applicable, HQL parser will be used."}
+{"timestamp": "2026-05-27T00:37:04,771", "level": "DEBUG", "trace_id": "", "span_id": "", "service": "mrtripop.aspect.GlobalAspect", "msg": ">> AuthProperties.getSecret() | args=[]"}
+{"timestamp": "2026-05-27T00:37:04,776", "level": "DEBUG", "trace_id": "", "span_id": "", "service": "mrtripop.aspect.GlobalAspect", "msg": "<< AuthProperties.getSecret() | 0ms | result=\"this-is-a-very-long-and-secure-secret-key-that-is-at-least-32-bytes-long-for-jwt-hmac-sha-256\""}
+{"timestamp": "2026-05-27T00:37:05,360", "level": "DEBUG", "trace_id": "", "span_id": "", "service": "mrtripop.aspect.GlobalAspect", "msg": ">> SecurityConfig.passwordEncoder() | args=[]"}
+{"timestamp": "2026-05-27T00:37:05,373", "level": "DEBUG", "trace_id": "", "span_id": "", "service": "mrtripop.aspect.GlobalAspect", "msg": "<< SecurityConfig.passwordEncoder() | 2ms | result=org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder@70163ce4"}
+{"timestamp": "2026-05-27T00:37:05,385", "level": "DEBUG", "trace_id": "", "span_id": "", "service": "mrtripop.aspect.GlobalAspect", "msg": ">> AppConfig.openTelemetry() | args=[]"}
+{"timestamp": "2026-05-27T00:37:05,395", "level": "DEBUG", "trace_id": "", "span_id": "", "service": "mrtripop.aspect.GlobalAspect", "msg": "<< AppConfig.openTelemetry() | 2ms | result=io.opentelemetry.api.DefaultOpenTelemetry@6d9ebd88"}
+{"timestamp": "2026-05-27T00:37:05,396", "level": "DEBUG", "trace_id": "", "span_id": "", "service": "mrtripop.aspect.GlobalAspect", "msg": ">> OpenAPIConfig.openAPI() | args=[]"}
+{"timestamp": "2026-05-27T00:37:05,404", "level": "DEBUG", "trace_id": "", "span_id": "", "service": "mrtripop.aspect.GlobalAspect", "msg": "<< OpenAPIConfig.openAPI() | 1ms | result={\"openapi\":\"3.0.1\",\"info\":{\"title\":\"Stock Management API\",\"description\":\"This API exposes endpoints to manage stock.\",\"termsOfService\":null,\"contact\":{\"name\":\"Tripop Torcheep\",\"url\":null,\"email\":\"tripop.chai12@gmail.com\",\"extensions\":null},\"license\":{\"name\":\"MIT License\",\"url\":\"https://choosealicense.com/licenses/mit/\",\"identifier\":null,\"extensions\":null},\"version\":\"1.0.0\",\"extensions\":null,\"summary\":null},\"externalDocs\":null,\"servers\":[{\"url\":\"http://localhost:8080\",\"description\":\"Localhost URL...(truncated)"}
+{"timestamp": "2026-05-27T00:37:05,469", "level": "ERROR", "trace_id": "", "span_id": "", "service": "resolver.dns.DnsServerAddressStreamProviders", "msg": "Unable to load io.netty.resolver.dns.macos.MacOSDnsServerAddressStreamProvider, fallback to system defaults. This may result in incorrect DNS resolutions on MacOS. Check whether you have a dependency on 'io.netty:netty-resolver-dns-native-macos'. Use DEBUG level to see the full stack: java.lang.UnsatisfiedLinkError: failed to load the required native library"}
+{"timestamp": "2026-05-27T00:37:05,592", "level": "DEBUG", "trace_id": "", "span_id": "", "service": "mrtripop.aspect.GlobalAspect", "msg": ">> RedisConfig.cacheManager() | args=[org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory@5478a4b1]"}
+{"timestamp": "2026-05-27T00:37:05,609", "level": "DEBUG", "trace_id": "", "span_id": "", "service": "mrtripop.aspect.GlobalAspect", "msg": "<< RedisConfig.cacheManager() | 12ms | result={\"cacheNames\":[],\"transactionAware\":false,\"allowRuntimeCacheCreation\":true,\"cacheConfigurations\":{}}"}
+{"timestamp": "2026-05-27T00:37:05,709", "level": "WARN", "trace_id": "", "span_id": "", "service": "orm.jpa.JpaBaseConfiguration$JpaWebConfiguration", "msg": "spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning"}
+{"timestamp": "2026-05-27T00:37:05,815", "level": "WARN", "trace_id": "", "span_id": "", "service": "security.servlet.UserDetailsServiceAutoConfiguration", "msg": "\n\nUsing generated security password: 4764b822-ecb3-4cc6-a342-ec52a475e72a\n\nThis generated password is for development use only. Your security configuration must be updated before running your application in production.\n"}
+{"timestamp": "2026-05-27T00:37:05,820", "level": "INFO", "trace_id": "", "span_id": "", "service": "authentication.configuration.InitializeUserDetailsBeanManagerConfigurer$InitializeUserDetailsManagerConfigurer", "msg": "Global AuthenticationManager configured with UserDetailsService bean with name inMemoryUserDetailsManager"}
+{"timestamp": "2026-05-27T00:37:06,007", "level": "DEBUG", "trace_id": "", "span_id": "", "service": "mrtripop.aspect.GlobalAspect", "msg": ">> SecurityConfig.securityFilterChain() | args=[org.springframework.security.config.annotation.web.builders.HttpSecurity@15764a15]"}
+{"timestamp": "2026-05-27T00:37:06,038", "level": "DEBUG", "trace_id": "", "span_id": "", "service": "security.web.DefaultSecurityFilterChain", "msg": "Will secure any request with filters: DisableEncodeUrlFilter, WebAsyncManagerIntegrationFilter, SecurityContextHolderFilter, HeaderWriterFilter, LogoutFilter, JwtAuthenticationFilter, RequestCacheAwareFilter, SecurityContextHolderAwareRequestFilter, AnonymousAuthenticationFilter, SessionManagementFilter, ExceptionTranslationFilter, AuthorizationFilter"}
+{"timestamp": "2026-05-27T00:37:06,039", "level": "DEBUG", "trace_id": "", "span_id": "", "service": "mrtripop.aspect.GlobalAspect", "msg": "<< SecurityConfig.securityFilterChain() | 31ms | result=DefaultSecurityFilterChain matching [any request] and having filters [DisableEncodeUrl, WebAsyncManagerIntegration, SecurityContextHolder, HeaderWriter, Logout, JwtAuthentication, RequestCacheAware, SecurityContextHolderAwareRequest, AnonymousAuthentication, SessionManagement, ExceptionTranslation, Authorization]"}
+{"timestamp": "2026-05-27T00:37:06,433", "level": "DEBUG", "trace_id": "", "span_id": "", "service": "web.filter.GenericFilterBean", "msg": "Filter 'jwtAuthenticationFilter' configured for use"}
+{"timestamp": "2026-05-27T00:37:06,434", "level": "INFO", "trace_id": "", "span_id": "", "service": "mock.web.MockServletContext", "msg": "Initializing Spring TestDispatcherServlet ''"}
+{"timestamp": "2026-05-27T00:37:06,434", "level": "INFO", "trace_id": "", "span_id": "", "service": "web.servlet.FrameworkServlet", "msg": "Initializing Servlet ''"}
+{"timestamp": "2026-05-27T00:37:06,435", "level": "INFO", "trace_id": "", "span_id": "", "service": "web.servlet.FrameworkServlet", "msg": "Completed initialization in 1 ms"}
+{"timestamp": "2026-05-27T00:37:06,498", "level": "INFO", "trace_id": "", "span_id": "", "service": "springframework.boot.StartupInfoLogger", "msg": "Started InventoryAdminControllerIT in 5.141 seconds (process running for 5.748)"}
+{"timestamp": "2026-05-27T00:37:06,535", "level": "DEBUG", "trace_id": "", "span_id": "", "service": "security.web.FilterChainProxy", "msg": "Securing POST /api/v1/inventory/admin/reconcile"}
+{"timestamp": "2026-05-27T00:37:06,539", "level": "DEBUG", "trace_id": "", "span_id": "", "service": "security.web.FilterChainProxy", "msg": "Secured POST /api/v1/inventory/admin/reconcile"}
+{"timestamp": "2026-05-27T00:37:06,547", "level": "DEBUG", "trace_id": "", "span_id": "", "service": "authorization.method.AuthorizationManagerBeforeMethodInterceptor", "msg": "Authorizing method invocation ReflectiveMethodInvocation: public org.springframework.http.ResponseEntity com.mrtripop.inventory.controllers.InventoryAdminController.triggerReconciliation(); target is of class [com.mrtripop.inventory.controllers.InventoryAdminController]"}
+{"timestamp": "2026-05-27T00:37:06,552", "level": "DEBUG", "trace_id": "", "span_id": "", "service": "authorization.method.AuthorizationManagerBeforeMethodInterceptor", "msg": "Authorized method invocation ReflectiveMethodInvocation: public org.springframework.http.ResponseEntity com.mrtripop.inventory.controllers.InventoryAdminController.triggerReconciliation(); target is of class [com.mrtripop.inventory.controllers.InventoryAdminController]"}
+{"timestamp": "2026-05-27T00:37:06,552", "level": "DEBUG", "trace_id": "", "span_id": "", "service": "mrtripop.aspect.GlobalAspect", "msg": ">> InventoryAdminController.triggerReconciliation() | args=[]"}
+{"timestamp": "2026-05-27T00:37:06,556", "level": "DEBUG", "trace_id": "", "span_id": "", "service": "mrtripop.aspect.GlobalAspect", "msg": ">> StockReconciliationServiceImpl.reconcileAll() | args=[]"}
+{"timestamp": "2026-05-27T00:37:06,556", "level": "DEBUG", "trace_id": "", "span_id": "", "service": "mrtripop.aspect.GlobalAspect", "msg": ">> ReconciliationStatusServiceImpl.startProcess() | args=[]"}
+{"timestamp": "2026-05-27T00:37:06,559", "level": "DEBUG", "trace_id": "", "span_id": "", "service": "mrtripop.aspect.GlobalAspect", "msg": "<< ReconciliationStatusServiceImpl.startProcess() | 3ms | result=null"}
+{"timestamp": "2026-05-27T00:37:06,560", "level": "DEBUG", "trace_id": "", "span_id": "", "service": "mrtripop.aspect.GlobalAspect", "msg": ">> CrudRepository.count() | args=[]"}
+{"timestamp": "2026-05-27T00:37:06,565", "level": "DEBUG", "trace_id": "", "span_id": "", "service": "mrtripop.aspect.GlobalAspect", "msg": "<< InventoryAdminController.triggerReconciliation() | 6ms | result={\"headers\":{},\"body\":{\"code\":\"INV2004\",\"message\":\"Stock reconciliation triggered successfully\"},\"statusCodeValue\":200,\"statusCode\":\"OK\"}"}
+Hibernate: 
+    select
+        count(*) 
+    from
+        batches b1_0
+{"timestamp": "2026-05-27T00:37:06,597", "level": "DEBUG", "trace_id": "", "span_id": "", "service": "security.web.FilterChainProxy", "msg": "Securing GET /api/v1/inventory/admin/reconcile/status"}
+{"timestamp": "2026-05-27T00:37:06,597", "level": "DEBUG", "trace_id": "", "span_id": "", "service": "security.web.FilterChainProxy", "msg": "Secured GET /api/v1/inventory/admin/reconcile/status"}
+{"timestamp": "2026-05-27T00:37:06,598", "level": "DEBUG", "trace_id": "", "span_id": "", "service": "authorization.method.AuthorizationManagerBeforeMethodInterceptor", "msg": "Authorizing method invocation ReflectiveMethodInvocation: public org.springframework.http.ResponseEntity com.mrtripop.inventory.controllers.InventoryAdminController.getReconciliationStatus(); target is of class [com.mrtripop.inventory.controllers.InventoryAdminController]"}
+{"timestamp": "2026-05-27T00:37:06,598", "level": "DEBUG", "trace_id": "", "span_id": "", "service": "authorization.method.AuthorizationManagerBeforeMethodInterceptor", "msg": "Authorized method invocation ReflectiveMethodInvocation: public org.springframework.http.ResponseEntity com.mrtripop.inventory.controllers.InventoryAdminController.getReconciliationStatus(); target is of class [com.mrtripop.inventory.controllers.InventoryAdminController]"}
+{"timestamp": "2026-05-27T00:37:06,598", "level": "DEBUG", "trace_id": "", "span_id": "", "service": "mrtripop.aspect.GlobalAspect", "msg": ">> InventoryAdminController.getReconciliationStatus() | args=[]"}
+{"timestamp": "2026-05-27T00:37:06,598", "level": "DEBUG", "trace_id": "", "span_id": "", "service": "mrtripop.aspect.GlobalAspect", "msg": ">> ReconciliationStatusServiceImpl.getStatus() | args=[]"}
+{"timestamp": "2026-05-27T00:37:06,601", "level": "DEBUG", "trace_id": "", "span_id": "", "service": "mrtripop.aspect.GlobalAspect", "msg": "<< ReconciliationStatusServiceImpl.getStatus() | 0ms | result=ReconciliationStatusDto(status=IN_PROGRESS, progress=0, startTime=2026-05-26T17:37:06.556947Z, updatedTime=2026-05-26T17:37:06.556947Z)"}
+{"timestamp": "2026-05-27T00:37:06,601", "level": "DEBUG", "trace_id": "", "span_id": "", "service": "mrtripop.aspect.GlobalAspect", "msg": "<< InventoryAdminController.getReconciliationStatus() | 3ms | result=<200 OK OK,ResponseBody(code=INV2005, message=Reconciliation status retrieved successfully, data=ReconciliationStatusDto(status=IN_PROGRESS, progress=0, startTime=2026-05-26T17:37:06.556947Z, updatedTime=2026-05-26T17:37:06.556947Z), error=null, timestamp=null),[]>"}
+{"timestamp": "2026-05-27T00:37:06,615", "level": "DEBUG", "trace_id": "", "span_id": "", "service": "mrtripop.aspect.GlobalAspect", "msg": "<< CrudRepository.count() | 55ms | result=0"}
+{"timestamp": "2026-05-27T00:37:06,623", "level": "DEBUG", "trace_id": "", "span_id": "", "service": "mrtripop.aspect.GlobalAspect", "msg": ">> PagingAndSortingRepository.findAll() | args=[{\"pageNumber\":0,\"pageSize\":100,\"sort\":{\"empty\":false,\"sorted\":true,\"unsorted\":false},\"offset\":0,\"paged\":true,\"unpaged\":false}]"}
+Hibernate: 
+    select
+        b1_0.id,
+        b1_0.batch_number,
+        b1_0.brand_id,
+        b1_0.created_at,
+        b1_0.expiry_date,
+        b1_0.manufacturer_lot_number,
+        b1_0.quantity,
+        b1_0.status,
+        b1_0.storage_conditions,
+        b1_0.supplier_reference,
+        b1_0.updated_at,
+        b1_0.version 
+    from
+        batches b1_0 
+    order by
+        b1_0.id 
+    offset
+        ? rows 
+    fetch
+        first ? rows only
+{"timestamp": "2026-05-27T00:37:06,644", "level": "DEBUG", "trace_id": "", "span_id": "", "service": "mrtripop.aspect.GlobalAspect", "msg": "<< PagingAndSortingRepository.findAll() | 20ms | result={\"content\":[],\"pageable\":{\"pageNumber\":0,\"pageSize\":100,\"sort\":{\"empty\":false,\"sorted\":true,\"unsorted\":false},\"offset\":0,\"paged\":true,\"unpaged\":false},\"last\":true,\"totalElements\":0,\"totalPages\":0,\"first\":true,\"size\":100,\"number\":0,\"sort\":{\"empty\":false,\"sorted\":true,\"unsorted\":false},\"numberOfElements\":0,\"empty\":true}"}
+{"timestamp": "2026-05-27T00:37:06,644", "level": "DEBUG", "trace_id": "", "span_id": "", "service": "mrtripop.aspect.GlobalAspect", "msg": ">> ReconciliationStatusServiceImpl.updateProgress() | args=[0]"}
+{"timestamp": "2026-05-27T00:37:06,645", "level": "DEBUG", "trace_id": "", "span_id": "", "service": "mrtripop.aspect.GlobalAspect", "msg": "<< ReconciliationStatusServiceImpl.updateProgress() | 1ms | result=null"}
+{"timestamp": "2026-05-27T00:37:06,645", "level": "DEBUG", "trace_id": "", "span_id": "", "service": "mrtripop.aspect.GlobalAspect", "msg": ">> ReconciliationStatusServiceImpl.updateStatus() | args=[\"COMPLETED\"]"}
+{"timestamp": "2026-05-27T00:37:06,645", "level": "DEBUG", "trace_id": "", "span_id": "", "service": "mrtripop.aspect.GlobalAspect", "msg": "<< ReconciliationStatusServiceImpl.updateStatus() | 0ms | result=null"}
+{"timestamp": "2026-05-27T00:37:06,645", "level": "DEBUG", "trace_id": "", "span_id": "", "service": "mrtripop.aspect.GlobalAspect", "msg": "<< StockReconciliationServiceImpl.reconcileAll() | 89ms | result=null"}
+{"timestamp": "2026-05-27T00:37:07,121", "level": "DEBUG", "trace_id": "", "span_id": "", "service": "security.web.FilterChainProxy", "msg": "Securing GET /api/v1/inventory/admin/reconcile/status"}
+{"timestamp": "2026-05-27T00:37:07,124", "level": "DEBUG", "trace_id": "", "span_id": "", "service": "web.authentication.AnonymousAuthenticationFilter", "msg": "Set SecurityContextHolder to anonymous SecurityContext"}
+{"timestamp": "2026-05-27T00:37:07,125", "level": "DEBUG", "trace_id": "", "span_id": "", "service": "web.authentication.Http403ForbiddenEntryPoint", "msg": "Pre-authenticated entry point called. Rejecting access"}
+{"timestamp": "2026-05-27T00:37:07,634", "level": "DEBUG", "trace_id": "", "span_id": "", "service": "security.web.FilterChainProxy", "msg": "Securing GET /api/v1/inventory/admin/reconcile/status"}
+{"timestamp": "2026-05-27T00:37:07,634", "level": "DEBUG", "trace_id": "", "span_id": "", "service": "web.authentication.AnonymousAuthenticationFilter", "msg": "Set SecurityContextHolder to anonymous SecurityContext"}
+{"timestamp": "2026-05-27T00:37:07,635", "level": "DEBUG", "trace_id": "", "span_id": "", "service": "web.authentication.Http403ForbiddenEntryPoint", "msg": "Pre-authenticated entry point called. Rejecting access"}
+{"timestamp": "2026-05-27T00:37:08,141", "level": "DEBUG", "trace_id": "", "span_id": "", "service": "security.web.FilterChainProxy", "msg": "Securing GET /api/v1/inventory/admin/reconcile/status"}
+{"timestamp": "2026-05-27T00:37:08,142", "level": "DEBUG", "trace_id": "", "span_id": "", "service": "web.authentication.AnonymousAuthenticationFilter", "msg": "Set SecurityContextHolder to anonymous SecurityContext"}
+{"timestamp": "2026-05-27T00:37:08,142", "level": "DEBUG", "trace_id": "", "span_id": "", "service": "web.authentication.Http403ForbiddenEntryPoint", "msg": "Pre-authenticated entry point called. Rejecting access"}
+{"timestamp": "2026-05-27T00:37:08,651", "level": "DEBUG", "trace_id": "", "span_id": "", "service": "security.web.FilterChainProxy", "msg": "Securing GET /api/v1/inventory/admin/reconcile/status"}
+{"timestamp": "2026-05-27T00:37:08,652", "level": "DEBUG", "trace_id": "", "span_id": "", "service": "web.authentication.AnonymousAuthenticationFilter", "msg": "Set SecurityContextHolder to anonymous SecurityContext"}
+{"timestamp": "2026-05-27T00:37:08,653", "level": "DEBUG", "trace_id": "", "span_id": "", "service": "web.authentication.Http403ForbiddenEntryPoint", "msg": "Pre-authenticated entry point called. Rejecting access"}
+{"timestamp": "2026-05-27T00:37:09,157", "level": "DEBUG", "trace_id": "", "span_id": "", "service": "security.web.FilterChainProxy", "msg": "Securing GET /api/v1/inventory/admin/reconcile/status"}
+{"timestamp": "2026-05-27T00:37:09,158", "level": "DEBUG", "trace_id": "", "span_id": "", "service": "web.authentication.AnonymousAuthenticationFilter", "msg": "Set SecurityContextHolder to anonymous SecurityContext"}
+{"timestamp": "2026-05-27T00:37:09,158", "level": "DEBUG", "trace_id": "", "span_id": "", "service": "web.authentication.Http403ForbiddenEntryPoint", "msg": "Pre-authenticated entry point called. Rejecting access"}
+{"timestamp": "2026-05-27T00:37:09,667", "level": "DEBUG", "trace_id": "", "span_id": "", "service": "security.web.FilterChainProxy", "msg": "Securing GET /api/v1/inventory/admin/reconcile/status"}
+{"timestamp": "2026-05-27T00:37:09,668", "level": "DEBUG", "trace_id": "", "span_id": "", "service": "web.authentication.AnonymousAuthenticationFilter", "msg": "Set SecurityContextHolder to anonymous SecurityContext"}
+{"timestamp": "2026-05-27T00:37:09,669", "level": "DEBUG", "trace_id": "", "span_id": "", "service": "web.authentication.Http403ForbiddenEntryPoint", "msg": "Pre-authenticated entry point called. Rejecting access"}
+{"timestamp": "2026-05-27T00:37:10,174", "level": "DEBUG", "trace_id": "", "span_id": "", "service": "security.web.FilterChainProxy", "msg": "Securing GET /api/v1/inventory/admin/reconcile/status"}
+{"timestamp": "2026-05-27T00:37:10,174", "level": "DEBUG", "trace_id": "", "span_id": "", "service": "web.authentication.AnonymousAuthenticationFilter", "msg": "Set SecurityContextHolder to anonymous SecurityContext"}
+{"timestamp": "2026-05-27T00:37:10,175", "level": "DEBUG", "trace_id": "", "span_id": "", "service": "web.authentication.Http403ForbiddenEntryPoint", "msg": "Pre-authenticated entry point called. Rejecting access"}
+{"timestamp": "2026-05-27T00:37:10,681", "level": "DEBUG", "trace_id": "", "span_id": "", "service": "security.web.FilterChainProxy", "msg": "Securing GET /api/v1/inventory/admin/reconcile/status"}
+{"timestamp": "2026-05-27T00:37:10,681", "level": "DEBUG", "trace_id": "", "span_id": "", "service": "web.authentication.AnonymousAuthenticationFilter", "msg": "Set SecurityContextHolder to anonymous SecurityContext"}
+{"timestamp": "2026-05-27T00:37:10,682", "level": "DEBUG", "trace_id": "", "span_id": "", "service": "web.authentication.Http403ForbiddenEntryPoint", "msg": "Pre-authenticated entry point called. Rejecting access"}
+{"timestamp": "2026-05-27T00:37:11,186", "level": "DEBUG", "trace_id": "", "span_id": "", "service": "security.web.FilterChainProxy", "msg": "Securing GET /api/v1/inventory/admin/reconcile/status"}
+{"timestamp": "2026-05-27T00:37:11,187", "level": "DEBUG", "trace_id": "", "span_id": "", "service": "web.authentication.AnonymousAuthenticationFilter", "msg": "Set SecurityContextHolder to anonymous SecurityContext"}
+{"timestamp": "2026-05-27T00:37:11,187", "level": "DEBUG", "trace_id": "", "span_id": "", "service": "web.authentication.Http403ForbiddenEntryPoint", "msg": "Pre-authenticated entry point called. Rejecting access"}
+{"timestamp": "2026-05-27T00:37:11,696", "level": "DEBUG", "trace_id": "", "span_id": "", "service": "security.web.FilterChainProxy", "msg": "Securing GET /api/v1/inventory/admin/reconcile/status"}
+{"timestamp": "2026-05-27T00:37:11,698", "level": "DEBUG", "trace_id": "", "span_id": "", "service": "web.authentication.AnonymousAuthenticationFilter", "msg": "Set SecurityContextHolder to anonymous SecurityContext"}
+{"timestamp": "2026-05-27T00:37:11,699", "level": "DEBUG", "trace_id": "", "span_id": "", "service": "web.authentication.Http403ForbiddenEntryPoint", "msg": "Pre-authenticated entry point called. Rejecting access"}
+{"timestamp": "2026-05-27T00:37:12,205", "level": "DEBUG", "trace_id": "", "span_id": "", "service": "security.web.FilterChainProxy", "msg": "Securing GET /api/v1/inventory/admin/reconcile/status"}
+{"timestamp": "2026-05-27T00:37:12,205", "level": "DEBUG", "trace_id": "", "span_id": "", "service": "web.authentication.AnonymousAuthenticationFilter", "msg": "Set SecurityContextHolder to anonymous SecurityContext"}
+{"timestamp": "2026-05-27T00:37:12,205", "level": "DEBUG", "trace_id": "", "span_id": "", "service": "web.authentication.Http403ForbiddenEntryPoint", "msg": "Pre-authenticated entry point called. Rejecting access"}
+{"timestamp": "2026-05-27T00:37:12,712", "level": "DEBUG", "trace_id": "", "span_id": "", "service": "security.web.FilterChainProxy", "msg": "Securing GET /api/v1/inventory/admin/reconcile/status"}
+{"timestamp": "2026-05-27T00:37:12,712", "level": "DEBUG", "trace_id": "", "span_id": "", "service": "web.authentication.AnonymousAuthenticationFilter", "msg": "Set SecurityContextHolder to anonymous SecurityContext"}
+{"timestamp": "2026-05-27T00:37:12,713", "level": "DEBUG", "trace_id": "", "span_id": "", "service": "web.authentication.Http403ForbiddenEntryPoint", "msg": "Pre-authenticated entry point called. Rejecting access"}
+{"timestamp": "2026-05-27T00:37:13,221", "level": "DEBUG", "trace_id": "", "span_id": "", "service": "security.web.FilterChainProxy", "msg": "Securing GET /api/v1/inventory/admin/reconcile/status"}
+{"timestamp": "2026-05-27T00:37:13,222", "level": "DEBUG", "trace_id": "", "span_id": "", "service": "web.authentication.AnonymousAuthenticationFilter", "msg": "Set SecurityContextHolder to anonymous SecurityContext"}
+{"timestamp": "2026-05-27T00:37:13,222", "level": "DEBUG", "trace_id": "", "span_id": "", "service": "web.authentication.Http403ForbiddenEntryPoint", "msg": "Pre-authenticated entry point called. Rejecting access"}
+{"timestamp": "2026-05-27T00:37:13,731", "level": "DEBUG", "trace_id": "", "span_id": "", "service": "security.web.FilterChainProxy", "msg": "Securing GET /api/v1/inventory/admin/reconcile/status"}
+{"timestamp": "2026-05-27T00:37:13,733", "level": "DEBUG", "trace_id": "", "span_id": "", "service": "web.authentication.AnonymousAuthenticationFilter", "msg": "Set SecurityContextHolder to anonymous SecurityContext"}
+{"timestamp": "2026-05-27T00:37:13,733", "level": "DEBUG", "trace_id": "", "span_id": "", "service": "web.authentication.Http403ForbiddenEntryPoint", "msg": "Pre-authenticated entry point called. Rejecting access"}
+{"timestamp": "2026-05-27T00:37:14,242", "level": "DEBUG", "trace_id": "", "span_id": "", "service": "security.web.FilterChainProxy", "msg": "Securing GET /api/v1/inventory/admin/reconcile/status"}
+{"timestamp": "2026-05-27T00:37:14,242", "level": "DEBUG", "trace_id": "", "span_id": "", "service": "web.authentication.AnonymousAuthenticationFilter", "msg": "Set SecurityContextHolder to anonymous SecurityContext"}
+{"timestamp": "2026-05-27T00:37:14,243", "level": "DEBUG", "trace_id": "", "span_id": "", "service": "web.authentication.Http403ForbiddenEntryPoint", "msg": "Pre-authenticated entry point called. Rejecting access"}
+{"timestamp": "2026-05-27T00:37:14,750", "level": "DEBUG", "trace_id": "", "span_id": "", "service": "security.web.FilterChainProxy", "msg": "Securing GET /api/v1/inventory/admin/reconcile/status"}
+{"timestamp": "2026-05-27T00:37:14,750", "level": "DEBUG", "trace_id": "", "span_id": "", "service": "web.authentication.AnonymousAuthenticationFilter", "msg": "Set SecurityContextHolder to anonymous SecurityContext"}
+{"timestamp": "2026-05-27T00:37:14,751", "level": "DEBUG", "trace_id": "", "span_id": "", "service": "web.authentication.Http403ForbiddenEntryPoint", "msg": "Pre-authenticated entry point called. Rejecting access"}
+{"timestamp": "2026-05-27T00:37:15,257", "level": "DEBUG", "trace_id": "", "span_id": "", "service": "security.web.FilterChainProxy", "msg": "Securing GET /api/v1/inventory/admin/reconcile/status"}
+{"timestamp": "2026-05-27T00:37:15,258", "level": "DEBUG", "trace_id": "", "span_id": "", "service": "web.authentication.AnonymousAuthenticationFilter", "msg": "Set SecurityContextHolder to anonymous SecurityContext"}
+{"timestamp": "2026-05-27T00:37:15,258", "level": "DEBUG", "trace_id": "", "span_id": "", "service": "web.authentication.Http403ForbiddenEntryPoint", "msg": "Pre-authenticated entry point called. Rejecting access"}
+{"timestamp": "2026-05-27T00:37:15,761", "level": "DEBUG", "trace_id": "", "span_id": "", "service": "security.web.FilterChainProxy", "msg": "Securing GET /api/v1/inventory/admin/reconcile/status"}
+{"timestamp": "2026-05-27T00:37:15,761", "level": "DEBUG", "trace_id": "", "span_id": "", "service": "web.authentication.AnonymousAuthenticationFilter", "msg": "Set SecurityContextHolder to anonymous SecurityContext"}
+{"timestamp": "2026-05-27T00:37:15,761", "level": "DEBUG", "trace_id": "", "span_id": "", "service": "web.authentication.Http403ForbiddenEntryPoint", "msg": "Pre-authenticated entry point called. Rejecting access"}
+{"timestamp": "2026-05-27T00:37:16,269", "level": "DEBUG", "trace_id": "", "span_id": "", "service": "security.web.FilterChainProxy", "msg": "Securing GET /api/v1/inventory/admin/reconcile/status"}
+{"timestamp": "2026-05-27T00:37:16,271", "level": "DEBUG", "trace_id": "", "span_id": "", "service": "web.authentication.AnonymousAuthenticationFilter", "msg": "Set SecurityContextHolder to anonymous SecurityContext"}
+{"timestamp": "2026-05-27T00:37:16,272", "level": "DEBUG", "trace_id": "", "span_id": "", "service": "web.authentication.Http403ForbiddenEntryPoint", "msg": "Pre-authenticated entry point called. Rejecting access"}
+
+MockHttpServletRequest:
+      HTTP Method = POST
+      Request URI = /api/v1/inventory/admin/reconcile
+       Parameters = {}
+          Headers = [Content-Type:"application/json;charset=UTF-8"]
+             Body = null
+    Session Attrs = {}
+
+Handler:
+             Type = com.mrtripop.inventory.controllers.InventoryAdminController
+           Method = com.mrtripop.inventory.controllers.InventoryAdminController#triggerReconciliation()
+
+Async:
+    Async started = false
+     Async result = null
+
+Resolved Exception:
+             Type = null
+
+ModelAndView:
+        View name = null
+             View = null
+            Model = null
+
+FlashMap:
+       Attributes = null
+
+MockHttpServletResponse:
+           Status = 200
+    Error message = null
+          Headers = [Content-Type:"application/json", X-Content-Type-Options:"nosniff", X-XSS-Protection:"0", Cache-Control:"no-cache, no-store, max-age=0, must-revalidate", Pragma:"no-cache", Expires:"0", X-Frame-Options:"DENY"]
+     Content type = application/json
+             Body = {"code":"INV2004","message":"Stock reconciliation triggered successfully"}
+    Forwarded URL = null
+   Redirected URL = null
+          Cookies = []
+
+MockHttpServletRequest:
+      HTTP Method = GET
+      Request URI = /api/v1/inventory/admin/reconcile/status
+       Parameters = {}
+          Headers = []
+             Body = null
+    Session Attrs = {}
+
+Handler:
+             Type = com.mrtripop.inventory.controllers.InventoryAdminController
+           Method = com.mrtripop.inventory.controllers.InventoryAdminController#getReconciliationStatus()
+
+Async:
+    Async started = false
+     Async result = null
+
+Resolved Exception:
+             Type = null
+
+ModelAndView:
+        View name = null
+             View = null
+            Model = null
+
+FlashMap:
+       Attributes = null
+
+MockHttpServletResponse:
+           Status = 200
+    Error message = null
+          Headers = [Content-Type:"application/json", X-Content-Type-Options:"nosniff", X-XSS-Protection:"0", Cache-Control:"no-cache, no-store, max-age=0, must-revalidate", Pragma:"no-cache", Expires:"0", X-Frame-Options:"DENY"]
+     Content type = application/json
+             Body = {"code":"INV2005","message":"Reconciliation status retrieved successfully","data":{"status":"IN_PROGRESS","progress":0,"start_time":"2026-05-26T17:37:06.556947Z","updated_time":"2026-05-26T17:37:06.556947Z"}}
+    Forwarded URL = null
+   Redirected URL = null
+          Cookies = []
+[ERROR] Tests run: 1, Failures: 0, Errors: 1, Skipped: 0, Time elapsed: 15.81 s <<< FAILURE! -- in com.mrtripop.inventory.controllers.InventoryAdminControllerIT
+[ERROR] com.mrtripop.inventory.controllers.InventoryAdminControllerIT.shouldTrackReconciliationProgress -- Time elapsed: 10.31 s <<< ERROR!
+org.awaitility.core.ConditionTimeoutException: Condition with Lambda expression in com.mrtripop.inventory.controllers.InventoryAdminControllerIT was not fulfilled within 10 seconds.
+	at org.awaitility.core.ConditionAwaiter.await(ConditionAwaiter.java:167)
+	at org.awaitility.core.CallableCondition.await(CallableCondition.java:78)
+	at org.awaitility.core.CallableCondition.await(CallableCondition.java:26)
+	at org.awaitility.core.ConditionFactory.until(ConditionFactory.java:1006)
+	at org.awaitility.core.ConditionFactory.until(ConditionFactory.java:975)
+	at com.mrtripop.inventory.controllers.InventoryAdminControllerIT.shouldTrackReconciliationProgress(InventoryAdminControllerIT.java:85)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+
+[INFO] 
+[INFO] Results:
+[INFO] 
+[ERROR] Errors: 
+[ERROR]   InventoryAdminControllerIT.shouldTrackReconciliationProgress:85 » ConditionTimeout Condition with Lambda expression in com.mrtripop.inventory.controllers.InventoryAdminControllerIT was not fulfilled within 10 seconds.
+[INFO] 
+[ERROR] Tests run: 1, Failures: 0, Errors: 1, Skipped: 0
+[INFO] 
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  17.025 s
+[INFO] Finished at: 2026-05-27T00:37:16+07:00
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-surefire-plugin:3.5.2:test (default-test) on project management: 
+[ERROR] 
+[ERROR] See /Users/mrtripop/Documents/programming/backend/spring-boot/stock-management-spring-boot/target/surefire-reports for the individual test results.
+[ERROR] See dump files (if any exist) [date].dump, [date]-jvmRun[N].dump and [date].dumpstream.
+[ERROR] -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException

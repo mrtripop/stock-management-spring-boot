@@ -117,7 +117,7 @@ export const VariantMatrix = {
   render: () => (
     <div className="flex flex-col gap-8">
       <div>
-        <p className="text-[length:var(--text-xs)] text-[var(--color-text-muted)] mb-2">Info variant</p>
+        <p className="text-xs text-[var(--color-text-muted)] mb-2">Info variant</p>
         <ConfirmationDialog
           open
           title="Switch Store"

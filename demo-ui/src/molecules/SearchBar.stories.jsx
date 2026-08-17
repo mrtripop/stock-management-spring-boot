@@ -45,15 +45,15 @@ export const VariantMatrix = {
   render: () => (
     <div className="flex flex-col gap-6 max-w-md">
       <div>
-        <p className="text-[length:var(--text-xs)] text-[var(--color-text-muted)] mb-2">Default (300ms debounce)</p>
+        <p className="text-xs text-[var(--color-text-muted)] mb-2">Default (300ms debounce)</p>
         <SearchBar placeholder="Search products..." onChange={(v) => console.log(v)} />
       </div>
       <div>
-        <p className="text-[length:var(--text-xs)] text-[var(--color-text-muted)] mb-2">With initial value</p>
+        <p className="text-xs text-[var(--color-text-muted)] mb-2">With initial value</p>
         <SearchBar value="Amoxicillin" placeholder="Search..." onChange={(v) => console.log(v)} />
       </div>
       <div>
-        <p className="text-[length:var(--text-xs)] text-[var(--color-text-muted)] mb-2">Custom placeholder</p>
+        <p className="text-xs text-[var(--color-text-muted)] mb-2">Custom placeholder</p>
         <SearchBar placeholder="Search by molecule name..." onChange={(v) => console.log(v)} />
       </div>
     </div>

@@ -99,27 +99,27 @@ export function FileUploader({
         {loading ? (
           <>
             <Spinner size="md" />
-            <span className="text-[length:var(--text-sm)] text-[var(--color-text-secondary)]">Uploading...</span>
+            <span className="text-sm text-[var(--color-text-secondary)]">Uploading...</span>
           </>
         ) : selectedFile && !displayError ? (
           <>
             <Icon name="check" className="w-8 h-8 text-[var(--color-success)]" />
-            <span className="text-[length:var(--text-sm)] font-[var(--font-medium)] text-[var(--color-text-primary)]">
+            <span className="text-sm font-medium text-[var(--color-text-primary)]">
               {selectedFile.name}
             </span>
-            <span className="text-[length:var(--text-xs)] text-[var(--color-text-muted)]">
+            <span className="text-xs text-[var(--color-text-muted)]">
               {formatFileSize(selectedFile.size)}
             </span>
           </>
         ) : (
           <>
             <Icon name="arrow-up-tray" className="w-8 h-8 text-[var(--color-text-muted)]" />
-            <span className="text-[length:var(--text-sm)] text-[var(--color-text-secondary)]">
-              <span className="text-[var(--color-primary)] font-[var(--font-medium)]">Click to upload</span>
+            <span className="text-sm text-[var(--color-text-secondary)]">
+              <span className="text-[var(--color-primary)] font-medium">Click to upload</span>
               {' '}or drag and drop
             </span>
             {accept && (
-              <span className="text-[length:var(--text-xs)] text-[var(--color-text-muted)]">
+              <span className="text-xs text-[var(--color-text-muted)]">
                 Accepted: {accept}
               </span>
             )}
@@ -135,7 +135,7 @@ export function FileUploader({
         aria-label={label}
       />
       {displayError && (
-        <p className="text-[length:var(--text-xs)] text-[var(--color-danger)] mt-1" role="alert">
+        <p className="text-xs text-[var(--color-danger)] mt-1" role="alert">
           {displayError}
         </p>
       )}

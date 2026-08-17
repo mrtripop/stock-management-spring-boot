@@ -8,6 +8,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
@@ -24,7 +25,9 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "molecules")
+@Table(name = "molecules", indexes = {
+    @Index(name = "idx_molecules_generic_name", columnList = "generic_name")
+})
 public class Molecule extends AuditEntity {
   @Id
   @GeneratedValue(strategy = GenerationType.UUID)

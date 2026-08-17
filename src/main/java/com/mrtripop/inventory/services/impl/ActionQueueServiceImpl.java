@@ -7,6 +7,7 @@ import com.mrtripop.clinical.services.AuditService;
 import com.mrtripop.exception.ApplicationException;
 import com.mrtripop.inventory.component.TaskMapper;
 import com.mrtripop.inventory.config.ActionQueueProperties;
+import com.mrtripop.inventory.constant.AuditAction;
 import com.mrtripop.inventory.constant.ErrorCode;
 import com.mrtripop.inventory.models.db.*;
 import com.mrtripop.inventory.models.dto.ActionQueueScanResult;
@@ -15,6 +16,7 @@ import com.mrtripop.inventory.repository.StoreStockRepository;
 import com.mrtripop.inventory.repository.TaskRepository;
 import com.mrtripop.inventory.services.ActionQueueService;
 import jakarta.persistence.OptimisticLockException;
+import java.time.Clock;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -38,6 +40,7 @@ public class ActionQueueServiceImpl implements ActionQueueService {
     private final AuditService auditService;
     private final TaskMapper taskMapper;
     private final ActionQueueProperties properties;
+    private final Clock clock;
 
     private static final List<TaskStatus> ACTIVE_STATUSES = List.of(TaskStatus.PENDING, TaskStatus.ACKNOWLEDGED);
 
@@ -69,7 +72,7 @@ public class ActionQueueServiceImpl implements ActionQueueService {
         }
         task.setStatus(TaskStatus.ACKNOWLEDGED);
         task = saveTaskOrThrowConflict(task);
-        auditService.recordAudit("ACTION_QUEUE_ACKNOWLEDGED", "Task", task.getId().toString(),
+        auditService.recordAudit(AuditAction.ACTION_QUEUE_ACKNOWLEDGED, AuditAction.ENTITY_TASK, task.getId().toString(),
                 TaskStatus.PENDING.name(), TaskStatus.ACKNOWLEDGED.name());
         return taskMapper.toDto(task);
     }
@@ -85,27 +88,30 @@ public class ActionQueueServiceImpl implements ActionQueueService {
         TaskStatus oldStatus = task.getStatus();
         task.setStatus(TaskStatus.RESOLVED);
         task = saveTaskOrThrowConflict(task);
-        auditService.recordAudit("ACTION_QUEUE_RESOLVED", "Task", task.getId().toString(),
+        auditService.recordAudit(AuditAction.ACTION_QUEUE_RESOLVED, AuditAction.ENTITY_TASK, task.getId().toString(),
                 oldStatus.name(), TaskStatus.RESOLVED.name());
         return taskMapper.toDto(task);
     }
 
-    // Per-task transaction: each save runs in its own transaction via auto-commit.
-    // @Transactional is intentionally NOT on scan methods because self-invocation
-    // from runFullScan() bypasses the Spring proxy, making them ineffective.
+    // Scan methods are intentionally NOT @Transactional because each task save should
+    // commit independently — a failure in one task should not roll back previously saved tasks.
+    // The self-invocation from runFullScan() is acceptable since these are read-then-write
+    // operations without transactional consistency requirements across the full scan.
     @Override
+    @Transactional(readOnly = true)
     public ActionQueueScanResult runExpiryScan() {
         int created = 0;
         int updated = 0;
         List<UUID> storeIds = storeStockRepository.findDistinctStoreIds();
-        LocalDate thresholdDate = LocalDate.now().plusDays(properties.getExpiryWarningDays());
+        LocalDate today = LocalDate.now(clock);
+        LocalDate thresholdDate = today.plusDays(properties.getExpiryWarningDays());
 
         for (UUID storeId : storeIds) {
             List<StoreStock> expiringStock = storeStockRepository.findExpiringSoonByStore(storeId, thresholdDate);
             for (StoreStock stock : expiringStock) {
                 Batch batch = stock.getBatch();
                 Brand brand = batch.getBrand();
-                int daysUntilExpiry = (int) ChronoUnit.DAYS.between(LocalDate.now(), batch.getExpiryDate());
+                int daysUntilExpiry = (int) ChronoUnit.DAYS.between(today, batch.getExpiryDate());
                 String message = String.format("Batch %s of %s expires in %d days (%s)",
                         batch.getBatchNumber(), brand.getBrandName(), daysUntilExpiry, batch.getExpiryDate());
 
@@ -115,7 +121,7 @@ public class ActionQueueServiceImpl implements ActionQueueService {
                     task.setDaysUntilExpiry(daysUntilExpiry);
                     task.setMessage(message);
                     taskRepository.save(task);
-                    auditService.recordAudit("ACTION_QUEUE_UPDATED", "Task", task.getId().toString(),
+                    auditService.recordAudit(AuditAction.ACTION_QUEUE_UPDATED, AuditAction.ENTITY_TASK, task.getId().toString(),
                             "daysUntilExpiry", String.valueOf(daysUntilExpiry));
                     updated++;
                 } else {
@@ -129,7 +135,7 @@ public class ActionQueueServiceImpl implements ActionQueueService {
                             .daysUntilExpiry(daysUntilExpiry)
                             .build();
                     taskRepository.save(task);
-                    auditService.recordAudit("ACTION_QUEUE_CREATED", "Task", task.getId().toString(),
+                    auditService.recordAudit(AuditAction.ACTION_QUEUE_CREATED, AuditAction.ENTITY_TASK, task.getId().toString(),
                             null, message);
                     created++;
                 }
@@ -142,6 +148,7 @@ public class ActionQueueServiceImpl implements ActionQueueService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ActionQueueScanResult runReorderScan() {
         int created = 0;
         int updated = 0;
@@ -162,7 +169,7 @@ public class ActionQueueServiceImpl implements ActionQueueService {
                     task.setCurrentQuantity(available);
                     task.setMessage(message);
                     taskRepository.save(task);
-                    auditService.recordAudit("ACTION_QUEUE_UPDATED", "Task", task.getId().toString(),
+                    auditService.recordAudit(AuditAction.ACTION_QUEUE_UPDATED, AuditAction.ENTITY_TASK, task.getId().toString(),
                             "currentQuantity", String.valueOf(available));
                     updated++;
                 } else {
@@ -176,7 +183,7 @@ public class ActionQueueServiceImpl implements ActionQueueService {
                             .thresholdQuantity(sp.getReorderThreshold())
                             .build();
                     taskRepository.save(task);
-                    auditService.recordAudit("ACTION_QUEUE_CREATED", "Task", task.getId().toString(),
+                    auditService.recordAudit(AuditAction.ACTION_QUEUE_CREATED, AuditAction.ENTITY_TASK, task.getId().toString(),
                             null, message);
                     created++;
                 }

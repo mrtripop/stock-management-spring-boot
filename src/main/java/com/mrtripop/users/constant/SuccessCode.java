@@ -14,7 +14,13 @@ public enum SuccessCode implements BaseStatusCode {
   AUTH_CURRENT_USER("USR2005", "Current user retrieved successfully"),
   AUTH_USER_CREATED("USR2006", "User created successfully"),
   AUTH_MFA_REQUIRED("USR2007", "MFA verification required"),
-  AUTH_TOTP_VERIFIED("USR2008", "TOTP verification successful");
+  AUTH_TOTP_VERIFIED("USR2008", "TOTP verification successful"),
+  // User CRUD operations
+  USR2009_GET_ALL_USERS_SUCCESS("USR2009", "Users retrieved successfully"),
+  USR2010_GET_USER_BY_ID_SUCCESS("USR2010", "User retrieved successfully"),
+  USR2011_CREATE_USER_SUCCESS("USR2011", "User created successfully"),
+  USR2012_UPDATE_USER_SUCCESS("USR2012", "User updated successfully"),
+  USR2013_DELETE_USER_SUCCESS("USR2013", "User deleted successfully");
 
   private final String code;
   private final String message;

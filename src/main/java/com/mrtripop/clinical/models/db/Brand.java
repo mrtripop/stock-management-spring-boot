@@ -25,7 +25,10 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "brands", indexes = {@Index(name = "idx_brands_barcode", columnList = "barcode")})
+@Table(name = "brands", indexes = {
+    @Index(name = "idx_brands_barcode", columnList = "barcode"),
+    @Index(name = "idx_brands_molecule_id", columnList = "molecule_id")
+})
 public class Brand extends AuditEntity {
   @Id
   @GeneratedValue(strategy = GenerationType.UUID)

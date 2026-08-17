@@ -1,5 +1,6 @@
 package com.mrtripop.inventory.services;
 
+import com.mrtripop.clinical.models.dto.BrandDto;
 import com.mrtripop.exception.ApplicationException;
 import com.mrtripop.inventory.models.dto.BatchDto;
 import com.mrtripop.inventory.models.dto.StockDeductionRequest;
@@ -22,6 +23,10 @@ public interface BatchService {
   BatchDto getBatchById(Long id) throws ApplicationException;
 
   Page<BatchDto> getBatchesByBrandId(UUID brandId, Pageable pageable);
+
+  Page<BatchDto> getBatches(Pageable pageable);
+
+  BrandDto resolveBarcode(String barcode) throws ApplicationException;
 
   StoreStockDto getStoreStock(UUID storeId, Long batchId) throws ApplicationException;
 

@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useCallback, useEffect, useMemo } from 'react';
 import api from './api';
 
-const AuthContext = createContext(null);
+export const AuthContext = createContext(null);
 
 const TOKEN_KEY = 'jwt_token';
 const STORE_ID_KEY = 'store_id';
@@ -56,10 +56,10 @@ export function AuthProvider({ children }) {
       });
       const payload = res.data;
 
-      if (payload?.mfaRequired || payload?.tempToken) {
+      if (payload?.mfaRequired) {
         setIsMfaRequired(true);
         setTempToken(payload.tempToken);
-        return { mfaRequired: true };
+        return { mfaRequired: true, tempToken: payload.tempToken };
       }
 
       if (payload?.accessToken) {

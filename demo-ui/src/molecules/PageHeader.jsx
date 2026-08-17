@@ -4,7 +4,7 @@ export function PageHeader({ title, subtitle, actions, breadcrumb, className = '
   return (
     <div className={className}>
       {breadcrumb && breadcrumb.length > 0 && (
-        <nav aria-label="Breadcrumb" className="flex items-center gap-1 text-[length:var(--text-xs)] text-[var(--color-text-muted)] mb-2">
+        <nav aria-label="Breadcrumb" className="flex items-center gap-1 text-xs text-[var(--color-text-muted)] mb-2">
           {breadcrumb.map((item, index) => (
             <span key={index} className="contents">
               {index > 0 && (
@@ -18,7 +18,7 @@ export function PageHeader({ title, subtitle, actions, breadcrumb, className = '
                   {item.label}
                 </a>
               ) : (
-                <span className={index === breadcrumb.length - 1 ? 'text-[var(--color-text-primary)] font-[var(--font-medium)]' : ''}>
+                <span className={index === breadcrumb.length - 1 ? 'text-[var(--color-text-primary)] font-medium' : ''}>
                   {item.label}
                 </span>
               )}
@@ -28,11 +28,11 @@ export function PageHeader({ title, subtitle, actions, breadcrumb, className = '
       )}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-[length:var(--text-2xl)] font-[var(--font-semibold)] text-[var(--color-text-primary)]">
+          <h1 className="text-2xl font-semibold text-[var(--color-text-primary)]">
             {title}
           </h1>
           {subtitle && (
-            <p className="text-[length:var(--text-sm)] text-[var(--color-text-secondary)] mt-0.5">
+            <p className="text-sm text-[var(--color-text-secondary)] mt-0.5">
               {subtitle}
             </p>
           )}

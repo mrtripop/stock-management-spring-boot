@@ -28,13 +28,19 @@ function ProtectedRoute({ children }) {
   return children
 }
 
+function PublicRoute({ children }) {
+  const { token } = useAuth()
+  if (token) return <Navigate to="/" />
+  return children
+}
+
 export default function App() {
   return (
     <AuthProvider>
       <QueryClientProvider client={queryClient}>
         <BrowserRouter>
           <Routes>
-            <Route path="/login" element={<Login />} />
+            <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
             <Route path="/" element={<ProtectedRoute><AdminLayout /></ProtectedRoute>}>
               <Route index element={<Dashboard />} />
               <Route path="products" element={<Products />} />

@@ -1,20 +1,27 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { MemoryRouter, Routes, Route } from 'react-router-dom'
 import AdminLayout from './AdminLayout'
+
+const queryClient = new QueryClient({
+  defaultOptions: { queries: { retry: false } },
+})
 
 export default {
   title: 'Templates/AdminLayout',
   component: AdminLayout,
   decorators: [
     (Story) => (
-      <MemoryRouter initialEntries={['/']}>
-        <Routes>
-          <Route element={<Story />}>
-            <Route index element={<DummyPage title="Dashboard" />} />
-            <Route path="products" element={<DummyPage title="Products" />} />
-            <Route path="inventory" element={<DummyPage title="Inventory" />} />
-          </Route>
-        </Routes>
-      </MemoryRouter>
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={['/']}>
+          <Routes>
+            <Route element={<Story />}>
+              <Route index element={<DummyPage title="Dashboard" />} />
+              <Route path="products" element={<DummyPage title="Products" />} />
+              <Route path="inventory" element={<DummyPage title="Inventory" />} />
+            </Route>
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>
     ),
   ],
 }

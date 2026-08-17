@@ -8,6 +8,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import jakarta.persistence.Version;
@@ -27,7 +28,8 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "stores", uniqueConstraints = @UniqueConstraint(name = "stores_name_key", columnNames = "name"))
+@Table(name = "stores", uniqueConstraints = @UniqueConstraint(name = "stores_name_key", columnNames = "name"),
+    indexes = {@Index(name = "idx_stores_name_active", columnList = "name, active")})
 public class Store extends AuditEntity {
   @Id
   @GeneratedValue(strategy = GenerationType.UUID)

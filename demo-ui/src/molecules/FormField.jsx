@@ -10,7 +10,7 @@ export function FormField({ label, error, helperText, required, children, classN
       {label && (
         <label
           htmlFor={childId}
-          className="block text-[length:var(--text-sm)] font-[var(--font-medium)] text-[var(--color-text-secondary)] mb-1"
+          className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1"
         >
           {label}
           {required && <span className="text-[var(--color-danger)] ml-0.5">*</span>}
@@ -18,12 +18,12 @@ export function FormField({ label, error, helperText, required, children, classN
       )}
       {children}
       {error && (
-        <p className="text-[length:var(--text-xs)] text-[var(--color-danger)] mt-1" role="alert">
+        <p className="text-xs text-[var(--color-danger)] mt-1" role="alert">
           {error}
         </p>
       )}
       {helperText && !error && (
-        <p className="text-[length:var(--text-xs)] text-[var(--color-text-muted)] mt-1">
+        <p className="text-xs text-[var(--color-text-muted)] mt-1">
           {helperText}
         </p>
       )}

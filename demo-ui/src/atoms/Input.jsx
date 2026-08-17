@@ -16,7 +16,7 @@ export const Input = forwardRef(function Input(
   return (
     <div className="flex flex-col gap-1">
       {label && (
-        <label className="text-[var(--text-sm)] font-medium text-[var(--color-text-primary)]">
+        <label className="text-sm font-medium text-[var(--color-text-primary)]">
           {label}
         </label>
       )}
@@ -29,7 +29,7 @@ export const Input = forwardRef(function Input(
         <input
           ref={ref}
           disabled={disabled}
-          className={`w-full px-3 py-2 text-[var(--text-sm)] rounded-[var(--radius-md)] border outline-none transition-colors bg-[var(--color-surface)]
+          className={`w-full px-3 py-2 text-sm rounded-[var(--radius-md)] border outline-none transition-colors bg-[var(--color-surface)]
             ${LeftIcon ? 'pl-9' : ''}
             ${RightIcon ? 'pr-9' : ''}
             ${error
@@ -49,12 +49,12 @@ export const Input = forwardRef(function Input(
         )}
       </div>
       {error && (
-        <p id={`${props.id}-error`} className="text-[var(--text-xs)] text-[var(--color-danger)]">
+        <p id={`${props.id}-error`} className="text-xs text-[var(--color-danger)]">
           {error}
         </p>
       )}
       {helperText && !error && (
-        <p id={`${props.id}-helper`} className="text-[var(--text-xs)] text-[var(--color-text-muted)]">
+        <p id={`${props.id}-helper`} className="text-xs text-[var(--color-text-muted)]">
           {helperText}
         </p>
       )}

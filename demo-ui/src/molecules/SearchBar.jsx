@@ -55,7 +55,7 @@ export function SearchBar({ value, onChange, placeholder = 'Search...', debounce
         value={internalValue}
         onChange={handleChange}
         placeholder={placeholder}
-        className="w-full pl-9 pr-8 py-2 text-[length:var(--text-sm)] rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text-primary)] outline-none transition-colors focus:border-[var(--color-border-focus)] focus:ring-2 focus:ring-[var(--color-primary)]/20 placeholder:text-[var(--color-text-muted)]"
+        className="w-full pl-9 pr-8 py-2 text-sm rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text-primary)] outline-none transition-colors focus:border-[var(--color-border-focus)] focus:ring-2 focus:ring-[var(--color-primary)]/20 placeholder:text-[var(--color-text-muted)]"
       />
       {showClear && (
         <button
