@@ -1,6 +1,6 @@
 # Design Tokens Guide
 
-**Updated:** 2026-05-30
+**Updated:** 2026-05-30 (Revised)
 
 ## Overview
 
