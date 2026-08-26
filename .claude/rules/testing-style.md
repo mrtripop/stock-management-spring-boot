@@ -3,7 +3,7 @@ paths:
   - "src/test/**/*.java"
 ---
 
-# Testing Standards
+# Testing Style
 
 ## Test Naming
 
@@ -67,10 +67,6 @@ void shouldSaveAndReturnDto() {
 ## Test Data Creation (Fixture Pattern)
 
 Use `Object Mother` or `Fixture patterns` to create test data. Do not build DTOs/entities inline in test methods. Centralize test data creation in a fixture class per domain.
-
-### Rules
-
-- All hardcode code MUST be constant for build DTOs/entities and reusable in actual test method with hardcode.
 
 Define shared expected values as constants in the fixture. Factory methods and assertions must reference the same constants — never hardcode literals in both places.
 
