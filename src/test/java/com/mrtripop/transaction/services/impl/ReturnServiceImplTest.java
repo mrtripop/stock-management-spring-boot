@@ -14,8 +14,10 @@ import com.mrtripop.transaction.fixture.ReturnFixture;
 import com.mrtripop.transaction.models.db.Invoice;
 import com.mrtripop.transaction.models.db.InvoiceItem;
 import com.mrtripop.transaction.models.db.Return;
+import com.mrtripop.transaction.models.db.ReturnItem;
 import com.mrtripop.transaction.models.dto.CreateReturnRequest;
 import com.mrtripop.transaction.models.dto.ReturnDto;
+import com.mrtripop.transaction.models.dto.ReturnItemDto;
 import com.mrtripop.transaction.models.dto.ReturnItemRequest;
 import com.mrtripop.transaction.repository.InvoiceItemRepository;
 import com.mrtripop.transaction.repository.InvoiceRepository;
@@ -376,6 +378,70 @@ class ReturnServiceImplTest {
           ex.getErrorCode());
       verify(returnRepository, never()).save(any());
       verify(invoiceRepository, never()).save(any());
+    }
+  }
+
+  @Nested
+  @DisplayName("FindReturn")
+  class FindReturn {
+
+    @Test
+    @DisplayName("should return a return by ID with its items")
+    void shouldReturnById() throws ApplicationException {
+      // Arrange
+      Invoice invoice = InvoiceFixture.completedInvoice();
+      Return foundReturn = ReturnFixture.validReturn(invoice);
+      InvoiceItem invoiceItem = InvoiceFixture.validInvoiceItem(invoice);
+      ReturnItem item = ReturnFixture.validReturnItem(foundReturn, invoiceItem);
+      ReturnDto dto = ReturnDto.builder().id(1L).build();
+      ReturnItemDto itemDto = ReturnItemDto.builder().id(1L).build();
+
+      when(returnRepository.findById(1L)).thenReturn(Optional.of(foundReturn));
+      when(returnItemRepository.findByParentReturnId(1L)).thenReturn(List.of(item));
+      when(returnMapper.toDto(foundReturn)).thenReturn(dto);
+      when(returnMapper.toItemDtoList(List.of(item))).thenReturn(List.of(itemDto));
+
+      // Act
+      ReturnDto result = returnService.findById(1L);
+
+      // Assert
+      assertNotNull(result);
+      assertNotNull(result.getItems());
+      assertEquals(1, result.getItems().size());
+    }
+
+    @Test
+    @DisplayName("should throw TXN4015 when return not found")
+    void shouldThrowReturnNotFound() {
+      // Arrange
+      when(returnRepository.findById(1L)).thenReturn(Optional.empty());
+
+      // Act & Assert
+      ApplicationException ex =
+          assertThrows(ApplicationException.class, () -> returnService.findById(1L));
+      assertEquals(ErrorCode.RETURN_NOT_FOUND, ex.getErrorCode());
+    }
+
+    @Test
+    @DisplayName("should return a paginated list of returns for an invoice")
+    void shouldReturnPaginatedListByInvoice() throws ApplicationException {
+      // Arrange
+      Invoice invoice = InvoiceFixture.completedInvoice();
+      Return foundReturn = ReturnFixture.validReturn(invoice);
+      org.springframework.data.domain.Page<Return> page =
+          new org.springframework.data.domain.PageImpl<>(List.of(foundReturn));
+      ReturnDto dto = ReturnDto.builder().id(1L).build();
+
+      when(returnRepository.findByInvoiceId(eq(1L), any(org.springframework.data.domain.Pageable.class)))
+          .thenReturn(page);
+      when(returnMapper.toDto(foundReturn)).thenReturn(dto);
+
+      // Act
+      org.springframework.data.domain.Page<ReturnDto> result =
+          returnService.findByInvoiceId(1L, org.springframework.data.domain.Pageable.unpaged());
+
+      // Assert
+      assertEquals(1, result.getTotalElements());
     }
   }
 }

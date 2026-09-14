@@ -127,13 +127,21 @@ public class ReturnServiceImpl implements ReturnService {
   }
 
   @Override
+  @Transactional(readOnly = true)
   public ReturnDto findById(Long id) throws ApplicationException {
-    throw new UnsupportedOperationException("not yet implemented");
+    Return foundReturn = returnRepository.findById(id)
+        .orElseThrow(() -> new ApplicationException(ErrorCode.RETURN_NOT_FOUND, HttpStatus.NOT_FOUND));
+
+    List<ReturnItem> items = returnItemRepository.findByParentReturnId(id);
+    ReturnDto dto = returnMapper.toDto(foundReturn);
+    dto.setItems(returnMapper.toItemDtoList(items));
+    return dto;
   }
 
   @Override
+  @Transactional(readOnly = true)
   public Page<ReturnDto> findByInvoiceId(Long invoiceId, Pageable pageable)
       throws ApplicationException {
-    throw new UnsupportedOperationException("not yet implemented");
+    return returnRepository.findByInvoiceId(invoiceId, pageable).map(returnMapper::toDto);
   }
 }
