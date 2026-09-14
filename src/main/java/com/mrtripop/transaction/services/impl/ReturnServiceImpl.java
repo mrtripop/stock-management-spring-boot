@@ -21,7 +21,9 @@ import com.mrtripop.transaction.services.ReturnService;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -58,6 +60,7 @@ public class ReturnServiceImpl implements ReturnService {
     BigDecimal totalRefundAmount = BigDecimal.ZERO;
     BigDecimal totalRefundPatientOwed = BigDecimal.ZERO;
     BigDecimal totalRefundInsuranceClaim = BigDecimal.ZERO;
+    Map<Long, Long> claimedQuantityByInvoiceItemId = new HashMap<>();
 
     for (ReturnItemRequest itemRequest : request.getItems()) {
       InvoiceItem invoiceItem = invoiceItemRepository.findById(itemRequest.getInvoiceItemId())
@@ -70,20 +73,22 @@ public class ReturnServiceImpl implements ReturnService {
 
       Long alreadyReturned =
           returnItemRepository.sumQuantityByInvoiceItemId(invoiceItem.getId());
-      long remaining = invoiceItem.getQuantity() - alreadyReturned;
+      long claimedInThisRequest =
+          claimedQuantityByInvoiceItemId.getOrDefault(invoiceItem.getId(), 0L);
+      long remaining = invoiceItem.getQuantity() - alreadyReturned - claimedInThisRequest;
       if (itemRequest.getQuantity() > remaining) {
         throw new ApplicationException(
             ErrorCode.RETURN_QUANTITY_EXCEEDS_AVAILABLE, HttpStatus.BAD_REQUEST);
       }
+      claimedQuantityByInvoiceItemId.merge(
+          invoiceItem.getId(), itemRequest.getQuantity(), Long::sum);
 
       BigDecimal lineRefundAmount =
           invoiceItem.getUnitPrice().multiply(BigDecimal.valueOf(itemRequest.getQuantity()));
-      BigDecimal lineRefundPatientOwed = invoiceItem.getPatientOwed()
-          .multiply(BigDecimal.valueOf(itemRequest.getQuantity()))
-          .divide(BigDecimal.valueOf(invoiceItem.getQuantity()), 2, RoundingMode.HALF_UP);
       BigDecimal lineRefundInsuranceClaim = invoiceItem.getInsuranceClaimAmount()
           .multiply(BigDecimal.valueOf(itemRequest.getQuantity()))
           .divide(BigDecimal.valueOf(invoiceItem.getQuantity()), 2, RoundingMode.HALF_UP);
+      BigDecimal lineRefundPatientOwed = lineRefundAmount.subtract(lineRefundInsuranceClaim);
 
       batchService.restoreStock(
           invoice.getStore().getId(), invoiceItem.getBatch().getId(), itemRequest.getQuantity());

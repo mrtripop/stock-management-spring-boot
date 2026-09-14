@@ -92,6 +92,11 @@ class ReturnServiceImplTest {
                   .compareTo(ReturnFixture.EXPECTED_NEW_INSURANCE_CLAIM) == 0));
       verify(auditService).recordAudit(
           eq("RETURN"), eq("Invoice"), eq("1"), anyString(), anyString());
+      verify(returnItemRepository).saveAll(argThat((List<ReturnItem> items) ->
+          items.size() == 1
+              && items.get(0).getQuantity().equals(ReturnFixture.RETURN_QUANTITY)
+              && items.get(0).getRefundAmount()
+                  .compareTo(ReturnFixture.EXPECTED_REFUND_AMOUNT) == 0));
     }
 
     @Test
@@ -263,6 +268,38 @@ class ReturnServiceImplTest {
     }
 
     @Test
+    @DisplayName(
+        "should reject duplicate invoice item lines in one request that together exceed the available quantity")
+    void shouldRejectDuplicateLinesExceedingAvailableQuantity() throws ApplicationException {
+      // Arrange — 5 available, two lines of 3 each for the same invoice item (6 total > 5)
+      Invoice invoice = InvoiceFixture.completedInvoice();
+      InvoiceItem invoiceItem = InvoiceFixture.validInvoiceItem(invoice);
+      ReturnItemRequest firstLine = ReturnItemRequest.builder()
+          .invoiceItemId(invoiceItem.getId())
+          .quantity(3L)
+          .build();
+      ReturnItemRequest secondLine = ReturnItemRequest.builder()
+          .invoiceItemId(invoiceItem.getId())
+          .quantity(3L)
+          .build();
+      CreateReturnRequest request = CreateReturnRequest.builder()
+          .reason(com.mrtripop.transaction.models.db.ReturnReason.OTHER)
+          .items(List.of(firstLine, secondLine))
+          .build();
+
+      when(invoiceRepository.findById(1L)).thenReturn(Optional.of(invoice));
+      when(invoiceItemRepository.findById(invoiceItem.getId())).thenReturn(Optional.of(invoiceItem));
+      when(returnItemRepository.sumQuantityByInvoiceItemId(invoiceItem.getId())).thenReturn(0L);
+
+      // Act & Assert
+      ApplicationException ex =
+          assertThrows(ApplicationException.class, () -> returnService.createReturn(1L, request));
+      assertEquals(ErrorCode.RETURN_QUANTITY_EXCEEDS_AVAILABLE, ex.getErrorCode());
+      verify(batchService, times(1)).restoreStock(any(), any(), any());
+      verify(returnRepository, never()).save(any());
+    }
+
+    @Test
     @DisplayName("should restock and refund two lines in a single request")
     void shouldCreateReturnForMultipleLines() throws ApplicationException {
       // Arrange
@@ -352,6 +389,64 @@ class ReturnServiceImplTest {
         return inv.getTotalAmount().compareTo(expectedTotal) == 0
             && inv.getPatientOwed().compareTo(expectedPatientOwed) == 0
             && inv.getInsuranceClaimAmount().compareTo(expectedInsurance) == 0;
+      }));
+    }
+
+    @Test
+    @DisplayName(
+        "should derive the patient-owed refund from the insurance-claim refund so both splits "
+            + "always sum to the exact line refund amount")
+    void shouldKeepRefundSplitConsistentAtExactHalfwayRounding() throws ApplicationException {
+      // Arrange — patient/insurance splits (2.925 / 1.575) both sit exactly at the HALF_UP
+      // rounding boundary, so independently rounding each would sum to one cent too much.
+      Invoice invoice = InvoiceFixture.completedInvoice();
+      InvoiceItem invoiceItem = ReturnFixture.invoiceItemForExactHalfwaySplit(invoice);
+      ReturnItemRequest itemRequest = ReturnItemRequest.builder()
+          .invoiceItemId(invoiceItem.getId())
+          .quantity(ReturnFixture.EXACT_HALFWAY_RETURN_QUANTITY)
+          .build();
+      CreateReturnRequest request = CreateReturnRequest.builder()
+          .reason(com.mrtripop.transaction.models.db.ReturnReason.OTHER)
+          .items(List.of(itemRequest))
+          .build();
+      Return savedReturn = ReturnFixture.validReturn(invoice);
+
+      when(invoiceRepository.findById(1L)).thenReturn(Optional.of(invoice));
+      when(invoiceItemRepository.findById(invoiceItem.getId())).thenReturn(Optional.of(invoiceItem));
+      when(returnItemRepository.sumQuantityByInvoiceItemId(invoiceItem.getId())).thenReturn(0L);
+      when(returnRepository.save(any(Return.class))).thenReturn(savedReturn);
+      when(returnItemRepository.saveAll(anyList())).thenAnswer(inv -> inv.getArgument(0));
+      when(invoiceRepository.save(any(Invoice.class))).thenAnswer(inv -> inv.getArgument(0));
+      when(returnMapper.toDto(any(Return.class)))
+          .thenReturn(ReturnDto.builder().id(1L).build());
+      when(returnMapper.toItemDtoList(anyList())).thenReturn(List.of());
+
+      // createReturn mutates this same Invoice instance in place, so the original
+      // amounts must be captured before Act.
+      BigDecimal originalPatientOwed = invoice.getPatientOwed();
+      BigDecimal originalInsuranceClaim = invoice.getInsuranceClaimAmount();
+
+      // Act
+      returnService.createReturn(1L, request);
+
+      // Assert
+      assertEquals(0, ReturnFixture.EXPECTED_EXACT_HALFWAY_PATIENT_OWED
+          .add(ReturnFixture.EXPECTED_EXACT_HALFWAY_INSURANCE_CLAIM)
+          .compareTo(ReturnFixture.EXPECTED_EXACT_HALFWAY_REFUND_AMOUNT));
+      verify(returnItemRepository).saveAll(argThat((List<ReturnItem> items) ->
+          items.size() == 1
+              && items.get(0).getQuantity().equals(ReturnFixture.EXACT_HALFWAY_RETURN_QUANTITY)
+              && items.get(0).getRefundAmount()
+                  .compareTo(ReturnFixture.EXPECTED_EXACT_HALFWAY_REFUND_AMOUNT) == 0));
+      verify(invoiceRepository).save(argThat(inv -> {
+        BigDecimal expectedPatientOwed = originalPatientOwed
+            .subtract(ReturnFixture.EXPECTED_EXACT_HALFWAY_PATIENT_OWED);
+        BigDecimal expectedInsuranceClaim = originalInsuranceClaim
+            .subtract(ReturnFixture.EXPECTED_EXACT_HALFWAY_INSURANCE_CLAIM);
+        return inv.getPatientOwed().compareTo(expectedPatientOwed) == 0
+            && inv.getInsuranceClaimAmount().compareTo(expectedInsuranceClaim) == 0
+            && inv.getTotalAmount()
+                .compareTo(inv.getPatientOwed().add(inv.getInsuranceClaimAmount())) == 0;
       }));
     }
 
