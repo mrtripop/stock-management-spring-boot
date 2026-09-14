@@ -9,6 +9,7 @@ import com.mrtripop.clinical.models.db.StoreType;
 import com.mrtripop.clinical.repository.BrandRepository;
 import com.mrtripop.clinical.repository.MoleculeRepository;
 import com.mrtripop.clinical.repository.StoreRepository;
+import com.mrtripop.inventory.fixture.BrandSubstituteFixture;
 import com.mrtripop.inventory.models.db.Batch;
 import com.mrtripop.inventory.models.db.BatchStatus;
 import com.mrtripop.inventory.models.db.StoreStock;
@@ -454,6 +455,239 @@ class StoreStockRepositoryIT {
       StoreStock unchangedStock =
           storeStockRepository.findById(stock.getId()).orElseThrow();
       assertEquals(10L, unchangedStock.getQuantity());
+    }
+  }
+
+  @Nested
+  @DisplayName("findAvailableSubstituteStock")
+  class FindAvailableSubstituteStock {
+
+    private Molecule paracetamol;
+    private Brand requestedBrand;
+    private Brand panadol;
+
+    @BeforeEach
+    void setUpEquivalentBrands() {
+      paracetamol = brand.getMolecule();
+      requestedBrand =
+          brandRepository.save(
+              BrandSubstituteFixture.newBrand(
+                  paracetamol,
+                  BrandSubstituteFixture.REQUESTED_BRAND_NAME,
+                  BrandSubstituteFixture.STRENGTH,
+                  BrandSubstituteFixture.FORM));
+      panadol =
+          brandRepository.save(
+              BrandSubstituteFixture.newBrand(
+                  paracetamol,
+                  BrandSubstituteFixture.PANADOL_BRAND_NAME,
+                  BrandSubstituteFixture.STRENGTH,
+                  BrandSubstituteFixture.FORM));
+    }
+
+    @Test
+    @DisplayName("should return stock of equivalent brands ordered by nearest expiry first")
+    void shouldReturnEquivalentStockOrderedByNearestExpiry() {
+      // Arrange
+      Brand calpol =
+          brandRepository.save(
+              BrandSubstituteFixture.newBrand(
+                  paracetamol,
+                  BrandSubstituteFixture.CALPOL_BRAND_NAME,
+                  BrandSubstituteFixture.STRENGTH,
+                  BrandSubstituteFixture.FORM));
+      saveStock(
+          store, panadol, BrandSubstituteFixture.FAR_BATCH_NUMBER,
+          BrandSubstituteFixture.farExpiryDate(), BatchStatus.AVAILABLE);
+      saveStock(
+          store, calpol, BrandSubstituteFixture.MID_BATCH_NUMBER,
+          BrandSubstituteFixture.midExpiryDate(), BatchStatus.AVAILABLE);
+      saveStock(
+          store, panadol, BrandSubstituteFixture.NEAR_BATCH_NUMBER,
+          BrandSubstituteFixture.nearExpiryDate(), BatchStatus.AVAILABLE);
+
+      // Act
+      List<StoreStock> result = findEquivalentStock(BrandSubstituteFixture.STRENGTH);
+
+      // Assert
+      assertEquals(
+          List.of(
+              BrandSubstituteFixture.NEAR_BATCH_NUMBER,
+              BrandSubstituteFixture.MID_BATCH_NUMBER,
+              BrandSubstituteFixture.FAR_BATCH_NUMBER),
+          result.stream().map(stock -> stock.getBatch().getBatchNumber()).toList());
+    }
+
+    @Test
+    @DisplayName("should not suggest the requested brand as its own substitute")
+    void shouldExcludeRequestedBrand() {
+      // Arrange
+      saveStock(
+          store, requestedBrand, BrandSubstituteFixture.NEAR_BATCH_NUMBER,
+          BrandSubstituteFixture.nearExpiryDate(), BatchStatus.AVAILABLE);
+      saveStock(
+          store, panadol, BrandSubstituteFixture.FAR_BATCH_NUMBER,
+          BrandSubstituteFixture.farExpiryDate(), BatchStatus.AVAILABLE);
+
+      // Act
+      List<StoreStock> result = findEquivalentStock(BrandSubstituteFixture.STRENGTH);
+
+      // Assert
+      assertEquals(1, result.size());
+      assertEquals(panadol.getId(), result.get(0).getBatch().getBrand().getId());
+    }
+
+    @Test
+    @DisplayName("should not suggest a brand with a different strength")
+    void shouldExcludeDifferentStrength() {
+      // Arrange
+      Brand weakerBrand =
+          brandRepository.save(
+              BrandSubstituteFixture.newBrand(
+                  paracetamol,
+                  BrandSubstituteFixture.CALPOL_BRAND_NAME,
+                  BrandSubstituteFixture.OTHER_STRENGTH,
+                  BrandSubstituteFixture.FORM));
+      saveStock(
+          store, weakerBrand, BrandSubstituteFixture.NEAR_BATCH_NUMBER,
+          BrandSubstituteFixture.nearExpiryDate(), BatchStatus.AVAILABLE);
+
+      // Act
+      List<StoreStock> result = findEquivalentStock(BrandSubstituteFixture.STRENGTH);
+
+      // Assert
+      assertTrue(result.isEmpty());
+    }
+
+    @Test
+    @DisplayName("should not suggest a brand with a different dosage form")
+    void shouldExcludeDifferentForm() {
+      // Arrange
+      Brand syrupBrand =
+          brandRepository.save(
+              BrandSubstituteFixture.newBrand(
+                  paracetamol,
+                  BrandSubstituteFixture.CALPOL_BRAND_NAME,
+                  BrandSubstituteFixture.STRENGTH,
+                  BrandSubstituteFixture.OTHER_FORM));
+      saveStock(
+          store, syrupBrand, BrandSubstituteFixture.NEAR_BATCH_NUMBER,
+          BrandSubstituteFixture.nearExpiryDate(), BatchStatus.AVAILABLE);
+
+      // Act
+      List<StoreStock> result = findEquivalentStock(BrandSubstituteFixture.STRENGTH);
+
+      // Assert
+      assertTrue(result.isEmpty());
+    }
+
+    @Test
+    @DisplayName("should not suggest a same-strength, same-form brand of another molecule")
+    void shouldExcludeDifferentMolecule() {
+      // Arrange
+      Molecule ibuprofen =
+          moleculeRepository.save(
+              BrandSubstituteFixture.newMolecule(BrandSubstituteFixture.OTHER_GENERIC_NAME));
+      Brand otherMoleculeBrand =
+          brandRepository.save(
+              BrandSubstituteFixture.newBrand(
+                  ibuprofen,
+                  BrandSubstituteFixture.CALPOL_BRAND_NAME,
+                  BrandSubstituteFixture.STRENGTH,
+                  BrandSubstituteFixture.FORM));
+      saveStock(
+          store, otherMoleculeBrand, BrandSubstituteFixture.NEAR_BATCH_NUMBER,
+          BrandSubstituteFixture.nearExpiryDate(), BatchStatus.AVAILABLE);
+
+      // Act
+      List<StoreStock> result = findEquivalentStock(BrandSubstituteFixture.STRENGTH);
+
+      // Assert
+      assertTrue(result.isEmpty());
+    }
+
+    @Test
+    @DisplayName("should match strength and form regardless of letter case")
+    void shouldMatchStrengthIgnoringCase() {
+      // Arrange
+      saveStock(
+          store, panadol, BrandSubstituteFixture.NEAR_BATCH_NUMBER,
+          BrandSubstituteFixture.nearExpiryDate(), BatchStatus.AVAILABLE);
+
+      // Act
+      List<StoreStock> result =
+          findEquivalentStock(BrandSubstituteFixture.STRENGTH_DIFFERENT_CASE);
+
+      // Assert
+      assertEquals(1, result.size());
+    }
+
+    @Test
+    @DisplayName("should not suggest stock held by another store")
+    void shouldExcludeOtherStoreStock() {
+      // Arrange
+      Store otherStore =
+          storeRepository.save(
+              BrandSubstituteFixture.newStore(BrandSubstituteFixture.OTHER_STORE_NAME));
+      saveStock(
+          otherStore, panadol, BrandSubstituteFixture.NEAR_BATCH_NUMBER,
+          BrandSubstituteFixture.nearExpiryDate(), BatchStatus.AVAILABLE);
+
+      // Act
+      List<StoreStock> result = findEquivalentStock(BrandSubstituteFixture.STRENGTH);
+
+      // Assert
+      assertTrue(result.isEmpty());
+    }
+
+    @Test
+    @DisplayName("should not suggest expired, recalled, quarantined or empty stock")
+    void shouldExcludeStockThatCannotBeDispensed() {
+      // Arrange
+      saveStock(
+          store, panadol, BrandSubstituteFixture.NEAR_BATCH_NUMBER,
+          BrandSubstituteFixture.pastExpiryDate(), BatchStatus.AVAILABLE);
+      saveStock(
+          store, panadol, BrandSubstituteFixture.MID_BATCH_NUMBER,
+          BrandSubstituteFixture.midExpiryDate(), BatchStatus.RECALLED);
+      saveStock(
+          store, panadol, BrandSubstituteFixture.FAR_BATCH_NUMBER,
+          BrandSubstituteFixture.farExpiryDate(), BatchStatus.QUARANTINED);
+      Batch emptyBatch =
+          batchRepository.save(
+              BrandSubstituteFixture.newBatch(
+                  panadol, BrandSubstituteFixture.EMPTY_BATCH_NUMBER,
+                  BrandSubstituteFixture.farExpiryDate(), BatchStatus.AVAILABLE));
+      storeStockRepository.save(BrandSubstituteFixture.newStoreStock(store, emptyBatch, 0L));
+
+      // Act
+      List<StoreStock> result = findEquivalentStock(BrandSubstituteFixture.STRENGTH);
+
+      // Assert
+      assertTrue(result.isEmpty());
+    }
+
+    private List<StoreStock> findEquivalentStock(String strength) {
+      return storeStockRepository.findAvailableSubstituteStock(
+          store.getId(),
+          paracetamol.getId(),
+          strength,
+          BrandSubstituteFixture.FORM,
+          requestedBrand.getId());
+    }
+
+    private void saveStock(
+        Store targetStore,
+        Brand stockBrand,
+        String batchNumber,
+        LocalDate expiryDate,
+        BatchStatus status) {
+      Batch savedBatch =
+          batchRepository.save(
+              BrandSubstituteFixture.newBatch(stockBrand, batchNumber, expiryDate, status));
+      storeStockRepository.save(
+          BrandSubstituteFixture.newStoreStock(
+              targetStore, savedBatch, BrandSubstituteFixture.PANADOL_NEAR_QUANTITY));
     }
   }
 
