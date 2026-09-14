@@ -30,7 +30,8 @@ public enum ErrorCode implements BaseStatusCode {
   BATCH_ALREADY_RECALLED("INV4021", "Batch is already recalled"),
   BATCH_ALREADY_QUARANTINED("INV4022", "Batch is already quarantined"),
   STOCK_NOT_FOUND_FOR_BATCH("INV4023", "Store stock not found for the specified batch"),
-  INSUFFICIENT_BATCH_QUANTITY("INV4024", "Insufficient quantity in batch for deduction");
+  INSUFFICIENT_BATCH_QUANTITY("INV4024", "Insufficient quantity in batch for deduction"),
+  BRAND_NOT_FOUND("INV4025", "Brand not found");
 
   private final String code;
   private final String message;

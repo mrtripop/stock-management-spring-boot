@@ -35,6 +35,28 @@ public interface StoreStockRepository extends JpaRepository<StoreStock, Long> {
   List<StoreStock> findAvailableStockByStoreIdAndBrandIdOrderByExpiryDate(
       @Param("storeId") UUID storeId, @Param("brandId") UUID brandId);
 
+  @Query(
+      """
+      SELECT ss FROM StoreStock ss
+      JOIN FETCH ss.batch b
+      JOIN FETCH b.brand br
+      WHERE ss.store.id = :storeId
+      AND br.molecule.id = :moleculeId
+      AND br.id <> :excludedBrandId
+      AND LOWER(br.strength) = LOWER(:strength)
+      AND LOWER(br.form) = LOWER(:form)
+      AND b.status = 'AVAILABLE'
+      AND b.expiryDate > CURRENT_DATE
+      AND ss.quantity > 0
+      ORDER BY b.expiryDate ASC, br.brandName ASC
+      """)
+  List<StoreStock> findAvailableSubstituteStock(
+      @Param("storeId") UUID storeId,
+      @Param("moleculeId") UUID moleculeId,
+      @Param("strength") String strength,
+      @Param("form") String form,
+      @Param("excludedBrandId") UUID excludedBrandId);
+
   @Modifying
   @Query("UPDATE StoreStock ss SET ss.quantity = ss.quantity - :amount "
       + "WHERE ss.id = :id AND ss.quantity >= :amount")

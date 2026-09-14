@@ -4,10 +4,13 @@ import com.mrtripop.clinical.component.ClinicalMapper;
 import com.mrtripop.clinical.models.db.Brand;
 import com.mrtripop.clinical.models.dto.BrandDto;
 import com.mrtripop.clinical.repository.BrandRepository;
+import com.mrtripop.constant.BaseStatusCode;
 import com.mrtripop.exception.ApplicationException;
 import com.mrtripop.inventory.component.BatchMapper;
 import com.mrtripop.inventory.constant.ErrorCode;
+import com.mrtripop.inventory.constant.SuccessCode;
 import com.mrtripop.inventory.models.dto.BatchDto;
+import com.mrtripop.inventory.models.dto.BrandSubstituteDto;
 import com.mrtripop.inventory.models.dto.StockDeductionRequest;
 import com.mrtripop.inventory.models.dto.StockDeductionResponseDto;
 import com.mrtripop.inventory.models.dto.StockEntryRequest;
@@ -15,9 +18,11 @@ import com.mrtripop.inventory.models.dto.StockEntryResponseDto;
 import com.mrtripop.inventory.models.dto.StoreStockDto;
 import com.mrtripop.inventory.repository.BatchRepository;
 import com.mrtripop.inventory.services.BatchService;
+import com.mrtripop.inventory.services.BrandSubstituteService;
 import com.mrtripop.model.BaseQueryParams;
 import com.mrtripop.model.ResponseBody;
 import jakarta.validation.Valid;
+import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -43,6 +48,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class BatchController {
 
   private final BatchService batchService;
+  private final BrandSubstituteService brandSubstituteService;
   private final BatchRepository batchRepository;
   private final BatchMapper batchMapper;
   private final BrandRepository brandRepository;
@@ -120,6 +126,19 @@ public class BatchController {
     return ResponseBody.builder()
         .code("STORE_STOCK_FOUND")
         .message("Store stock retrieved successfully")
+        .data(result)
+        .build()
+        .toResponseEntity(HttpStatus.OK);
+  }
+
+  @GetMapping("/stores/{storeId}/brands/{brandId}/substitutes")
+  public ResponseEntity<Object> getBrandSubstitutes(
+      @PathVariable UUID storeId, @PathVariable UUID brandId) throws ApplicationException {
+    List<BrandSubstituteDto> result = brandSubstituteService.findSubstitutes(storeId, brandId);
+    BaseStatusCode success = SuccessCode.INV2005_GET_BRAND_SUBSTITUTES_IS_SUCCESS;
+    return ResponseBody.builder()
+        .code(success.getCode())
+        .message(success.getMessage())
         .data(result)
         .build()
         .toResponseEntity(HttpStatus.OK);

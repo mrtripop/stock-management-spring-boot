@@ -9,7 +9,10 @@ import com.mrtripop.clinical.models.db.RegulatorySchedule;
 import com.mrtripop.clinical.models.db.Store;
 import com.mrtripop.clinical.models.db.StoreProduct;
 import com.mrtripop.clinical.models.db.StoreType;
+import com.mrtripop.inventory.fixture.BrandSubstituteFixture;
 import java.math.BigDecimal;
+import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -339,6 +342,84 @@ class StoreProductRepositoryIT {
 
       assertEquals(2, result.getContent().size());
       assertTrue(result.getContent().stream().allMatch(sp -> sp.getIsActive()));
+    }
+  }
+
+  @Nested
+  @DisplayName("findByStoreIdAndBrandIdInAndIsActiveTrueAndPriceIsNotNull")
+  class FindSellableProductsByBrandIds {
+
+    @BeforeEach
+    void setup() {
+      setupTestData();
+    }
+
+    @Test
+    @DisplayName("should return only requested brands the store has activated with a price")
+    void shouldReturnOnlyActivePricedProductsForRequestedBrands() {
+      // Arrange
+      Brand inactiveBrand =
+          brandRepository.save(
+              BrandSubstituteFixture.newBrand(
+                  molecule,
+                  BrandSubstituteFixture.PANADOL_BRAND_NAME,
+                  BrandSubstituteFixture.STRENGTH,
+                  BrandSubstituteFixture.FORM));
+      Brand unpricedBrand =
+          brandRepository.save(
+              BrandSubstituteFixture.newBrand(
+                  molecule,
+                  BrandSubstituteFixture.CALPOL_BRAND_NAME,
+                  BrandSubstituteFixture.STRENGTH,
+                  BrandSubstituteFixture.FORM));
+      Brand notRequestedBrand =
+          brandRepository.save(
+              BrandSubstituteFixture.newBrand(
+                  molecule,
+                  BrandSubstituteFixture.REQUESTED_BRAND_NAME,
+                  BrandSubstituteFixture.STRENGTH,
+                  BrandSubstituteFixture.FORM));
+      storeProductRepository.save(
+          BrandSubstituteFixture.newStoreProduct(
+              store, brand, BrandSubstituteFixture.PANADOL_PRICE, true));
+      storeProductRepository.save(
+          BrandSubstituteFixture.newStoreProduct(
+              store, inactiveBrand, BrandSubstituteFixture.PANADOL_PRICE, false));
+      storeProductRepository.save(
+          BrandSubstituteFixture.newStoreProduct(store, unpricedBrand, null, true));
+      storeProductRepository.save(
+          BrandSubstituteFixture.newStoreProduct(
+              store, notRequestedBrand, BrandSubstituteFixture.CALPOL_PRICE, true));
+
+      // Act
+      List<StoreProduct> result =
+          storeProductRepository.findByStoreIdAndBrandIdInAndIsActiveTrueAndPriceIsNotNull(
+              store.getId(), Set.of(brand.getId(), inactiveBrand.getId(), unpricedBrand.getId()));
+
+      // Assert
+      assertEquals(
+          List.of(brand.getId()),
+          result.stream().map(storeProduct -> storeProduct.getBrand().getId()).toList());
+    }
+
+    @Test
+    @DisplayName("should not return products another store sells")
+    void shouldExcludeOtherStoreProducts() {
+      // Arrange
+      Store otherStore =
+          storeRepository.save(
+              BrandSubstituteFixture.newStore(BrandSubstituteFixture.OTHER_STORE_NAME));
+      storeProductRepository.save(
+          BrandSubstituteFixture.newStoreProduct(
+              otherStore, brand, BrandSubstituteFixture.PANADOL_PRICE, true));
+
+      // Act
+      List<StoreProduct> result =
+          storeProductRepository.findByStoreIdAndBrandIdInAndIsActiveTrueAndPriceIsNotNull(
+              store.getId(), Set.of(brand.getId()));
+
+      // Assert
+      assertTrue(result.isEmpty());
     }
   }
 
