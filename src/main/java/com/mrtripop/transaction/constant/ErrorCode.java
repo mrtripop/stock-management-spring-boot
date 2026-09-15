@@ -17,7 +17,12 @@ public enum ErrorCode implements BaseStatusCode {
   BATCH_NOT_FOUND("TXN4008", "Batch not found"),
   RECEIPT_NOT_FOUND("TXN4009", "Receipt not found"),
   INVALID_RECONCILIATION_PERIOD("TXN4010", "Period end must be greater than or equal to period start"),
-  RECEIPT_NOT_AVAILABLE("TXN4011", "Receipt is not available for this invoice status");
+  RECEIPT_NOT_AVAILABLE("TXN4011", "Receipt is not available for this invoice status"),
+  INVOICE_NOT_COMPLETED("TXN4012", "Invoice must be completed before it can be returned"),
+  RETURN_QUANTITY_EXCEEDS_AVAILABLE(
+      "TXN4013", "Return quantity exceeds the remaining returnable quantity"),
+  INVOICE_ITEM_NOT_FOUND("TXN4014", "Invoice item not found"),
+  RETURN_NOT_FOUND("TXN4015", "Return not found");
 
   private final String code;
   private final String message;
