@@ -17,6 +17,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
+import org.hibernate.annotations.Comment;
 
 @Getter
 @Setter
@@ -36,22 +37,30 @@ public class Brand extends AuditEntity {
   @GeneratedValue(strategy = GenerationType.UUID)
   private UUID id;
 
+  @Comment("FK to molecules; the active ingredient this brand is a commercial formulation of")
   @ManyToOne
   @JoinColumn(name = "molecule_id", nullable = false)
   private Molecule molecule;
 
+  @Comment("Commercial/marketing name shown to pharmacy staff and customers, e.g. 'Panadol'")
   @Column(name = "brand_name", nullable = false)
   private String brandName;
 
+  @Comment("Dose strength per unit, e.g. '500mg'; brands sharing molecule, strength and form "
+      + "are treated as clinically substitutable")
   @Column(name = "strength")
   private String strength;
 
+  @Comment("Dosage form, e.g. 'Tablet' or 'Syrup'; part of the clinical-equivalence match "
+      + "alongside strength")
   @Column(name = "form")
   private String form;
 
+  @Comment("Unit this brand is dispensed and counted in, e.g. 'EA' for each")
   @Column(name = "base_unit")
   private String baseUnit;
 
+  @Comment("Barcode scanned to resolve this brand at checkout or stock-in; null until assigned")
   @Column(name = "barcode", length = 50)
   private String barcode;
 }
