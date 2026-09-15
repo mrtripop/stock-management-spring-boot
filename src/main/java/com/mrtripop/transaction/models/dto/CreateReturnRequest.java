@@ -19,7 +19,7 @@ public class CreateReturnRequest {
   @NotNull(message = "Reason is required")
   private ReturnReason reason;
 
-  @NotEmpty(message = "Return items must not be empty")
   @Valid
+  @NotEmpty(message = "Return items must not be empty")
   private List<ReturnItemRequest> items;
 }

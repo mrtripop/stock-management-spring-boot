@@ -13,7 +13,9 @@ public interface ReturnItemRepository extends JpaRepository<ReturnItem, Long> {
   List<ReturnItem> findByParentReturnId(Long returnId);
 
   @Query(
-      "SELECT COALESCE(SUM(ri.quantity), 0) FROM ReturnItem ri "
-          + "WHERE ri.invoiceItem.id = :invoiceItemId")
+      """
+      SELECT COALESCE(SUM(ri.quantity), 0) FROM ReturnItem ri
+      WHERE ri.invoiceItem.id = :invoiceItemId
+      """)
   Long sumQuantityByInvoiceItemId(@Param("invoiceItemId") Long invoiceItemId);
 }

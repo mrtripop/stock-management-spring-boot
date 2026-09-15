@@ -49,6 +49,7 @@ public class ReturnServiceImpl implements ReturnService {
   @Transactional(rollbackFor = ApplicationException.class)
   public ReturnDto createReturn(Long invoiceId, CreateReturnRequest request)
       throws ApplicationException {
+    // Load and validate the invoice is eligible for a return
     Invoice invoice = invoiceRepository.findById(invoiceId)
         .orElseThrow(() -> new ApplicationException(ErrorCode.INVOICE_NOT_FOUND, HttpStatus.NOT_FOUND));
 
@@ -62,6 +63,8 @@ public class ReturnServiceImpl implements ReturnService {
     BigDecimal totalRefundInsuranceClaim = BigDecimal.ZERO;
     Map<Long, Long> claimedQuantityByInvoiceItemId = new HashMap<>();
 
+    // Validate each requested line against remaining returnable quantity, restock it,
+    // and compute its refund split
     for (ReturnItemRequest itemRequest : request.getItems()) {
       InvoiceItem invoiceItem = invoiceItemRepository.findById(itemRequest.getInvoiceItemId())
           .orElseThrow(() -> new ApplicationException(
@@ -104,6 +107,7 @@ public class ReturnServiceImpl implements ReturnService {
       totalRefundInsuranceClaim = totalRefundInsuranceClaim.add(lineRefundInsuranceClaim);
     }
 
+    // Persist the return and its line items
     Return newReturn = Return.builder()
         .invoice(invoice)
         .reason(request.getReason())
@@ -116,6 +120,7 @@ public class ReturnServiceImpl implements ReturnService {
     }
     returnItemRepository.saveAll(returnItems);
 
+    // Apply the refund to the invoice's totals
     String oldTotalAmount = invoice.getTotalAmount().toPlainString();
     invoice.setTotalAmount(invoice.getTotalAmount().subtract(totalRefundAmount));
     invoice.setPatientOwed(invoice.getPatientOwed().subtract(totalRefundPatientOwed));
@@ -123,6 +128,7 @@ public class ReturnServiceImpl implements ReturnService {
         invoice.getInsuranceClaimAmount().subtract(totalRefundInsuranceClaim));
     Invoice savedInvoice = invoiceRepository.save(invoice);
 
+    // Record the audit trail and build the response
     auditService.recordAudit("RETURN", "Invoice", String.valueOf(invoiceId), oldTotalAmount,
         savedInvoice.getTotalAmount().toPlainString());
 

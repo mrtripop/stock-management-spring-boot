@@ -15,6 +15,7 @@ import com.mrtripop.transaction.models.db.Invoice;
 import com.mrtripop.transaction.models.db.InvoiceItem;
 import com.mrtripop.transaction.models.db.Return;
 import com.mrtripop.transaction.models.db.ReturnItem;
+import com.mrtripop.transaction.models.db.ReturnReason;
 import com.mrtripop.transaction.models.dto.CreateReturnRequest;
 import com.mrtripop.transaction.models.dto.ReturnDto;
 import com.mrtripop.transaction.models.dto.ReturnItemDto;
@@ -33,12 +34,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.mockito.junit.jupiter.MockitoSettings;
-import org.mockito.quality.Strictness;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 
 @ExtendWith(MockitoExtension.class)
-@MockitoSettings(strictness = Strictness.LENIENT)
 @DisplayName("ReturnServiceImpl")
 class ReturnServiceImplTest {
 
@@ -143,7 +144,7 @@ class ReturnServiceImplTest {
       // Act & Assert
       ApplicationException ex =
           assertThrows(ApplicationException.class, () -> returnService.createReturn(1L, request));
-      assertEquals(com.mrtripop.transaction.constant.ErrorCode.INVOICE_NOT_FOUND, ex.getErrorCode());
+      assertEquals(ErrorCode.INVOICE_NOT_FOUND, ex.getErrorCode());
     }
 
     @Test
@@ -193,7 +194,7 @@ class ReturnServiceImplTest {
           .quantity(InvoiceFixture.VALID_QUANTITY + 1)
           .build();
       CreateReturnRequest request = CreateReturnRequest.builder()
-          .reason(com.mrtripop.transaction.models.db.ReturnReason.OTHER)
+          .reason(ReturnReason.OTHER)
           .items(List.of(overRequest))
           .build();
 
@@ -219,7 +220,7 @@ class ReturnServiceImplTest {
           .quantity(3L)
           .build();
       CreateReturnRequest request = CreateReturnRequest.builder()
-          .reason(com.mrtripop.transaction.models.db.ReturnReason.OTHER)
+          .reason(ReturnReason.OTHER)
           .items(List.of(boundaryRequest))
           .build();
       Return savedReturn = ReturnFixture.validReturn(invoice);
@@ -253,7 +254,7 @@ class ReturnServiceImplTest {
           .quantity(4L)
           .build();
       CreateReturnRequest request = CreateReturnRequest.builder()
-          .reason(com.mrtripop.transaction.models.db.ReturnReason.OTHER)
+          .reason(ReturnReason.OTHER)
           .items(List.of(tooMuchRequest))
           .build();
 
@@ -283,7 +284,7 @@ class ReturnServiceImplTest {
           .quantity(3L)
           .build();
       CreateReturnRequest request = CreateReturnRequest.builder()
-          .reason(com.mrtripop.transaction.models.db.ReturnReason.OTHER)
+          .reason(ReturnReason.OTHER)
           .items(List.of(firstLine, secondLine))
           .build();
 
@@ -315,7 +316,7 @@ class ReturnServiceImplTest {
           .quantity(ReturnFixture.ROUNDING_RETURN_QUANTITY)
           .build();
       CreateReturnRequest request = CreateReturnRequest.builder()
-          .reason(com.mrtripop.transaction.models.db.ReturnReason.OTHER)
+          .reason(ReturnReason.OTHER)
           .items(List.of(firstRequest, secondRequest))
           .build();
       Return savedReturn = ReturnFixture.validReturn(invoice);
@@ -353,7 +354,7 @@ class ReturnServiceImplTest {
           .quantity(ReturnFixture.ROUNDING_RETURN_QUANTITY)
           .build();
       CreateReturnRequest request = CreateReturnRequest.builder()
-          .reason(com.mrtripop.transaction.models.db.ReturnReason.OTHER)
+          .reason(ReturnReason.OTHER)
           .items(List.of(itemRequest))
           .build();
       Return savedReturn = ReturnFixture.validReturn(invoice);
@@ -406,7 +407,7 @@ class ReturnServiceImplTest {
           .quantity(ReturnFixture.EXACT_HALFWAY_RETURN_QUANTITY)
           .build();
       CreateReturnRequest request = CreateReturnRequest.builder()
-          .reason(com.mrtripop.transaction.models.db.ReturnReason.OTHER)
+          .reason(ReturnReason.OTHER)
           .items(List.of(itemRequest))
           .build();
       Return savedReturn = ReturnFixture.validReturn(invoice);
@@ -523,17 +524,14 @@ class ReturnServiceImplTest {
       // Arrange
       Invoice invoice = InvoiceFixture.completedInvoice();
       Return foundReturn = ReturnFixture.validReturn(invoice);
-      org.springframework.data.domain.Page<Return> page =
-          new org.springframework.data.domain.PageImpl<>(List.of(foundReturn));
+      Page<Return> page = new PageImpl<>(List.of(foundReturn));
       ReturnDto dto = ReturnDto.builder().id(1L).build();
 
-      when(returnRepository.findByInvoiceId(eq(1L), any(org.springframework.data.domain.Pageable.class)))
-          .thenReturn(page);
+      when(returnRepository.findByInvoiceId(eq(1L), any(Pageable.class))).thenReturn(page);
       when(returnMapper.toDto(foundReturn)).thenReturn(dto);
 
       // Act
-      org.springframework.data.domain.Page<ReturnDto> result =
-          returnService.findByInvoiceId(1L, org.springframework.data.domain.Pageable.unpaged());
+      Page<ReturnDto> result = returnService.findByInvoiceId(1L, Pageable.unpaged());
 
       // Assert
       assertEquals(1, result.getTotalElements());

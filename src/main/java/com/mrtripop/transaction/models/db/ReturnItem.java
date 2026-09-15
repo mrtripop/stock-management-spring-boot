@@ -53,6 +53,7 @@ public class ReturnItem {
   @Column(name = "quantity", nullable = false)
   private Long quantity;
 
+  // Refund for this line only: invoiceItem.unitPrice * quantity returned.
   @Column(name = "refund_amount", nullable = false, precision = 10, scale = 2)
   private BigDecimal refundAmount;
 }

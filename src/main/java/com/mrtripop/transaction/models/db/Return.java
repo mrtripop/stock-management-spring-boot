@@ -47,6 +47,7 @@ public class Return extends AuditEntity {
   @Column(name = "reason", nullable = false, length = 30)
   private ReturnReason reason;
 
+  // Sum of every ReturnItem.refundAmount under this Return; always positive.
   @Column(name = "total_refund_amount", nullable = false, precision = 10, scale = 2)
   private BigDecimal totalRefundAmount;
 }
