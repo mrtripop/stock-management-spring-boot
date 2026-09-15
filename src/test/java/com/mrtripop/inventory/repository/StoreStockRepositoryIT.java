@@ -459,7 +459,10 @@ class StoreStockRepositoryIT {
   }
 
   @Nested
-  @DisplayName("findAvailableSubstituteStock")
+  @DisplayName(
+      "The substitute-stock query returns only clinically equivalent, sellable stock — same "
+          + "molecule, strength and form, never the requested brand itself or anything not "
+          + "actually available to sell")
   class FindAvailableSubstituteStock {
 
     private Molecule paracetamol;
