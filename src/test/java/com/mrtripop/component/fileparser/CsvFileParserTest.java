@@ -3,39 +3,33 @@ package com.mrtripop.component.fileparser;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.mrtripop.component.fileparser.fixture.ProductDtoFixture;
 import com.mrtripop.product.models.dto.ProductDTO;
 import java.util.Arrays;
 import java.util.List;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+@DisplayName("Product catalog data can be exported to CSV")
 class CsvFileParserTest {
 
   private final CsvFileParser csvFileParser = new CsvFileParser();
 
   @Test
-  void testExport() {
-    ProductDTO product = ProductDTO.builder()
-        .id(1L)
-        .code("SKU001")
-        .barcode("123456789")
-        .name("Test Product")
-        .description("Description")
-        .category("Category")
-        .reorderQuantity(10)
-        .packedWeight(1.0)
-        .packedHeight(1.0)
-        .packedWidth(1.0)
-        .packedDepth(1.0)
-        .isActive(true)
-        .build();
-
+  @DisplayName("Staff export the product catalog to CSV for external systems to consume")
+  void shouldExportProductCatalogToCsv() {
+    // Arrange
+    ProductDTO product = ProductDtoFixture.fullProduct();
     List<ProductDTO> data = Arrays.asList(product);
+
+    // Act
     byte[] result = csvFileParser.export(data);
 
+    // Assert
     assertNotNull(result);
     assertTrue(result.length > 0);
     String csvContent = new String(result);
-    assertTrue(csvContent.contains("SKU001"));
-    assertTrue(csvContent.contains("Test Product"));
+    assertTrue(csvContent.contains(ProductDtoFixture.SKU_CODE));
+    assertTrue(csvContent.contains(ProductDtoFixture.PRODUCT_NAME));
   }
 }

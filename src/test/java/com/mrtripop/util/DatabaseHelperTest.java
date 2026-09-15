@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 
+@DisplayName("Build pagination and sort requests for list queries")
 class DatabaseHelperTest {
 
   @Test
