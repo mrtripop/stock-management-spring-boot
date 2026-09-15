@@ -43,14 +43,17 @@ public class ReturnItem {
       allocationSize = 1)
   private Long id;
 
+  @Comment("FK to returns; the return this line item belongs to")
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "return_id", nullable = false)
   private Return parentReturn;
 
+  @Comment("FK to invoice_items; the originally sold line this return line applies against")
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "invoice_item_id", nullable = false)
   private InvoiceItem invoiceItem;
 
+  @Comment("Quantity of this invoice item being returned")
   @Column(name = "quantity", nullable = false)
   private Long quantity;
 

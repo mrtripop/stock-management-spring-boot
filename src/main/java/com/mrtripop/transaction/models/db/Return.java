@@ -40,10 +40,13 @@ public class Return extends AuditEntity {
   @SequenceGenerator(name = "returns_sequence", sequenceName = "returns_sequence", allocationSize = 1)
   private Long id;
 
+  @Comment("FK to invoices; the completed invoice this return is recorded against")
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "invoice_id", nullable = false)
   private Invoice invoice;
 
+  @Comment("Why this return was recorded — damaged, expired, wrong item, customer changed "
+      + "mind, or other")
   @Enumerated(EnumType.STRING)
   @Column(name = "reason", nullable = false, length = 30)
   private ReturnReason reason;
