@@ -40,7 +40,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("ReturnServiceImpl")
+@DisplayName(
+    "Return service lets pharmacy staff record a partial return on a completed sale, "
+        + "restocking the returned items and refunding the correct amount")
 class ReturnServiceImplTest {
 
   @Mock private InvoiceRepository invoiceRepository;
@@ -53,7 +55,9 @@ class ReturnServiceImplTest {
   @InjectMocks private ReturnServiceImpl returnService;
 
   @Nested
-  @DisplayName("CreateReturn")
+  @DisplayName(
+      "When a customer needs to return an item, pharmacy staff create a return ticket "
+          + "to restock it and refund the correct amount")
   class CreateReturn {
 
     @Test
@@ -478,7 +482,7 @@ class ReturnServiceImplTest {
   }
 
   @Nested
-  @DisplayName("FindReturn")
+  @DisplayName("When pharmacy staff need to look up a return that was already recorded")
   class FindReturn {
 
     @Test

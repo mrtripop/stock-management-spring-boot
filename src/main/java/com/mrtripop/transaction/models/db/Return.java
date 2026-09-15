@@ -21,6 +21,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
+import org.hibernate.annotations.Comment;
 
 @Entity
 @Table(
@@ -48,6 +49,7 @@ public class Return extends AuditEntity {
   private ReturnReason reason;
 
   // Sum of every ReturnItem.refundAmount under this Return; always positive.
+  @Comment("Total refund amount across all items in this return")
   @Column(name = "total_refund_amount", nullable = false, precision = 10, scale = 2)
   private BigDecimal totalRefundAmount;
 }

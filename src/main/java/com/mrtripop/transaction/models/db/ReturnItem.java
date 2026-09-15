@@ -18,6 +18,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
+import org.hibernate.annotations.Comment;
 
 @Entity
 @Table(
@@ -54,6 +55,7 @@ public class ReturnItem {
   private Long quantity;
 
   // Refund for this line only: invoiceItem.unitPrice * quantity returned.
+  @Comment("Refund amount for this single returned line item")
   @Column(name = "refund_amount", nullable = false, precision = 10, scale = 2)
   private BigDecimal refundAmount;
 }
