@@ -33,7 +33,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("Suggest substitute brands at the counter")
+@DisplayName(
+    "Brand substitute lookup helps pharmacy staff offer an equivalent, in-stock brand when the "
+        + "one requested is out of stock, without ever suggesting a different strength or form")
 class BrandSubstituteServiceImplTest {
 
   @Mock private StoreRepository storeRepository;
