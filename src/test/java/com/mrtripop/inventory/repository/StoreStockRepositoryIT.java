@@ -32,7 +32,11 @@ import org.springframework.transaction.annotation.Transactional;
 @SpringBootTest
 @ActiveProfiles("test")
 @Transactional
-@DisplayName("StoreStockRepository")
+@DisplayName(
+    "StoreStockRepository is the source of truth for how much of each batch is on hand at each "
+        + "store — guarding against duplicate or orphaned stock records, and letting pharmacy "
+        + "staff safely dispense, find sellable stock by expiry or substitute brand, and see "
+        + "totals across the whole network")
 class StoreStockRepositoryIT {
 
   @Autowired private StoreStockRepository storeStockRepository;
@@ -79,7 +83,9 @@ class StoreStockRepositoryIT {
   }
 
   @Nested
-  @DisplayName("findByStoreIdAndBatchId")
+  @DisplayName(
+      "Pharmacy staff can look up the stock record for one specific batch held at one specific "
+          + "store, and get nothing back when that batch isn't stocked there")
   class FindByStoreIdAndBatchId {
 
     @Test
@@ -133,7 +139,7 @@ class StoreStockRepositoryIT {
   }
 
   @Nested
-  @DisplayName("findByStoreId")
+  @DisplayName("Pharmacy staff can page through everything currently stocked at one store")
   class FindByStoreId {
 
     @Test
@@ -211,7 +217,10 @@ class StoreStockRepositoryIT {
   }
 
   @Nested
-  @DisplayName("findAvailableStockByStoreIdAndBrandIdOrderByExpiryDate (FEFO)")
+  @DisplayName(
+      "When dispensing a specific brand from a store, only stock that's actually sellable is "
+          + "offered — never expired, recalled, quarantined or empty — and always in "
+          + "first-expiry-first-out order, so nothing expires unsold on the shelf")
   class FefoQuery {
 
     @Test
@@ -420,7 +429,9 @@ class StoreStockRepositoryIT {
   }
 
   @Nested
-  @DisplayName("deductQuantity")
+  @DisplayName(
+      "Selling or dispensing stock reduces what's held only when enough is actually on hand — "
+          + "a request for more than is available is refused and leaves the stock untouched")
   class DeductQuantity {
 
     @Test
@@ -695,7 +706,10 @@ class StoreStockRepositoryIT {
   }
 
   @Nested
-  @DisplayName("aggregateStockByMolecule")
+  @DisplayName(
+      "Staff can see, across the whole store network, how much of a molecule is actually "
+          + "available to sell by store and brand — expired, recalled, quarantined or "
+          + "zero-quantity stock never counts toward the total")
   class AggregateStockByMolecule {
 
     @Test
