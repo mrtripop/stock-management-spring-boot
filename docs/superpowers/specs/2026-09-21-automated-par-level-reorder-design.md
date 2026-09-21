@@ -36,20 +36,24 @@ This feature implements **Automated Par-Level Replenishment**:
 - Full audit ledger logging for state transitions (`AuditLedger`).
 - Unit and slice tests (`@Nested`, AAA pattern) for service, engine, and controller layers.
 
-#### Mandatory Engineering Skills & Standards Reference
-Subagents and implementers must strictly consult and adhere to the following `software-engineer` plugin skills:
-- **Code Style & Quality:**
-  - [`code-style-standards`](file:///Users/mrtripop/.gemini/config/plugins/software-engineer/skills/code-style-standards/SKILL.md): Immutability, no magic literals/numbers, intentional naming, programming to interfaces.
-  - [`code-comment`](file:///Users/mrtripop/.gemini/config/plugins/software-engineer/skills/code-comment/SKILL.md): Abstraction-level commenting rules (why over what, documentation integrity).
-- **Testing Standards & Principles:**
-  - [`testing-standards`](file:///Users/mrtripop/.gemini/config/plugins/software-engineer/skills/testing-standards/SKILL.md): `@Nested` scenario grouping, `should[ExpectedBehavior]_when[Scenario]` business rule naming, AAA (Arrange-Act-Assert) pattern, fixture data constants.
-  - [`testing-principles`](file:///Users/mrtripop/.gemini/config/plugins/software-engineer/skills/testing-principles/SKILL.md): Seam selection, behavioral assertions over mock mechanics, avoiding flaky assertions.
-- **Security Standards:**
-  - [`security-standards`](file:///Users/mrtripop/.gemini/config/plugins/software-engineer/skills/security-standards/SKILL.md): Strict input validation (`@Valid`, `@NotNull`, `@Min`, `@Future`, `@NotBlank`), authorization checks, safe error message responses.
-- **Performance & Data Access:**
-  - [`performance-standards`](file:///Users/mrtripop/.gemini/config/plugins/software-engineer/skills/performance-standards/SKILL.md): N+1 query prevention (using `@EntityGraph` or `JOIN FETCH`), database indexes on foreign keys and filter columns (`store_id`, `status`), scoped `@Transactional` boundaries.
-- **Foundational Engineering Principles:**
-  - [`foundation-principles`](file:///Users/mrtripop/.gemini/config/plugins/software-engineer/skills/foundation-principles/SKILL.md): Ubiquitous domain language, surgical modifications, non-breaking migrations, verification before completion.
+#### Mandatory Engineering Skills & Standards Directive
+> [!IMPORTANT]
+> **MANDATORY FOR ALL SUBAGENTS AND IMPLEMENTERS:**
+> You MUST read the **entire content** of each standard and reference file listed below using `view_file` before writing, modifying, or testing any code. Reading only summaries or skipping full-text reading is strictly prohibited.
+>
+> 1. **Code Style & Java Dialect:**
+>    - [`code-style-standards/SKILL.md`](file:///Users/mrtripop/.gemini/config/plugins/software-engineer/skills/code-style-standards/SKILL.md)
+>    - [`code-style-standards/references/java-spring.md`](file:///Users/mrtripop/.gemini/config/plugins/software-engineer/skills/code-style-standards/references/java-spring.md) (Notice rules on `@Comment` on every column, `@ToString(exclude = ...)`, no magic values, text blocks for SQL/JPQL)
+> 2. **Testing Standards & Java Dialect:**
+>    - [`testing-standards/SKILL.md`](file:///Users/mrtripop/.gemini/config/plugins/software-engineer/skills/testing-standards/SKILL.md)
+>    - [`testing-standards/references/java-spring.md`](file:///Users/mrtripop/.gemini/config/plugins/software-engineer/skills/testing-standards/references/java-spring.md) (Notice rules on `@DisplayName` at class/nested/method levels, Fixture pattern with input/derived constants, explicit AAA structure)
+>    - [`testing-principles/SKILL.md`](file:///Users/mrtripop/.gemini/config/plugins/software-engineer/skills/testing-principles/SKILL.md)
+> 3. **Performance Standards & Java Dialect:**
+>    - [`performance-standards/SKILL.md`](file:///Users/mrtripop/.gemini/config/plugins/software-engineer/skills/performance-standards/SKILL.md) (Rule 1: Never issue a query inside a loop - eliminate N+1 queries)
+>    - [`performance-standards/references/java-spring.md`](file:///Users/mrtripop/.gemini/config/plugins/software-engineer/skills/performance-standards/references/java-spring.md) (`JOIN FETCH`, indexing, batch operations, short transactions)
+> 4. **Security & Foundation Standards:**
+>    - [`security-standards/SKILL.md`](file:///Users/mrtripop/.gemini/config/plugins/software-engineer/skills/security-standards/SKILL.md)
+>    - [`foundation-principles/SKILL.md`](file:///Users/mrtripop/.gemini/config/plugins/software-engineer/skills/foundation-principles/SKILL.md)
 
 ### Out of Scope (Explicit Non-Goals)
 - **No E2E Tests:** Verification relies strictly on focused unit tests (`ReorderServiceImplTest`, `ActionQueueServiceImplTest`) and controller slice tests (`@WebMvcTest`), avoiding heavy end-to-end integration environments.
@@ -260,14 +264,17 @@ public class ReorderItem extends AuditEntity {
 ### 1. Daily Scan & Order Consolidation (`runReorderScan()`)
 During the scheduled run:
 1. Scan `storeProducts` where `isActive = true` and `reorderThreshold IS NOT NULL`.
-2. Compute total available stock: `availableStock = sumAvailableQuantityByStoreAndBrand(storeId, brandId)`.
-3. If `availableStock < reorderThreshold`:
-   - Check if an `APPROVED` reorder already exists for this store that contains this brand. If so, an order is already in transit—do not create a duplicate order item.
-   - Calculate target par level: `target = (sp.getTargetStock() != null) ? sp.getTargetStock() : (sp.getReorderThreshold() * 2)`.
-   - Calculate `suggestedQty = Math.max(1L, target - availableStock)`.
-   - Create or update the `Task` (`TaskType.REORDER_NEEDED`, `PENDING`).
-   - Find existing `DRAFT` reorder for this store. If none exists, create a new `Reorder(status = DRAFT)`.
-   - If line item for this brand exists in the draft, update snapshot counts and `suggestedQuantity`. If not, add new `ReorderItem` linked to the `Task`.
+2. **N+1 Prevention (`performance-standards` §1):** Group active `storeProducts` by `storeId`. For each store, fetch available quantities for all brands in a single bulk query (`storeStockRepository.sumAvailableQuantitiesByStoreGroupedByBrand(storeId)`) and build an in-memory `Map<UUID, Long> availableStockByBrand`. Do not query the database per product in a loop.
+3. For each `StoreProduct`:
+   - Retrieve `availableStock = availableStockByBrand.getOrDefault(brandId, 0L)` in $O(1)$.
+   - If `availableStock < reorderThreshold`:
+     - Check if an `APPROVED` reorder already exists for this store that contains this brand. If so, an order is already in transit—do not create a duplicate order item.
+     - Calculate target par level: `target = (sp.getTargetStock() != null) ? sp.getTargetStock() : (sp.getReorderThreshold() * 2)`.
+     - Calculate `suggestedQty = Math.max(1L, target - availableStock)`.
+     - Create or update the `Task` (`TaskType.REORDER_NEEDED`, `PENDING`).
+     - Find existing `DRAFT` reorder for this store. If none exists, create a new `Reorder(status = DRAFT)`.
+     - If line item for this brand exists in the draft, update snapshot counts and `suggestedQuantity`. If not, add new `ReorderItem` linked to the `Task`.
+   - Batch save or cascade persist changes.
 
 ### 2. Approval (`approveReorder`)
 `PATCH /api/v1/inventory/reorders/{id}/approve`
@@ -380,29 +387,44 @@ Base path: `/api/v1/inventory/reorders`
 
 ## 8. Testing Strategy (No E2E)
 
-Following project conventions (`@Nested`, AAA pattern, human-readable method names):
+Strictly adhere to [`testing-standards/SKILL.md`](file:///Users/mrtripop/.gemini/config/plugins/software-engineer/skills/testing-standards/SKILL.md) and [`references/java-spring.md`](file:///Users/mrtripop/.gemini/config/plugins/software-engineer/skills/testing-standards/references/java-spring.md):
+- **Descriptive `@DisplayName`:** Required at the root class level (business capability), on every `@Nested` class (business scenario/rule), and on every `@Test` method (stating who, what, and business outcome).
+- **Centralized Test Fixtures (`ReorderFixture.java`):**
+  - Define shared test constants as single source of truth for both setup and assertions (`VALID_STORE_ID`, `VALID_BRAND_ID`, `THRESHOLD_QTY`, `TARGET_PAR_QTY`, `EXPECTED_SUGGESTED_QTY`, etc.).
+  - Never hardcode duplicate literals or inline magic numbers inside test assertions.
+  - Factory methods: `validDraftEntity()`, `validApprovedEntity()`, `validApproveRequest()`, `validReceiveRequest()`.
+- **Strict AAA Pattern:**
+  - Every test must have `// Arrange`, `// Act`, `// Assert` blocks separated by blank lines. No interleaved assertions or setups.
+- **Behavioral Verification:**
+  - Verify `auditService.recordAudit()` only because recording compliance audit is the explicit behavioral contract.
+  - Assert on observable state and return values, not internal mock calls.
 
 ### Unit Tests (`ReorderServiceImplTest`)
-- **Approve Reorder:**
-  - `shouldApproveReorder_whenOrderIsDraft`
-  - `shouldApplyCustomApprovedQuantities_whenProvidedInRequest`
-  - `shouldDefaultToSuggestedQuantity_whenNoAdjustmentsProvided`
-  - `shouldThrowConflict_whenOrderIsNotDraft`
-  - `shouldAcknowledgeLinkedTasks_whenOrderIsApproved`
-- **Receive Reorder:**
-  - `shouldReceiveAllItemsAndIncrementStock_whenOrderIsApproved`
-  - `shouldAutoResolveLinkedTasks_whenOrderIsReceived`
-  - `shouldThrowConflict_whenOrderIsNotApproved`
-  - `shouldThrowBadRequest_whenItemDoesNotBelongToOrder`
-  - `shouldRollbackEntireReceipt_whenSingleItemFailsValidation`
-- **Cancel Reorder:**
-  - `shouldCancelReorder_whenOrderIsDraftOrApproved`
-  - `shouldThrowConflict_whenOrderIsAlreadyReceived`
+Class annotation: `@DisplayName("Pharmacy inventory reorder management - approval, receiving, and cancellation workflows")`
+
+* `@Nested @DisplayName("Store manager approves draft reorder") class ApproveReorder`
+  * `@Test @DisplayName("When order is in DRAFT, manager can approve it and transition status to APPROVED")` -> `shouldApproveReorder_whenOrderIsDraft`
+  * `@Test @DisplayName("When manager provides adjusted quantities, approved quantities reflect the custom amounts")` -> `shouldApplyCustomApprovedQuantities_whenProvidedInRequest`
+  * `@Test @DisplayName("When manager provides no adjustments, approved quantities default to suggested quantities")` -> `shouldDefaultToSuggestedQuantity_whenNoAdjustmentsProvided`
+  * `@Test @DisplayName("When order is not in DRAFT status, approval is rejected with conflict")` -> `shouldThrowConflict_whenOrderIsNotDraft`
+  * `@Test @DisplayName("When order is approved, linked action queue tasks are acknowledged to show order in-flight")` -> `shouldAcknowledgeLinkedTasks_whenOrderIsApproved`
+
+* `@Nested @DisplayName("Pharmacy staff receives delivered reorder shipment") class ReceiveReorder`
+  * `@Test @DisplayName("When valid shipment arrives, batch is created, store stock is incremented, and order is marked RECEIVED")` -> `shouldReceiveAllItemsAndIncrementStock_whenOrderIsApproved`
+  * `@Test @DisplayName("When shipment is received, all linked action queue tasks are automatically resolved")` -> `shouldAutoResolveLinkedTasks_whenOrderIsReceived`
+  * `@Test @DisplayName("When order is not in APPROVED status, receiving is rejected with conflict")` -> `shouldThrowConflict_whenOrderIsNotApproved`
+  * `@Test @DisplayName("When receiving payload contains an item from another order, receiving is rejected")` -> `shouldThrowBadRequest_whenItemDoesNotBelongToOrder`
+  * `@Test @DisplayName("When any single line item in delivery fails validation, entire receipt transaction rolls back")` -> `shouldRollbackEntireReceipt_whenSingleItemFailsValidation`
+
+* `@Nested @DisplayName("Store manager cancels reorder") class CancelReorder`
+  * `@Test @DisplayName("When order is DRAFT or APPROVED, order can be cancelled and acknowledged tasks revert to pending")` -> `shouldCancelReorder_whenOrderIsDraftOrApproved`
+  * `@Test @DisplayName("When order is already RECEIVED, cancellation is rejected with conflict")` -> `shouldThrowConflict_whenOrderIsAlreadyReceived`
 
 ### Scheduler Scan Tests (`ActionQueueServiceImplTest`)
-- `shouldConsolidateMultipleLowStockProductsIntoSingleDraftReorder_whenScanRuns`
-- `shouldAppendToExistingDraftReorder_whenDraftAlreadyOpenForStore`
-- `shouldSkipAddingItem_whenApprovedOrderAlreadyInFlightForBrand`
+* `@Nested @DisplayName("Daily automated par-level reorder consolidation scan") class RunReorderScan`
+  * `@Test @DisplayName("When multiple products are below threshold, a single consolidated draft reorder is created without N+1 queries")` -> `shouldConsolidateMultipleLowStockProductsIntoSingleDraftReorder_whenScanRuns`
+  * `@Test @DisplayName("When a draft reorder is already open for a store, newly detected low-stock items append to it")` -> `shouldAppendToExistingDraftReorder_whenDraftAlreadyOpenForStore`
+  * `@Test @DisplayName("When an approved order is already in-flight for a brand, it is skipped to prevent duplicate orders")` -> `shouldSkipAddingItem_whenApprovedOrderAlreadyInFlightForBrand`
 
 ### Controller Web Layer Tests (`ReorderControllerTest`)
-- Focused `@WebMvcTest(ReorderController.class)` verifying JSON mapping, parameter validation (`@Min`, `@Future`, `@NotBlank`), and HTTP status codes (`200`, `400`, `404`, `409`).
+* Focused `@WebMvcTest(ReorderController.class)` verifying JSON serialization, `@Valid` bean validations (`@Min`, `@Future`, `@NotBlank`), and HTTP status codes (`200`, `400`, `404`, `409`).

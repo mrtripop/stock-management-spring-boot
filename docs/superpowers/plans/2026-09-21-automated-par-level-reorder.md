@@ -8,13 +8,14 @@
 
 **Tech Stack:** Java 17, Spring Boot 3.4.2, Spring Data JPA, Hibernate, PostgreSQL, MapStruct 1.6.0, Lombok, JUnit 5, Mockito, Google Java Format.
 
-**Mandatory Engineering Skills Reference:**
-- [`code-style-standards`](file:///Users/mrtripop/.gemini/config/plugins/software-engineer/skills/code-style-standards/SKILL.md) & [`java-spring.md`](file:///Users/mrtripop/.gemini/config/plugins/software-engineer/skills/code-style-standards/references/java-spring.md)
-- [`testing-standards`](file:///Users/mrtripop/.gemini/config/plugins/software-engineer/skills/testing-standards/SKILL.md)
-- [`testing-principles`](file:///Users/mrtripop/.gemini/config/plugins/software-engineer/skills/testing-principles/SKILL.md)
-- [`security-standards`](file:///Users/mrtripop/.gemini/config/plugins/software-engineer/skills/security-standards/SKILL.md)
-- [`performance-standards`](file:///Users/mrtripop/.gemini/config/plugins/software-engineer/skills/performance-standards/SKILL.md)
-- [`foundation-principles`](file:///Users/mrtripop/.gemini/config/plugins/software-engineer/skills/foundation-principles/SKILL.md)
+> [!IMPORTANT]
+> **MANDATORY FOR ALL AGENTS AND SUBAGENTS:**
+> Before executing or modifying ANY task in this plan, you MUST use `view_file` to read the **ENTIRE content** (not summaries) of each of the following files:
+> 1. [`code-style-standards/SKILL.md`](file:///Users/mrtripop/.gemini/config/plugins/software-engineer/skills/code-style-standards/SKILL.md) & [`code-style-standards/references/java-spring.md`](file:///Users/mrtripop/.gemini/config/plugins/software-engineer/skills/code-style-standards/references/java-spring.md) (Notice: `@Comment` on EVERY entity column/FK, `@ToString(exclude = ...)`, text blocks `"""` for JPQL, no magic literals).
+> 2. [`testing-standards/SKILL.md`](file:///Users/mrtripop/.gemini/config/plugins/software-engineer/skills/testing-standards/SKILL.md) & [`testing-standards/references/java-spring.md`](file:///Users/mrtripop/.gemini/config/plugins/software-engineer/skills/testing-standards/references/java-spring.md) (Notice: descriptive `@DisplayName` on class, `@Nested`, and `@Test`, Fixture pattern with input and derived output constants, AAA blocks separated by blank lines).
+> 3. [`testing-principles/SKILL.md`](file:///Users/mrtripop/.gemini/config/plugins/software-engineer/skills/testing-principles/SKILL.md) (Notice: verify behavior not mock mechanics, honest assertions).
+> 4. [`performance-standards/SKILL.md`](file:///Users/mrtripop/.gemini/config/plugins/software-engineer/skills/performance-standards/SKILL.md) & [`performance-standards/references/java-spring.md`](file:///Users/mrtripop/.gemini/config/plugins/software-engineer/skills/performance-standards/references/java-spring.md) (Notice: Rule 1 - Never query in a loop, bulk query aggregation, indexes).
+> 5. [`security-standards/SKILL.md`](file:///Users/mrtripop/.gemini/config/plugins/software-engineer/skills/security-standards/SKILL.md) & [`foundation-principles/SKILL.md`](file:///Users/mrtripop/.gemini/config/plugins/software-engineer/skills/foundation-principles/SKILL.md).
 
 ---
 
@@ -374,47 +375,116 @@ git commit -m "feat(inventory): add reorder DTOs, MapStruct mapper, and status c
 
 ---
 
-### Task 5: Enhance `runReorderScan()` in `ActionQueueServiceImpl`
+### Task 5: Enhance `runReorderScan()` in `ActionQueueServiceImpl` (with N+1 Prevention)
 
 **Files:**
+- Modify: `src/main/java/com/mrtripop/inventory/repository/StoreStockRepository.java`
 - Modify: `src/main/java/com/mrtripop/inventory/services/impl/ActionQueueServiceImpl.java`
 - Test: `src/test/java/com/mrtripop/inventory/services/ActionQueueServiceImplTest.java`
 
-- [ ] **Step 1: Write unit tests in `ActionQueueServiceImplTest` for reorder consolidation**
-Write `@Nested` tests for `RunReorderScan`:
-- `shouldCreateConsolidatedDraftReorder_whenProductsBelowThreshold`
-- `shouldAppendToExistingDraftReorder_whenDraftAlreadyOpenForStore`
-- `shouldSkipAddingItem_whenApprovedOrderAlreadyInFlightForBrand`
+- [ ] **Step 1: Add bulk brand stock aggregation query in `StoreStockRepository` to eliminate N+1 queries**
+```java
+@Query("""
+    SELECT ss.batch.brand.id, COALESCE(SUM(ss.quantity), 0L)
+    FROM StoreStock ss
+    WHERE ss.store.id = :storeId AND ss.batch.status = 'AVAILABLE'
+    GROUP BY ss.batch.brand.id
+    """)
+List<Object[]> sumAvailableQuantitiesByStoreGroupedByBrand(@Param("storeId") UUID storeId);
+```
 
-- [ ] **Step 2: Run test to verify failure**
+- [ ] **Step 2: Write unit tests in `ActionQueueServiceImplTest` for reorder consolidation**
+Write `@Nested` tests for `RunReorderScan` with `@DisplayName` and AAA comments:
+```java
+@Nested
+@DisplayName("Daily scheduled scan for low stock par-level replenishment")
+class RunReorderScan {
+
+    @Test
+    @DisplayName("When multiple products in a store are below threshold, a single consolidated draft reorder is created")
+    void shouldCreateConsolidatedDraftReorder_whenProductsBelowThreshold() {
+        // Arrange
+        ...
+        // Act
+        ...
+        // Assert
+        ...
+    }
+}
+```
+
+- [ ] **Step 3: Run test to verify failure**
 Run: `./mvnw test -Dtest=ActionQueueServiceImplTest`
 
-- [ ] **Step 3: Update `ActionQueueServiceImpl.runReorderScan()`**
+- [ ] **Step 4: Update `ActionQueueServiceImpl.runReorderScan()`**
+- Group active `StoreProduct` records by `storeId`.
+- For each store, call `storeStockRepository.sumAvailableQuantitiesByStoreGroupedByBrand(storeId)` to obtain `Map<UUID, Long> availableStockByBrand`.
 - Calculate `targetStock = sp.getTargetStock() != null ? sp.getTargetStock() : (sp.getReorderThreshold() * 2)`.
-- Calculate `suggestedQty = Math.max(1L, targetStock - available)`.
+- Calculate `suggestedQty = Math.max(1L, targetStock - availableStockByBrand.getOrDefault(brandId, 0L))`.
 - Check if an `APPROVED` reorder already includes `brandId` for `storeId`.
 - Find or create `DRAFT` `Reorder` for `storeId`.
 - Create or update `ReorderItem` linked to the `Task`.
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [ ] **Step 5: Run tests to verify they pass**
 Run: `./mvnw test -Dtest=ActionQueueServiceImplTest`
 
-- [ ] **Step 5: Commit**
+- [ ] **Step 6: Commit**
 ```bash
-git add src/main/java/com/mrtripop/inventory/services/impl/ActionQueueServiceImpl.java src/test/java/com/mrtripop/inventory/services/ActionQueueServiceImplTest.java
-git commit -m "feat(inventory): consolidate low-stock products into draft reorders during scan"
+git add src/main/java/com/mrtripop/inventory/ src/test/java/com/mrtripop/inventory/
+git commit -m "feat(inventory): consolidate low-stock products into draft reorders without N+1 queries"
 ```
 
 ---
 
-### Task 6: Implement `ReorderService` (Approval, Receiving, Cancellation & Query)
+### Task 6: Implement `ReorderFixture` and `ReorderService` (Approval, Receiving, Cancellation & Query)
 
 **Files:**
+- Create: `src/test/java/com/mrtripop/inventory/fixture/ReorderFixture.java`
 - Create: `src/main/java/com/mrtripop/inventory/services/ReorderService.java`
 - Create: `src/main/java/com/mrtripop/inventory/services/impl/ReorderServiceImpl.java`
 - Test: `src/test/java/com/mrtripop/inventory/services/ReorderServiceImplTest.java`
 
-- [ ] **Step 1: Define `ReorderService` interface**
+- [ ] **Step 1: Create `ReorderFixture` with shared constants and factory methods**
+Strictly adhere to [`testing-standards/references/java-spring.md`](file:///Users/mrtripop/.gemini/config/plugins/software-engineer/skills/testing-standards/references/java-spring.md#L73):
+```java
+package com.mrtripop.inventory.fixture;
+
+import com.mrtripop.clinical.models.db.Brand;
+import com.mrtripop.clinical.models.db.Store;
+import com.mrtripop.inventory.models.db.*;
+import com.mrtripop.inventory.models.dto.*;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.UUID;
+
+public final class ReorderFixture {
+    private ReorderFixture() {}
+
+    // Input constants
+    public static final Long REORDER_ID = 1L;
+    public static final Long ITEM_ID = 101L;
+    public static final String REORDER_NUMBER = "RO-20260921-0001";
+    public static final UUID STORE_ID = UUID.fromString("11111111-1111-1111-1111-111111111111");
+    public static final UUID BRAND_ID = UUID.fromString("22222222-2222-2222-2222-222222222222");
+    public static final String BRAND_NAME = "Amoxicillin 500mg";
+    public static final String BARCODE = "88500000001";
+    public static final Long CURRENT_STOCK = 10L;
+    public static final Long REORDER_THRESHOLD = 50L;
+    public static final Long TARGET_STOCK = 100L;
+    public static final Long SUGGESTED_QUANTITY = 90L; // TARGET_STOCK - CURRENT_STOCK
+    public static final Long APPROVED_QUANTITY = 100L;
+    public static final Long RECEIVED_QUANTITY = 100L;
+    public static final String BATCH_NUMBER = "BAT-2026-X1";
+    public static final LocalDate FUTURE_EXPIRY_DATE = LocalDate.now().plusYears(1);
+
+    public static Reorder createDraftEntity() { ... }
+    public static Reorder createApprovedEntity() { ... }
+    public static ApproveReorderRequest createApproveRequest() { ... }
+    public static ReceiveReorderRequest createReceiveRequest() { ... }
+}
+```
+
+- [ ] **Step 2: Define `ReorderService` interface**
 ```java
 package com.mrtripop.inventory.services;
 
@@ -434,37 +504,38 @@ public interface ReorderService {
 }
 ```
 
-- [ ] **Step 2: Write unit tests in `ReorderServiceImplTest`**
+- [ ] **Step 3: Write unit tests in `ReorderServiceImplTest` following `@DisplayName` and Fixture standards**
 Group scenarios using `@Nested`:
-- `@Nested class ApproveReorder`:
+- `@DisplayName("Pharmacy inventory reorder management - approval, receiving, and cancellation workflows")`
+- `@Nested @DisplayName("Store manager approves draft reorder") class ApproveReorder`:
   - `shouldApproveReorder_whenOrderIsDraft`
   - `shouldAcknowledgeLinkedTasks_whenOrderIsApproved`
   - `shouldThrowConflict_whenOrderIsNotDraft`
-- `@Nested class ReceiveReorder`:
+- `@Nested @DisplayName("Pharmacy staff receives delivered reorder shipment") class ReceiveReorder`:
   - `shouldReceiveAllItemsAndUpdateStock_whenOrderIsApproved`
   - `shouldAutoResolveLinkedTasks_whenOrderIsReceived`
   - `shouldThrowConflict_whenOrderIsNotApproved`
   - `shouldThrowBadRequest_whenItemDoesNotBelongToOrder`
-- `@Nested class CancelReorder`:
+- `@Nested @DisplayName("Store manager cancels reorder") class CancelReorder`:
   - `shouldCancelReorder_whenOrderIsDraftOrApproved`
   - `shouldThrowConflict_whenOrderIsAlreadyReceived`
 
-- [ ] **Step 3: Run test to verify it fails**
+- [ ] **Step 4: Run test to verify failure**
 Run: `./mvnw test -Dtest=ReorderServiceImplTest`
 
-- [ ] **Step 4: Implement `ReorderServiceImpl`**
+- [ ] **Step 5: Implement `ReorderServiceImpl`**
 - `approveReorder()`: Updates status to `APPROVED`, sets `approvedQuantity` (defaults to `suggestedQuantity`), transitions linked `Task` to `ACKNOWLEDGED`, logs `REORDER_APPROVED` audit.
 - `receiveReorder()`: Atomically calls `batchService.stockEntry()` / creates batch, increments `StoreStock`, sets `receivedQuantity`, sets linked `Task` to `RESOLVED`, updates status to `RECEIVED`, logs `REORDER_RECEIVED` audit.
 - `cancelReorder()`: Sets status to `CANCELLED`, reverts `ACKNOWLEDGED` tasks to `PENDING`, logs `REORDER_CANCELLED` audit.
 - Handles `OptimisticLockException` translating to `INV4024_REORDER_CONCURRENT_MODIFICATION`.
 
-- [ ] **Step 5: Run tests to verify they pass**
+- [ ] **Step 6: Run tests to verify they pass**
 Run: `./mvnw test -Dtest=ReorderServiceImplTest`
 
-- [ ] **Step 6: Commit**
+- [ ] **Step 7: Commit**
 ```bash
-git add src/main/java/com/mrtripop/inventory/services/ src/test/java/com/mrtripop/inventory/services/ReorderServiceImplTest.java
-git commit -m "feat(inventory): implement ReorderService approval, receiving and cancellation"
+git add src/main/java/com/mrtripop/inventory/services/ src/test/java/com/mrtripop/inventory/
+git commit -m "feat(inventory): implement ReorderFixture and ReorderServiceImpl with strict testing standards"
 ```
 
 ---
