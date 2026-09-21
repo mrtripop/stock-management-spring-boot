@@ -36,6 +36,21 @@ This feature implements **Automated Par-Level Replenishment**:
 - Full audit ledger logging for state transitions (`AuditLedger`).
 - Unit and slice tests (`@Nested`, AAA pattern) for service, engine, and controller layers.
 
+#### Mandatory Engineering Skills & Standards Reference
+Subagents and implementers must strictly consult and adhere to the following `software-engineer` plugin skills:
+- **Code Style & Quality:**
+  - [`code-style-standards`](file:///Users/mrtripop/.gemini/config/plugins/software-engineer/skills/code-style-standards/SKILL.md): Immutability, no magic literals/numbers, intentional naming, programming to interfaces.
+  - [`code-comment`](file:///Users/mrtripop/.gemini/config/plugins/software-engineer/skills/code-comment/SKILL.md): Abstraction-level commenting rules (why over what, documentation integrity).
+- **Testing Standards & Principles:**
+  - [`testing-standards`](file:///Users/mrtripop/.gemini/config/plugins/software-engineer/skills/testing-standards/SKILL.md): `@Nested` scenario grouping, `should[ExpectedBehavior]_when[Scenario]` business rule naming, AAA (Arrange-Act-Assert) pattern, fixture data constants.
+  - [`testing-principles`](file:///Users/mrtripop/.gemini/config/plugins/software-engineer/skills/testing-principles/SKILL.md): Seam selection, behavioral assertions over mock mechanics, avoiding flaky assertions.
+- **Security Standards:**
+  - [`security-standards`](file:///Users/mrtripop/.gemini/config/plugins/software-engineer/skills/security-standards/SKILL.md): Strict input validation (`@Valid`, `@NotNull`, `@Min`, `@Future`, `@NotBlank`), authorization checks, safe error message responses.
+- **Performance & Data Access:**
+  - [`performance-standards`](file:///Users/mrtripop/.gemini/config/plugins/software-engineer/skills/performance-standards/SKILL.md): N+1 query prevention (using `@EntityGraph` or `JOIN FETCH`), database indexes on foreign keys and filter columns (`store_id`, `status`), scoped `@Transactional` boundaries.
+- **Foundational Engineering Principles:**
+  - [`foundation-principles`](file:///Users/mrtripop/.gemini/config/plugins/software-engineer/skills/foundation-principles/SKILL.md): Ubiquitous domain language, surgical modifications, non-breaking migrations, verification before completion.
+
 ### Out of Scope (Explicit Non-Goals)
 - **No E2E Tests:** Verification relies strictly on focused unit tests (`ReorderServiceImplTest`, `ActionQueueServiceImplTest`) and controller slice tests (`@WebMvcTest`), avoiding heavy end-to-end integration environments.
 - **External Supplier EDI / API Integration:** Reorders represent internal procurement requisitions / PO drafts. Direct dispatch to third-party vendor APIs is out of scope.
