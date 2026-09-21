@@ -105,8 +105,15 @@ Collaborators:
 
 ## 4. Data Model
 
+All entity column definitions strictly adhere to the `code-style-standards` JPA Entity Columns rule ([`references/java-spring.md`](file:///Users/mrtripop/.gemini/config/plugins/software-engineer/skills/code-style-standards/references/java-spring.md#L148)):
+- Every column and foreign key relationship (`@ManyToOne`) defines an explicit Hibernate `@Comment` describing its business intent and destination.
+- Sequence generators follow the repository standard (`reorders_sequence`, `reorder_items_sequence`, `allocationSize = 1`).
+- Lazy-loaded associations are excluded from `@ToString` to avoid recursion and `LazyInitializationException`.
+- Explicit table indexes for foreign keys and filter predicates.
+
 ### `StoreProduct` Modification (Table `store_products`)
 ```java
+@Comment("Target inventory par-level to restock up to; if null, defaults to 2x reorderThreshold")
 @Column(name = "target_stock")
 private Long targetStock;
 ```
@@ -128,32 +135,48 @@ public enum ReorderStatus {
     name = "reorders",
     indexes = {
         @Index(name = "idx_reorders_store_status", columnList = "store_id, status"),
-        @Index(name = "idx_reorders_number", columnList = "reorder_number", unique = true)
+        @Index(name = "idx_reorders_reorder_number", columnList = "reorder_number", unique = true)
     }
 )
+@SuperBuilder
+@Getter
+@Setter
+@ToString(exclude = {"store", "items"})
+@NoArgsConstructor
+@AllArgsConstructor
 public class Reorder extends AuditEntity {
+
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "reorder_seq")
-    @SequenceGenerator(name = "reorder_seq", sequenceName = "reorder_seq", allocationSize = 1)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "reorders_sequence")
+    @SequenceGenerator(
+        name = "reorders_sequence",
+        sequenceName = "reorders_sequence",
+        allocationSize = 1
+    )
     private Long id;
 
+    @Comment("Unique human-readable order number for tracking, e.g. RO-20260921-0001")
     @Column(name = "reorder_number", nullable = false, length = 50, unique = true)
-    private String reorderNumber; // Format: "RO-YYYYMMDD-XXXX"
+    private String reorderNumber;
 
+    @Comment("FK to stores; the store location this replenishment order is placed for")
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "store_id", nullable = false)
     private Store store;
 
+    @Comment("Current lifecycle status of the reorder (DRAFT, APPROVED, RECEIVED, CANCELLED)")
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 20)
     private ReorderStatus status = ReorderStatus.DRAFT;
 
+    @Comment("Manager or system notes regarding this reorder requisition")
     @Column(name = "notes", length = 500)
     private String notes;
 
     @OneToMany(mappedBy = "reorder", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ReorderItem> items = new ArrayList<>();
 
+    @Comment("Optimistic locking version counter to prevent concurrent modification conflicts")
     @Version
     @Column(name = "version", nullable = false)
     private Long version = 0L;
@@ -167,42 +190,63 @@ public class Reorder extends AuditEntity {
     name = "reorder_items",
     indexes = {
         @Index(name = "idx_reorder_items_reorder_id", columnList = "reorder_id"),
-        @Index(name = "idx_reorder_items_brand_id", columnList = "brand_id")
+        @Index(name = "idx_reorder_items_brand_id", columnList = "brand_id"),
+        @Index(name = "idx_reorder_items_task_id", columnList = "task_id")
     }
 )
+@SuperBuilder
+@Getter
+@Setter
+@ToString(exclude = {"reorder", "brand", "task"})
+@NoArgsConstructor
+@AllArgsConstructor
 public class ReorderItem extends AuditEntity {
+
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "reorder_item_seq")
-    @SequenceGenerator(name = "reorder_item_seq", sequenceName = "reorder_item_seq", allocationSize = 1)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "reorder_items_sequence")
+    @SequenceGenerator(
+        name = "reorder_items_sequence",
+        sequenceName = "reorder_items_sequence",
+        allocationSize = 1
+    )
     private Long id;
 
+    @Comment("FK to reorders; the parent replenishment order this line item belongs to")
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "reorder_id", nullable = false)
     private Reorder reorder;
 
+    @Comment("FK to brands; the commercial brand / medicine being replenished")
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "brand_id", nullable = false)
     private Brand brand;
 
+    @Comment("Snapshot of available physical stock at the store when this order was drafted")
     @Column(name = "current_stock_at_order", nullable = false)
     private Long currentStockAtOrder;
 
+    @Comment("Snapshot of store product reorder threshold at the time the order was drafted")
     @Column(name = "reorder_threshold_at_order", nullable = false)
     private Long reorderThresholdAtOrder;
 
+    @Comment("Calculated suggested restock quantity to bring stock up to target par level")
     @Column(name = "suggested_quantity", nullable = false)
     private Long suggestedQuantity;
 
+    @Comment("Final quantity approved by store manager for supplier order; null until approved")
     @Column(name = "approved_quantity")
     private Long approvedQuantity;
 
+    @Comment("Actual physical quantity delivered and restocked into inventory; null until received")
     @Column(name = "received_quantity")
     private Long receivedQuantity;
 
+    @Comment("FK to action_queue_tasks; nullable link to the REORDER_NEEDED task being fulfilled")
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "task_id")
     private Task task;
 
+    @Comment("Optimistic locking version counter to prevent concurrent modification conflicts")
     @Version
     @Column(name = "version", nullable = false)
     private Long version = 0L;
