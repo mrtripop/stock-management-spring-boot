@@ -10,6 +10,9 @@ import java.util.UUID;
 
 public final class StoreProductFixture {
 
+  public static final Long DEFAULT_TARGET_STOCK = 50L;
+  public static final Long UPDATED_TARGET_STOCK = 100L;
+
   private StoreProductFixture() {}
 
   public static StoreProduct defaultEntity(UUID storeId, UUID brandId) {

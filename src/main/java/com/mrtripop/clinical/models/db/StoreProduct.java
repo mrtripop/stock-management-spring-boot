@@ -20,6 +20,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
+import org.hibernate.annotations.Comment;
 
 @Getter
 @Setter
@@ -61,4 +62,8 @@ public class StoreProduct extends AuditEntity {
 
   @Column(name = "reorder_threshold")
   private Long reorderThreshold;
+
+  @Comment("Target inventory par-level to restock up to; if null, defaults to 2x reorderThreshold")
+  @Column(name = "target_stock")
+  private Long targetStock;
 }
