@@ -4,6 +4,7 @@ import com.mrtripop.clinical.models.db.Brand;
 import com.mrtripop.clinical.models.db.RegulatorySchedule;
 import com.mrtripop.clinical.models.db.Store;
 import com.mrtripop.clinical.models.db.StoreProduct;
+import com.mrtripop.clinical.models.dto.ActivateProductRequest;
 import com.mrtripop.clinical.models.dto.StoreProductDto;
 import com.mrtripop.clinical.models.dto.UpdateOverrideRequest;
 import com.mrtripop.clinical.repository.BrandRepository;
@@ -36,7 +37,19 @@ public class StoreProductServiceImpl implements StoreProductService {
   @Override
   @Transactional
   public StoreProductDto activateProduct(UUID storeId, UUID brandId) {
-    log.info("Activating product brand {} for store {}", brandId, storeId);
+    return activateProduct(storeId, brandId, null);
+  }
+
+  @Override
+  @Transactional
+  public StoreProductDto activateProduct(UUID storeId, ActivateProductRequest request) {
+    return activateProduct(storeId, request.getBrandId(), request.getTargetStock());
+  }
+
+  @Override
+  @Transactional
+  public StoreProductDto activateProduct(UUID storeId, UUID brandId, Long targetStock) {
+    log.info("Activating product brand {} for store {} with targetStock {}", brandId, storeId, targetStock);
     Store store = findStoreOrThrow(storeId);
     Brand brand = findBrandOrThrow(brandId);
 
@@ -50,6 +63,7 @@ public class StoreProductServiceImpl implements StoreProductService {
             .store(store)
             .brand(brand)
             .isActive(true)
+            .targetStock(targetStock)
             .build();
 
     try {
@@ -104,6 +118,9 @@ public class StoreProductServiceImpl implements StoreProductService {
     }
     if (request.getShelfLocation() != null) {
       storeProduct.setShelfLocation(request.getShelfLocation());
+    }
+    if (request.getTargetStock() != null) {
+      storeProduct.setTargetStock(request.getTargetStock());
     }
 
     StoreProduct saved = storeProductRepository.save(storeProduct);
@@ -164,6 +181,7 @@ public class StoreProductServiceImpl implements StoreProductService {
     dto.setPrice(sp.getPrice());
     dto.setShelfLocation(sp.getShelfLocation());
     dto.setIsActive(sp.getIsActive());
+    dto.setTargetStock(sp.getTargetStock());
     dto.setCreatedAt(sp.getCreatedAt());
     dto.setUpdatedAt(sp.getUpdatedAt());
 
@@ -185,7 +203,9 @@ public class StoreProductServiceImpl implements StoreProductService {
   }
 
   private String buildOverrideValue(StoreProduct sp) {
-    return String.format("price=%s, shelfLocation=%s", sp.getPrice(), sp.getShelfLocation());
+    return String.format(
+        "price=%s, shelfLocation=%s, targetStock=%s",
+        sp.getPrice(), sp.getShelfLocation(), sp.getTargetStock());
   }
 
   @ResponseStatus(HttpStatus.CONFLICT)

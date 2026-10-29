@@ -18,6 +18,7 @@ public class StoreProductDto {
   private BigDecimal price;
   private String shelfLocation;
   private Boolean isActive;
+  private Long targetStock;
   private Long createdAt;
   private Long updatedAt;
 

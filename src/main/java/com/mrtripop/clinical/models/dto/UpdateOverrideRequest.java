@@ -1,6 +1,7 @@
 package com.mrtripop.clinical.models.dto;
 
 import jakarta.validation.constraints.Digits;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Size;
 import java.math.BigDecimal;
 import lombok.AllArgsConstructor;
@@ -18,4 +19,7 @@ public class UpdateOverrideRequest {
 
   @Size(max = 100, message = "Shelf location must not exceed 100 characters")
   private String shelfLocation;
+
+  @Min(value = 0, message = "Target stock must be greater than or equal to 0")
+  private Long targetStock;
 }

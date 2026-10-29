@@ -34,7 +34,7 @@ public class StoreProductController {
   @PostMapping
   public ResponseEntity<ResponseBody<StoreProductDto>> activateProduct(
       @PathVariable UUID storeId, @Valid @RequestBody ActivateProductRequest request) {
-    StoreProductDto result = storeProductService.activateProduct(storeId, request.getBrandId());
+    StoreProductDto result = storeProductService.activateProduct(storeId, request);
     return ResponseEntity.status(HttpStatus.CREATED)
         .body(
             new ResponseBody<>(
