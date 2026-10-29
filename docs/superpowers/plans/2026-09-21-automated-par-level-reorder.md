@@ -29,7 +29,7 @@
 - Modify: `src/main/java/com/mrtripop/clinical/component/StoreProductMapper.java`
 - Test: `src/test/java/com/mrtripop/clinical/services/StoreProductServiceTest.java`
 
-- [ ] **Step 1: Write unit test verifying `targetStock` mapping in `StoreProductServiceTest`**
+- [x] **Step 1: Write unit test verifying `targetStock` mapping in `StoreProductServiceTest`**
 ```java
 @Test
 void shouldMapTargetStock_whenActivatingStoreProduct() {
@@ -37,10 +37,10 @@ void shouldMapTargetStock_whenActivatingStoreProduct() {
 }
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 Run: `./mvnw test -Dtest=StoreProductServiceTest`
 
-- [ ] **Step 3: Implement `targetStock` column in `StoreProduct` with Hibernate `@Comment`**
+- [x] **Step 3: Implement `targetStock` column in `StoreProduct` with Hibernate `@Comment`**
 ```java
 @Comment("Target inventory par-level to restock up to; if null, defaults to 2x reorderThreshold")
 @Column(name = "target_stock")
@@ -48,10 +48,10 @@ private Long targetStock;
 ```
 Update DTOs and MapStruct mapper accordingly.
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 Run: `./mvnw test -Dtest=StoreProductServiceTest`
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 ```bash
 git add src/main/java/com/mrtripop/clinical/
 git commit -m "feat(clinical): add targetStock par level column to StoreProduct"
